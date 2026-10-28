@@ -17,5 +17,5 @@ Times e agentes ficam em `.claude/agents/`; comandos em `.claude/commands/` (`/r
 
 ## Ambiente
 - `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` (agentes). Sem elas, `hq.py` grava em `out/_hq.log` (modo offline).
-- `GOOGLE_APPLICATION_CREDENTIALS` para `drive_upload.py` (sem ela, os arquivos ficam em `out/_drive/`).
+- Drive (Gmail pessoal): cliente OAuth em `~/.config/lucas-hq/oauth-client.json` e login único com `python3 tools/drive_upload.py --login`. Sem isso, os arquivos ficam em `out/_drive/`.
 - Python: `pip install -r tools/requirements.txt`; precisa de `ffmpeg`.

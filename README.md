@@ -32,5 +32,5 @@ Abra `http://localhost:5173/?demo=1` para o modo demo (eventos simulados). Sem S
 - [x] 12 agentes, 4 comandos, 7 ferramentas, cérebro MCP, permissões (`rm` negado, geração no Higgsfield e `mv` para `done/` pedem OK)
 - [x] Teste de 1 vídeo: corte → vertical → legendas → capa → frames → Drive (dry-run) → agenda
 - [ ] Você: criar projeto Supabase e colar as chaves
-- [ ] Você: credenciais do Google Drive (`GOOGLE_APPLICATION_CREDENTIALS`) e login no Higgsfield MCP
+- [ ] Você: cliente OAuth do Drive em `~/.config/lucas-hq/oauth-client.json` + `python3 tools/drive_upload.py --login`, e login no Higgsfield MCP
 - [ ] Você: conectar o repo na Vercel (ou ativar Pages)
