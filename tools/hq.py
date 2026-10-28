@@ -20,9 +20,20 @@ from pathlib import Path
 
 from _common import emit
 
-URL = os.environ.get("SUPABASE_URL", "")
+def _env(*names: str) -> str:
+    """First non-empty var; tolerates values pasted as NAME=value."""
+    for n in names:
+        v = os.environ.get(n, "").strip()
+        if "=" in v and not v.startswith("http") and not v.startswith("ey"):
+            v = v.split("=", 1)[1].strip()
+        if v:
+            return v
+    return ""
+
+
+URL = _env("SUPABASE_URL", "VITE_SUPABASE_URL").rstrip("/")
 URL = URL if URL.startswith("http") else None
-KEY = os.environ.get("SUPABASE_SERVICE_KEY")
+KEY = _env("SUPABASE_SERVICE_KEY") or None
 OP = {"inbox-b2b": "agencia-lucas", "criacao-b2b": "agencia-lucas"}
 
 

@@ -2,8 +2,10 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { useHQ } from '../store'
 import type { Agent, HQEvent, ScheduleItem, SkillRuntime, Task } from '../data/types'
 
-const url = import.meta.env.VITE_SUPABASE_URL as string | undefined
-const key = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
+// tolerate values pasted as NAME=value
+const clean = (v?: string) => v?.trim().replace(/^[A-Z_]+=/, '') || undefined
+const url = clean(import.meta.env.VITE_SUPABASE_URL)
+const key = clean(import.meta.env.VITE_SUPABASE_ANON_KEY)
 
 function makeClient(): SupabaseClient | null {
   if (!url || !key) return null
