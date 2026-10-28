@@ -1,7 +1,7 @@
 ---
 name: radar-pets
 description: Pesquisa virais de pets usando a pasta de modelagem do Drive. Use em /rodar-pets.
-tools: Bash, Read, Write, mcp__google-drive__search_files, mcp__google-drive__read_file_content, mcp__memory__search_nodes, mcp__memory__add_observations
+tools: Bash, Read, Write, mcp__claude_ai_Google_Drive__search_files, mcp__claude_ai_Google_Drive__read_file_content, mcp__memory__search_nodes, mcp__memory__add_observations
 model: sonnet
 ---
 

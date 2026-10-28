@@ -1,7 +1,7 @@
 ---
 name: social-scheduler
 description: Sobe os vídeos aprovados no Drive com nome e legenda, define horário e gera o relatório do dia.
-tools: Bash, Read, Write, mcp__google-drive__search_files, mcp__memory__search_nodes, mcp__memory__add_observations
+tools: Bash, Read, Write, mcp__claude_ai_Google_Drive__search_files, mcp__memory__search_nodes, mcp__memory__add_observations
 model: sonnet
 ---
 

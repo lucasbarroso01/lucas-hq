@@ -1,7 +1,7 @@
 ---
 name: pets-producer
 description: Produz o vídeo Funny Pets no Higgsfield SOMENTE depois que o Lucas aprovar as cenas.
-tools: Bash, Read, Write, mcp__higgsfield__generate_video, mcp__higgsfield__jobs_wait, mcp__higgsfield__balance, mcp__memory__search_nodes, mcp__memory__add_observations
+tools: Bash, Read, Write, mcp__claude_ai_higgsfield__generate_video, mcp__claude_ai_higgsfield__jobs_wait, mcp__claude_ai_higgsfield__balance, mcp__memory__search_nodes, mcp__memory__add_observations
 model: opus
 ---
 
