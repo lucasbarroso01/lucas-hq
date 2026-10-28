@@ -8,3 +8,4 @@ done/*
 !*/.gitkeep
 *.pyc
 __pycache__
+*.tsbuildinfo
