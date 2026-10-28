@@ -5,7 +5,7 @@ Without them it appends to out/_hq.log (offline/test mode) and still prints the 
 python3 tools/hq.py task --id wf-2026-10-28-01 --team producao-wf --agent video-editor --title wf_01.mp4 --etapa LEGENDAS --progress 50 [--status running] [--parent wf-batch]
 python3 tools/hq.py agent --id video-editor --status working --doing "legendando wf_01"
 python3 tools/hq.py event --type brain_write --team radar --agent radar-worldframe --note "tema X já usado"
-python3 tools/hq.py event --type handoff --team roteiros --to producao-wf --text "Roteiros · 5 ganchos prontos"
+python3 tools/hq.py handoff --team roteiros --to producao-wf --text "Roteiros · 5 ganchos prontos"
 python3 tools/hq.py skill --team producao-wf --skill hypit-video --progress 40 --state running
 python3 tools/hq.py schedule --date 2026-10-28 --page Worldframe --time 18:00 --title wf_04.mp4 --status pronto --task wf-...
 python3 tools/hq.py approval --task t2 [--wait 0]   # prints the latest decision; --wait N polls up to N seconds
@@ -59,8 +59,9 @@ def rest(method: str, table: str, body=None, query: str = "", upsert: bool = Fal
 ap = argparse.ArgumentParser()
 sub = ap.add_subparsers(dest="cmd", required=True)
 t = sub.add_parser("task")
-for k in ["id", "team", "agent", "title", "etapa", "status", "parent", "drive-url", "post-time"]:
+for k in ["id", "team", "agent", "title", "etapa", "parent", "drive-url", "post-time"]:
     t.add_argument(f"--{k}")
+t.add_argument("--status", choices=["running", "waiting", "done", "error"])
 t.add_argument("--progress", type=int)
 t.add_argument("--qa-score", type=float)
 t.add_argument("--payload", help="JSON")
@@ -72,6 +73,11 @@ e = sub.add_parser("event")
 e.add_argument("--type", required=True, choices=["handoff", "brain_read", "brain_write", "tool_run", "toast"])
 for k in ["team", "agent", "to", "text", "note", "tool"]:
     e.add_argument(f"--{k}")
+h = sub.add_parser("handoff", help="pass work to another team (walker + toast in the office)")
+h.add_argument("--team", required=True, help="team handing off")
+h.add_argument("--to", required=True, help="team receiving")
+h.add_argument("--text", required=True)
+h.add_argument("--agent")
 s = sub.add_parser("skill")
 s.add_argument("--team", required=True)
 s.add_argument("--skill", required=True)
@@ -106,6 +112,9 @@ try:
         payload = {k: v for k, v in {"to_team": a.to, "text": a.text, "note": a.note, "tool": a.tool}.items() if v}
         rest("POST", "events", {"type": a.type, "team_id": a.team, "agent_id": a.agent, "payload": payload})
         emit("hq", table="events", type=a.type)
+    elif a.cmd == "handoff":
+        rest("POST", "events", {"type": "handoff", "team_id": a.team, "agent_id": a.agent, "payload": {"to_team": a.to, "text": a.text}})
+        emit("hq", table="events", type="handoff", to=a.to)
     elif a.cmd == "skill":
         rest("POST", "skills_runtime", {"team_id": a.team, "skill": a.skill, "progress": a.progress, "state": a.state}, "?on_conflict=team_id,skill", upsert=True)
         emit("hq", table="skills_runtime", skill=a.skill, progress=a.progress)

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Remove pauses (and, with faster-whisper, filler words like "um", "é…") from a video.
 
-python3 tools/cut.py inbox/raw.mp4 -o out/nome/cut.mp4 [--keep-fillers] [--silence-db -35] [--min-silence 0.45]
+python3 tools/cut.py inbox/raw.mp4 -o out/nome/cut.mp4 [--keep-fillers] [--trim-start 1.5] [--trim-end 0.8] [--silence-db -35] [--min-silence 0.45]
 """
 import argparse
 from pathlib import Path
@@ -13,6 +13,8 @@ ap = argparse.ArgumentParser()
 ap.add_argument("input")
 ap.add_argument("-o", "--output", required=True)
 ap.add_argument("--keep-fillers", action="store_true")
+ap.add_argument("--trim-start", type=float, default=0, help="drop the first N seconds")
+ap.add_argument("--trim-end", type=float, default=0, help="drop the last N seconds")
 ap.add_argument("--silence-db", type=float, default=-35)
 ap.add_argument("--min-silence", type=float, default=0.45)
 ap.add_argument("--pad", type=float, default=0.08, help="seconds of air kept around speech")
@@ -42,6 +44,10 @@ try:
                     fillers += 1
         except ImportError:
             fillers_note = "skipped (instale faster-whisper)"
+    if a.trim_start > 0:
+        cuts.append((0.0, a.trim_start))
+    if a.trim_end > 0:
+        cuts.append((max(0.0, total - a.trim_end), total))
     cuts.sort()
     keep, t = [], 0.0
     for s, e in cuts:

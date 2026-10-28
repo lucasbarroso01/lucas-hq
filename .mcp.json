@@ -7,7 +7,7 @@
         "@modelcontextprotocol/server-memory"
       ],
       "env": {
-        "MEMORY_FILE_PATH": "brain/memory.jsonl"
+        "MEMORY_FILE_PATH": "${PWD}/brain/memory.jsonl"
       }
     }
   }
