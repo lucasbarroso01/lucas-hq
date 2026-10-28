@@ -15,6 +15,7 @@ import json
 import os
 import time
 import urllib.parse
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -47,9 +48,12 @@ def rest(method: str, table: str, body=None, query: str = "", upsert: bool = Fal
                "Prefer": "return=representation" + (",resolution=merge-duplicates" if upsert else "")}
     req = urllib.request.Request(f"{URL}/rest/v1/{table}{query}", method=method, headers=headers,
                                  data=json.dumps(body).encode() if body is not None else None)
-    with urllib.request.urlopen(req, timeout=20) as r:
-        txt = r.read().decode()
-        return json.loads(txt) if txt else []
+    try:
+        with urllib.request.urlopen(req, timeout=20) as r:
+            txt = r.read().decode()
+            return json.loads(txt) if txt else []
+    except urllib.error.HTTPError as e:
+        raise RuntimeError(f"{e.code} {table}: {e.read().decode()[:200]}") from None
 
 
 ap = argparse.ArgumentParser()
@@ -89,7 +93,11 @@ try:
             "payload": json.loads(a.payload) if a.payload else None,
             "operacao": OP.get(a.team, "maquina-viral") if a.team else None,
         }.items() if v is not None}
-        rest("POST", "tasks", row, "?on_conflict=id", upsert=True)
+        if a.team:
+            rest("POST", "tasks", row, "?on_conflict=id", upsert=True)
+        else:  # partial update of an existing task
+            if not rest("PATCH", "tasks", {k: v for k, v in row.items() if k != "id"}, f"?id=eq.{urllib.parse.quote(a.id)}") and URL and KEY:
+                raise ValueError(f"tarefa {a.id} não existe: passe --team na primeira chamada")
         emit("hq", table="tasks", id=a.id, etapa=a.etapa, progress=a.progress, status=a.status)
     elif a.cmd == "agent":
         rest("PATCH", "agents", {"status": a.status, "doing_now": a.doing or ("ocioso" if a.status == "idle" else "trabalhando")}, f"?id=eq.{a.id}")

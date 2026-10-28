@@ -51,7 +51,7 @@ async function load() {
       const { data } = await supabase!.from('schedule').select('*')
       if (data) useHQ.getState().set({ schedule: data as ScheduleItem[] })
     })
-    .subscribe()
+    .subscribe((status, err) => console.info('[supabase] realtime', status, err?.message ?? ''))
   return true
 }
 
