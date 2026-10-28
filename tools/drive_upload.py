@@ -15,9 +15,12 @@ import argparse
 import datetime as dt
 import os
 import shutil
+import warnings
 from pathlib import Path
 
 from _common import emit
+
+warnings.filterwarnings("ignore", category=FutureWarning)  # google libs nag about Python versions
 
 ROOT = "Central de Conteúdo — Lucas"
 SCOPES = ["https://www.googleapis.com/auth/drive"]
