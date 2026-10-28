@@ -10,6 +10,7 @@ import { AgendaView } from './ui/AgendaView'
 import { BrainView } from './brain/BrainView'
 import { ReviewModal } from './ui/ReviewModal'
 import { TaskDetail } from './ui/TaskDetail'
+import { NextPosts, PostAlarm } from './ui/NextPosts'
 import { useHQ } from './store'
 import { connectSupabase } from './lib/supabase'
 import { startDemo } from './lib/demo'
@@ -31,6 +32,8 @@ export function App() {
       </div>
       <TopBar />
       {view === 'office' && <MiniMap />}
+      {view === 'office' && !selected && <NextPosts />}
+      <PostAlarm />
       <Toasts />
       <AnimatePresence>{view === 'office' && selected && <TeamDrawer key={selected} teamId={selected} />}</AnimatePresence>
       {view === 'tasks' && <TasksView />}

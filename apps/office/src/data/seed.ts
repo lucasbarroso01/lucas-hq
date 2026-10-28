@@ -1,4 +1,5 @@
 import type { Agent, ScheduleItem, SkillRuntime, Task, Team } from './types'
+import { EXP, PAGINAS, nowBR, toMin } from '../lib/expediente'
 
 export const TEAMS: Team[] = [
   { id: 'radar', nome: 'Radar', cor: '#3B6FE0', operacao: 'maquina-viral', icon: '📡',
@@ -69,14 +70,19 @@ function weekDays() {
   return Array.from({ length: 7 }, (_, i) => { const x = new Date(monday); x.setDate(monday.getDate() + i); return x.toISOString().slice(0, 10) })
 }
 const today = new Date().toISOString().slice(0, 10)
-export const SCHEDULE: ScheduleItem[] = weekDays().flatMap((data) => {
-  const st = (data < today ? 'postado' : data === today ? 'pronto' : 'aguardando') as ScheduleItem['status']
-  return [
-    ...['09:00', '12:00', '15:00', '18:00', '21:00'].map((h, i) => ({ id: `wf-${data}-${i}`, data, pagina: 'Worldframe' as const, horario: h,
-      task_id: null, titulo: `wf_0${i + 1}.mp4`, status: st })),
-    { id: `fp-${data}`, data, pagina: 'Funny Pets' as const, horario: '19:30', task_id: null, titulo: 'pets_01.mp4', status: data === today ? 'aguardando' : st },
-  ]
-})
+const br = nowBR()
+/** Semana de exemplo: horários vêm de config/expediente.yaml. */
+export const SCHEDULE: ScheduleItem[] = weekDays().flatMap((data) =>
+  PAGINAS.flatMap((pagina) => EXP.paginas[pagina].posts.map((horario, i) => {
+    // dia de exemplo coerente com o relógio: passado postado (um atrasado), próximo pronto/aprovado, resto planejado
+    const past = toMin(horario) <= br.min
+    const status: ScheduleItem['status'] = data < br.date ? 'postado' : data > br.date ? 'planejado'
+      : past ? (i === 1 ? 'atrasado' : 'postado') : i % 2 ? 'aprovado' : i < 4 ? 'pronto' : 'planejado'
+    const titulo = pagina === 'Worldframe' ? `wf_0${i + 1}.mp4` : 'pets_01.mp4'
+    return { id: `${pagina}-${data}-${horario}`, data, pagina, horario, task_id: null, titulo, status,
+      drive_url: status === 'planejado' ? null : 'https://drive.google.com' }
+  })),
+)
 
 export const SKILLS: SkillRuntime[] = TEAMS.flatMap((t) => t.skills.map((skill) => ({ team_id: t.id, skill, progress: 0, state: 'idle' as const })))
 

@@ -53,7 +53,7 @@ export function TopBar() {
           <span className="animate-pulse">●</span> {total} agentes · {running} rodando
         </div>
         <span title={`fonte: ${live}`} className="hidden font-mono text-[10px] uppercase text-white/35 xl:block">{live}</span>
-        <button onClick={() => set({ unread: 0 })} className="relative grid h-9 w-9 place-items-center rounded-xl hover:bg-white/10">
+        <button title="Notificações (ativa os avisos de post)" onClick={() => { set({ unread: 0 }); try { if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission() } catch { /* ignore */ } }} className="relative grid h-9 w-9 place-items-center rounded-xl hover:bg-white/10">
           🔔
           {unread > 0 && <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-rose-500 px-1 text-[9px] font-bold">{unread > 99 ? '99+' : unread}</span>}
         </button>

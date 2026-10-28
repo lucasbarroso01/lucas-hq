@@ -68,3 +68,15 @@ export async function decide(task_id: string, decision: 'approved' | 'changes', 
     if (error) console.warn('[supabase] approval', error.message)
   }
 }
+
+/** Botão "marcar como postado" da Agenda (a chave anon só pode mudar o status do post). */
+export async function markPosted(id: string) {
+  const hq = useHQ.getState()
+  const item = hq.schedule.find((s) => s.id === id)
+  hq.set({ schedule: hq.schedule.map((s) => (s.id === id ? { ...s, status: 'postado' } : s)) })
+  hq.pushToast(null, `Postado · ${item?.titulo ?? ''} · ${item?.pagina ?? ''}`)
+  if (supabase) {
+    const { error } = await supabase.from('schedule').update({ status: 'postado' }).eq('id', id)
+    if (error) console.warn('[supabase] schedule', error.message)
+  }
+}

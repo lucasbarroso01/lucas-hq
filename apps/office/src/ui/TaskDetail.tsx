@@ -141,4 +141,7 @@ function Body({ task, tasks, events, close }: { task: Task; tasks: Task[]; event
   )
 }
 
-const statusPt = (s: Task['status']) => ({ running: 'rodando', waiting: 'aguardando você', done: 'concluída', error: 'erro' })[s]
+export const statusPt = (s: Task['status']) => ({
+  na_fila: 'na fila', running: 'rodando', waiting: 'aguardando você', waiting_upstream: 'esperando etapa anterior',
+  done: 'concluída', error: 'erro', atrasado: 'atrasada',
+})[s]

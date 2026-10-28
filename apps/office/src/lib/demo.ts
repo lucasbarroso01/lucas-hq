@@ -1,5 +1,6 @@
 import { useHQ } from '../store'
 import type { HQEvent, Task } from '../data/types'
+import { SCHEDULE } from '../data/seed'
 
 const pick = <T,>(xs: T[]) => xs[Math.floor(Math.random() * xs.length)]
 let seq = 0
@@ -37,7 +38,7 @@ const DOING: Record<string, string[]> = {
 /** Fake but coherent activity so the office is alive without real agents (?demo=1). */
 export function startDemo() {
   const hq = useHQ.getState()
-  hq.set({ live: 'demo' })
+  hq.set({ live: 'demo', schedule: SCHEDULE })
   ;(window as any).__hq = useHQ
   // Five parallel video-editor sub-agents in Produção Worldframe.
   const subs: Task[] = Array.from({ length: 5 }, (_, i) => ({

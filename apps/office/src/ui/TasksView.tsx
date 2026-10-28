@@ -4,7 +4,7 @@ import { useHQ, teamById } from '../store'
 import { Ring, ago } from './bits'
 import { decide } from '../lib/supabase'
 import type { Task } from '../data/types'
-import { driveSearch } from './TaskDetail'
+import { driveSearch, statusPt } from './TaskDetail'
 
 const DRIVE_HOME = (import.meta.env.VITE_DRIVE_URL as string | undefined) || driveSearch('Central de Conteúdo — Lucas')
 
@@ -63,6 +63,18 @@ export function TasksView() {
               ) : (
                 <button onClick={(e) => { e.stopPropagation(); decide(t.id, 'approved') }} className="rounded-lg bg-amber-400 px-3 py-1.5 text-xs font-bold text-night-950 shadow-[0_0_18px_#fbbf2466] hover:bg-amber-300">Aprovar</button>
               )}
+            </Card>
+          )} />
+        )}
+        {f === 'all' && (
+          <Group title="Fila, esperando e atrasos" items={tasks.filter((t) => ['na_fila', 'waiting_upstream', 'atrasado', 'error'].includes(t.status))} render={(t) => (
+            <Card key={t.id} task={t}>
+              <span className="grid h-12 w-12 place-items-center rounded-full bg-white/10 text-xl">{({ na_fila: '📥', waiting_upstream: '⏳', atrasado: '⏰', error: '⚠️' } as Record<string, string>)[t.status]}</span>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-medium">{t.titulo}</div>
+                <div className="mt-1 flex items-center gap-2"><TeamChip id={t.team_id} /><span className="font-mono text-[10px] text-white/45">{statusPt(t.status)} · {ago(t.updated_at)}</span></div>
+              </div>
+              <SeeWork id={t.id} />
             </Card>
           )} />
         )}

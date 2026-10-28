@@ -1,5 +1,5 @@
 export type Operation = 'maquina-viral' | 'agencia-lucas'
-export type TaskStatus = 'running' | 'waiting' | 'done' | 'error'
+export type TaskStatus = 'na_fila' | 'running' | 'waiting' | 'waiting_upstream' | 'done' | 'error' | 'atrasado'
 export type EventType = 'handoff' | 'brain_read' | 'brain_write' | 'tool_run' | 'toast'
 
 export interface Team {
@@ -58,7 +58,9 @@ export interface ScheduleItem {
   horario: string // HH:MM
   task_id: string | null
   titulo: string
-  status: 'pronto' | 'aguardando' | 'postado'
+  drive_url?: string | null
+  status: ScheduleStatus
 }
+export type ScheduleStatus = 'planejado' | 'pronto' | 'aprovado' | 'postado' | 'atrasado'
 
 export interface SkillRuntime { team_id: string; skill: string; progress: number; state: 'running' | 'idle' }
