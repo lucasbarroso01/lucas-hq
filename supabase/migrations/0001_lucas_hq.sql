@@ -75,7 +75,13 @@ drop trigger if exists tasks_touch on tasks;
 create trigger tasks_touch before update on tasks for each row execute function touch_updated_at();
 
 -- Realtime
-alter publication supabase_realtime add table agents, tasks, events, approvals, schedule, skills_runtime;
+do $$ declare t text; begin
+  foreach t in array array['agents','tasks','events','approvals','schedule','skills_runtime'] loop
+    if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and tablename = t) then
+      execute format('alter publication supabase_realtime add table %I', t);
+    end if;
+  end loop;
+end $$;
 
 -- RLS: the office (anon key) reads everything and may only insert approvals.
 -- Agents use the service key, which bypasses RLS.
@@ -86,11 +92,19 @@ alter table events enable row level security;
 alter table approvals enable row level security;
 alter table schedule enable row level security;
 alter table skills_runtime enable row level security;
+drop policy if exists "read" on teams;
 create policy "read" on teams for select using (true);
+drop policy if exists "read" on agents;
 create policy "read" on agents for select using (true);
+drop policy if exists "read" on tasks;
 create policy "read" on tasks for select using (true);
+drop policy if exists "read" on events;
 create policy "read" on events for select using (true);
+drop policy if exists "read" on approvals;
 create policy "read" on approvals for select using (true);
+drop policy if exists "read" on schedule;
 create policy "read" on schedule for select using (true);
+drop policy if exists "read" on skills_runtime;
 create policy "read" on skills_runtime for select using (true);
+drop policy if exists "approve" on approvals;
 create policy "approve" on approvals for insert with check (true);
