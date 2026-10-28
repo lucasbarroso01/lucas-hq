@@ -4,6 +4,7 @@
 python3 tools/cut.py inbox/raw.mp4 -o out/nome/cut.mp4 [--keep-fillers] [--silence-db -35] [--min-silence 0.45]
 """
 import argparse
+from pathlib import Path
 import re
 
 from _common import FILLERS, duration, emit, has_audio, load_words, run
@@ -18,6 +19,7 @@ ap.add_argument("--pad", type=float, default=0.08, help="seconds of air kept aro
 ap.add_argument("--words-json", help="precomputed transcript (skips whisper)")
 ap.add_argument("--model", default="small")
 a = ap.parse_args()
+Path(a.output).parent.mkdir(parents=True, exist_ok=True)
 
 try:
     total = duration(a.input)

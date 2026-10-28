@@ -19,6 +19,7 @@ ap.add_argument("--at", type=float, help="use the frame at this second instead o
 ap.add_argument("--pos", choices=["top", "middle", "bottom"], default="top")
 ap.add_argument("--samples", type=int, default=12)
 a = ap.parse_args()
+Path(a.output).parent.mkdir(parents=True, exist_ok=True)
 
 
 def grab(t: float, dst: Path) -> Path:

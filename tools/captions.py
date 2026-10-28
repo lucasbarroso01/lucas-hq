@@ -18,6 +18,7 @@ ap.add_argument("--words-json", help="precomputed transcript (skips whisper)")
 ap.add_argument("--model", default="small")
 ap.add_argument("--font-size", type=int, default=92)
 a = ap.parse_args()
+Path(a.output).parent.mkdir(parents=True, exist_ok=True)
 
 YELLOW, WHITE = "&H0033D6FF", "&H00FFFFFF"  # ASS is BGR
 
@@ -58,4 +59,5 @@ try:
 except ImportError:
     emit("captions", ok=False, error="faster-whisper não instalado: pip install faster-whisper (ou use --words-json)")
 except Exception as e:  # noqa: BLE001
-    emit("captions", ok=False, error=str(e))
+    hint = " (falha ao baixar o modelo do Whisper: confira a internet/acesso a huggingface.co)" if "403" in str(e) or "huggingface" in str(e).lower() else ""
+    emit("captions", ok=False, error=str(e) + hint)

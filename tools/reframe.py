@@ -4,6 +4,7 @@
 python3 tools/reframe.py out/nome/cut.mp4 -o out/nome/vertical.mp4 [--fit]
 """
 import argparse
+from pathlib import Path
 
 from _common import emit, run
 
@@ -12,6 +13,7 @@ ap.add_argument("input")
 ap.add_argument("-o", "--output", required=True)
 ap.add_argument("--fit", action="store_true", help="keep the whole frame over a blurred copy instead of cropping")
 a = ap.parse_args()
+Path(a.output).parent.mkdir(parents=True, exist_ok=True)
 
 crop = "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1"
 fit = ("split[a][b];[a]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=30:5[bg];"

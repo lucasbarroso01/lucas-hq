@@ -18,6 +18,7 @@ try:
     cols, rows = (int(x) for x in a.grid.split("x"))
     n = cols * rows
     out = a.output or str(Path(a.input).with_name("frames.jpg"))
+    Path(out).parent.mkdir(parents=True, exist_ok=True)
     fps = n / max(0.1, duration(a.input))
     run(["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-i", a.input,
          "-vf", f"fps={fps:.4f},scale=360:-2,drawtext=text='%{{pts\\:hms}}':x=10:y=10:fontsize=22:fontcolor=white:box=1:boxcolor=black@0.6,tile={cols}x{rows}:padding=6:margin=6",
