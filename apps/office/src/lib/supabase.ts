@@ -3,7 +3,7 @@ import { useHQ } from '../store'
 import type { Agent, HQEvent, ScheduleItem, SkillRuntime, Task } from '../data/types'
 
 // tolerate values pasted as NAME=value
-const clean = (v?: string) => v?.trim().replace(/^[A-Z_]+=/, '') || undefined
+const clean = (v?: string) => v?.trim().replace(/^[A-Z_]+=/, '').replace(/\/rest\/v1\/?$/, '').replace(/\/+$/, '') || undefined
 const url = clean(import.meta.env.VITE_SUPABASE_URL)
 const key = clean(import.meta.env.VITE_SUPABASE_ANON_KEY)
 

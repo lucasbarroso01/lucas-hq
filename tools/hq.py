@@ -32,7 +32,7 @@ def _env(*names: str) -> str:
     return ""
 
 
-URL = _env("SUPABASE_URL", "VITE_SUPABASE_URL").rstrip("/")
+URL = _env("SUPABASE_URL", "VITE_SUPABASE_URL").rstrip("/").removesuffix("/rest/v1").rstrip("/")
 URL = URL if URL.startswith("http") else None
 KEY = _env("SUPABASE_SERVICE_KEY") or None
 OP = {"inbox-b2b": "agencia-lucas", "criacao-b2b": "agencia-lucas"}
