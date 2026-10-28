@@ -1,0 +1,10 @@
+{
+  "name": "lucas-hq",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter office dev",
+    "build": "pnpm --filter office build",
+    "preview": "pnpm --filter office preview"
+  },
+  "packageManager": "pnpm@10.28.0"
+}
