@@ -37,7 +37,7 @@ function Vortex() {
   )
 }
 
-const ORBIT = 6
+const ORBIT = 5.2
 function AgentNode({ agent, i, n }: { agent: Agent; i: number; n: number }) {
   const team = teamById(agent.team_id)!
   const g = useRef<any>(null)
@@ -60,7 +60,7 @@ function AgentNode({ agent, i, n }: { agent: Agent; i: number; n: number }) {
       <Line ref={line} points={[[0, 0, 0], [0, 0, 0]]} color={team.cor} lineWidth={1.6} transparent opacity={0.15} toneMapped={false} />
       <group ref={g}>
         <mesh>
-          <icosahedronGeometry args={[0.28, 1]} />
+          <icosahedronGeometry args={[0.2, 1]} />
           <meshStandardMaterial color={team.cor} emissive={team.cor} emissiveIntensity={fresh ? 3 : 1.1} toneMapped={false} />
         </mesh>
         <Html center position={[0, 0.65, 0]} style={{ pointerEvents: 'none' }}>
@@ -79,7 +79,7 @@ export function BrainView() {
   const feed = events.filter((e) => e.type === 'brain_read' || e.type === 'brain_write').slice(0, 30)
   return (
     <div className="absolute inset-0 z-10">
-      <Canvas camera={{ position: [0, 5, 12], fov: 45 }}>
+      <Canvas camera={{ position: [-2, 6, 16], fov: 42 }}>
         <ambientLight intensity={0.4} />
         <pointLight position={[0, 0, 0]} intensity={40} color="#7cc8ff" />
         <Vortex />
