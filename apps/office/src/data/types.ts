@@ -35,7 +35,7 @@ export interface Task {
   post_time?: string | null
   qa_score?: number | null
   parent_id?: string | null
-  payload?: { scenes?: string[] } | null
+  payload?: { scenes?: string[]; notes?: string; drive_folder?: string } | null
   created_at: string
   updated_at: string
 }
@@ -46,7 +46,7 @@ export interface HQEvent {
   team_id: string | null
   agent_id: string | null
   type: EventType
-  payload: { text?: string; to_team?: string; note?: string; tool?: string; [k: string]: unknown }
+  payload: { text?: string; to_team?: string; note?: string; tool?: string; task?: string; [k: string]: unknown }
 }
 
 export interface Approval { task_id: string; decision: 'approved' | 'changes'; feedback?: string; ts: string }

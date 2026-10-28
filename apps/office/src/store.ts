@@ -24,6 +24,7 @@ interface State {
   operation: 'all' | Operation
   selectedTeam: string | null
   reviewTask: string | null
+  detailTask: string | null
   live: 'supabase' | 'demo' | 'local'
   camera: { x: number; z: number; zoom: number }
 
@@ -59,6 +60,7 @@ export const useHQ = create<State>((set, get) => ({
   operation: 'all',
   selectedTeam: null,
   reviewTask: null,
+  detailTask: null,
   live: 'local',
   camera: { x: 0, z: 0, zoom: 1 },
 

@@ -43,6 +43,7 @@ export function startDemo() {
   const subs: Task[] = Array.from({ length: 5 }, (_, i) => ({
     id: `sub-${i + 1}`, team_id: 'producao-wf', agent_id: 'video-editor', operacao: 'maquina-viral',
     titulo: `wf_0${i + 1}.mp4`, etapa: WF_STEPS[0], status: 'running', progress: i * 6, parent_id: 'wf-batch',
+    payload: { notes: `Título: wf_0${i + 1}\nGancho: "Essa cidade some do mapa toda noite"\nDuração: 38s\nLegenda: Você sabia? 🌍 #curiosidades` },
     created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
   }))
   subs.forEach(hq.upsertTask)
@@ -80,6 +81,7 @@ export function startDemo() {
       const p = Math.min(100, t.progress + 2 + Math.random() * 6)
       if (t.parent_id === 'wf-batch') {
         const etapa = p >= 100 ? WF_STEPS[3] : WF_STEPS[Math.min(3, Math.floor(p / 25))]
+        if (etapa !== t.etapa || p >= 100) s.ingestEvent(ev({ team_id: t.team_id, agent_id: 'video-editor', type: 'tool_run', payload: { task: t.id, text: p >= 100 ? `${t.titulo} pronto · frames.jpg conferido` : `${etapa} · ${t.titulo}` } }))
         s.upsertTask({ ...t, progress: p >= 100 ? 0 : p, etapa: p >= 100 ? WF_STEPS[0] : etapa, updated_at: new Date().toISOString() })
       } else if (p >= 100) {
         s.upsertTask({ ...t, progress: 100, status: 'done', drive_url: 'https://drive.google.com', updated_at: new Date().toISOString() })

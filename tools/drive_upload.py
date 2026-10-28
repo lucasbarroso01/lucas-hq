@@ -13,6 +13,7 @@ Without either (or with --dry-run) files are staged in out/_drive/<path> and the
 """
 import argparse
 import datetime as dt
+import json
 import os
 import shutil
 import warnings
@@ -38,6 +39,7 @@ ap.add_argument("--time", help="HH:MM")
 ap.add_argument("--date", default=dt.date.today().isoformat())
 ap.add_argument("--name", help="file name in Drive (default: video name)")
 ap.add_argument("--dry-run", action="store_true")
+ap.add_argument("--task", help="task id: saves the Drive links on it so the office shows an \"Abrir no Drive\" button")
 a = ap.parse_args()
 if not a.login and not (a.video and a.page and a.caption and a.time):
     ap.error("video, --page, --caption e --time são obrigatórios (ou use --login)")
@@ -117,6 +119,16 @@ try:
                                  fields="id,webViewLink", supportsAllDrives=True).execute()
         svc.files().create(body={"name": Path(name).with_suffix(".txt").name, "parents": [parent]},
                            media_body=MediaInMemoryUpload(txt.encode(), mimetype="text/plain"), fields="id", supportsAllDrives=True).execute()
-        emit("drive_upload", mode="oauth" if use_oauth else "service_account", path="/".join(parts), file=name, url=vid["webViewLink"], post_time=a.time)
+        folder_url = f"https://drive.google.com/drive/folders/{parent}"
+        if a.task:
+            import subprocess
+            import sys
+
+            hq = Path(__file__).with_name("hq.py")
+            subprocess.run([sys.executable, str(hq), "task", "--id", a.task, "--drive-url", vid["webViewLink"],
+                            "--payload", json.dumps({"drive_folder": folder_url}), "--log", f"subiu {name} no Drive"],
+                           capture_output=True, text=True)
+        emit("drive_upload", mode="oauth" if use_oauth else "service_account", path="/".join(parts), file=name,
+             url=vid["webViewLink"], folder_url=folder_url, post_time=a.time)
 except Exception as e:  # noqa: BLE001
     emit("drive_upload", ok=False, error=str(e))

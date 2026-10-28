@@ -64,14 +64,15 @@ for k in ["id", "team", "agent", "title", "etapa", "parent", "drive-url", "post-
 t.add_argument("--status", choices=["running", "waiting", "done", "error"])
 t.add_argument("--progress", type=int)
 t.add_argument("--qa-score", type=float)
-t.add_argument("--payload", help="JSON")
+t.add_argument("--payload", help="JSON, merged into the existing payload (e.g. {\"notes\": \"...\"})")
+t.add_argument("--log", help="one human sentence for the task's live log (default: etapa + progress)")
 g = sub.add_parser("agent")
 g.add_argument("--id", required=True)
 g.add_argument("--status", choices=["working", "idle"], required=True)
 g.add_argument("--doing", default="")
 e = sub.add_parser("event")
 e.add_argument("--type", required=True, choices=["handoff", "brain_read", "brain_write", "tool_run", "toast"])
-for k in ["team", "agent", "to", "text", "note", "tool"]:
+for k in ["team", "agent", "to", "text", "note", "tool", "task"]:
     e.add_argument(f"--{k}")
 h = sub.add_parser("handoff", help="pass work to another team (walker + toast in the office)")
 h.add_argument("--team", required=True, help="team handing off")
@@ -96,20 +97,30 @@ try:
         row = {k: v for k, v in {
             "id": a.id, "team_id": a.team, "agent_id": a.agent, "titulo": a.title, "etapa": a.etapa, "status": a.status,
             "progress": a.progress, "parent_id": a.parent, "drive_url": a.drive_url, "post_time": a.post_time, "qa_score": a.qa_score,
-            "payload": json.loads(a.payload) if a.payload else None,
+            "payload": None,
             "operacao": OP.get(a.team, "maquina-viral") if a.team else None,
         }.items() if v is not None}
+        q = f"?id=eq.{urllib.parse.quote(a.id)}"
+        if a.payload:
+            old = rest("GET", "tasks", None, q + "&select=payload")
+            row["payload"] = {**((old[0].get("payload") or {}) if old else {}), **json.loads(a.payload)}
         if a.team:
-            rest("POST", "tasks", row, "?on_conflict=id", upsert=True)
+            saved = rest("POST", "tasks", row, "?on_conflict=id", upsert=True)
         else:  # partial update of an existing task
-            if not rest("PATCH", "tasks", {k: v for k, v in row.items() if k != "id"}, f"?id=eq.{urllib.parse.quote(a.id)}") and URL and KEY:
+            saved = rest("PATCH", "tasks", {k: v for k, v in row.items() if k != "id"}, q)
+            if not saved and URL and KEY:
                 raise ValueError(f"tarefa {a.id} não existe: passe --team na primeira chamada")
+        # every step also lands in the task's live log in the office
+        team = a.team or (saved[0].get("team_id") if saved else None)
+        agent = a.agent or (saved[0].get("agent_id") if saved else None)
+        text = a.log or " · ".join(x for x in [a.etapa, f"{a.progress}%" if a.progress is not None else None, a.status] if x) or "atualizou a tarefa"
+        rest("POST", "events", {"type": "tool_run", "team_id": team, "agent_id": agent, "payload": {"task": a.id, "text": text}})
         emit("hq", table="tasks", id=a.id, etapa=a.etapa, progress=a.progress, status=a.status)
     elif a.cmd == "agent":
         rest("PATCH", "agents", {"status": a.status, "doing_now": a.doing or ("ocioso" if a.status == "idle" else "trabalhando")}, f"?id=eq.{a.id}")
         emit("hq", table="agents", id=a.id, status=a.status)
     elif a.cmd == "event":
-        payload = {k: v for k, v in {"to_team": a.to, "text": a.text, "note": a.note, "tool": a.tool}.items() if v}
+        payload = {k: v for k, v in {"to_team": a.to, "text": a.text, "note": a.note, "tool": a.tool, "task": a.task}.items() if v}
         rest("POST", "events", {"type": a.type, "team_id": a.team, "agent_id": a.agent, "payload": payload})
         emit("hq", table="events", type=a.type)
     elif a.cmd == "handoff":

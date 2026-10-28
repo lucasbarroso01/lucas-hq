@@ -17,7 +17,7 @@ Estética: vídeo caseiro de celular, vertical, câmera tremida, luz de casa, **
 ## Regras fixas
 - Rode cada passo como um comando separado (sem cadeias `&&`). Use só os scripts de `tools/` (sempre a partir da raiz do repo).
 - **Antes de começar**: leia as regras do time e as lições no cérebro com `mcp__memory__search_nodes` (regras-funnypets, licoes) e registre `python3 tools/hq.py event --type brain_read --team producao-pets --agent pets-producer --note "<o que leu>"`.
-- A cada mudança de etapa: `python3 tools/hq.py task --id <id> --team producao-pets --agent pets-producer --title <titulo> --etapa <ETAPA> --progress <0-100>` e `python3 tools/hq.py agent --id pets-producer --status working --doing "<frase curta>"`.
+- A cada mudança de etapa (com `--log "<o que fez, 1 frase>"`, que vira o log ao vivo da tarefa): `python3 tools/hq.py task --id <id> --team producao-pets --agent pets-producer --title <titulo> --etapa <ETAPA> --progress <0-100>` e `python3 tools/hq.py agent --id pets-producer --status working --doing "<frase curta>"`.
 - **Ao terminar**: escreva no cérebro o que aprendeu (`mcp__memory__add_observations` em `licoes` ou na entidade do time) e registre `python3 tools/hq.py event --type brain_write --team producao-pets --agent pets-producer --note "<lição>"`. Depois `python3 tools/hq.py agent --id pets-producer --status idle`.
 - Status de tarefa aceitos: `running`, `waiting`, `done`, `error` (nada além disso).
 - Nunca publique em redes, nunca apague arquivos (`rm` é negado), nunca gaste créditos sem aprovação quando a regra do time exigir.

@@ -4,7 +4,7 @@ argument-hint: "[teste]"
 ---
 Rode a Máquina Viral para a página Worldframe de hoje. Argumentos: $ARGUMENTS
 
-Se o argumento for `teste`: use só 1 vídeo (`inbox/teste_wf.mp4`), pule Radar/Roteiros, e o upload roda com `--dry-run`.
+Se o argumento for `teste`: use só 1 vídeo (`inbox/teste_wf.mp4`) e pule Radar/Roteiros. O upload vai de verdade para o Drive (com `--task`), para o link aparecer no escritório.
 
 1. `radar-worldframe` → 5 temas (Task).
 2. `roteirista-lead` → 5 roteiros (ele divide em sub-agentes).

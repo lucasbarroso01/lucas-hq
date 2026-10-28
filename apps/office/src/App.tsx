@@ -9,6 +9,7 @@ import { TasksView } from './ui/TasksView'
 import { AgendaView } from './ui/AgendaView'
 import { BrainView } from './brain/BrainView'
 import { ReviewModal } from './ui/ReviewModal'
+import { TaskDetail } from './ui/TaskDetail'
 import { useHQ } from './store'
 import { connectSupabase } from './lib/supabase'
 import { startDemo } from './lib/demo'
@@ -36,6 +37,7 @@ export function App() {
       {view === 'agenda' && <AgendaView />}
       {view === 'brain' && <BrainView />}
       <ReviewModal />
+      <TaskDetail />
     </div>
   )
 }

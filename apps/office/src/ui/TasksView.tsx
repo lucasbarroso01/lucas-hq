@@ -4,6 +4,9 @@ import { useHQ, teamById } from '../store'
 import { Ring, ago } from './bits'
 import { decide } from '../lib/supabase'
 import type { Task } from '../data/types'
+import { driveSearch } from './TaskDetail'
+
+const DRIVE_HOME = (import.meta.env.VITE_DRIVE_URL as string | undefined) || driveSearch('Central de Conteúdo — Lucas')
 
 type F = 'all' | 'running' | 'waiting' | 'done'
 
@@ -16,20 +19,23 @@ export function TasksView() {
   const labels: [F, string][] = [['all', 'Todas'], ['running', 'Rodando'], ['waiting', 'Aguardando'], ['done', 'Concluídas']]
 
   return (
-    <Page title="Tarefas" subtitle="Tudo que os times estão fazendo agora">
-      <div className="mb-6 flex gap-1.5">
+    <Page title="Tarefas" subtitle="Tudo que os times estão fazendo agora · clique numa tarefa para ver o trabalho">
+      <div className="mb-6 flex flex-wrap gap-1.5">
         {labels.map(([id, l]) => (
           <button key={id} onClick={() => setF(id)} className={`rounded-xl px-3 py-1.5 text-xs font-medium ring-1 ${f === id ? 'bg-white/15 text-white ring-white/20' : 'text-white/55 ring-white/10 hover:text-white'}`}>
             {l} <span className="ml-1 font-mono text-white/45">{counts[id]}</span>
           </button>
         ))}
+        <a href={DRIVE_HOME} target="_blank" rel="noreferrer" className="rounded-xl bg-emerald-400/15 px-3 py-1.5 text-xs font-bold text-emerald-200 ring-1 ring-emerald-400/30 hover:bg-emerald-400/25">
+          📁 Vídeos prontos no Drive ↗
+        </a>
       </div>
       <div className="grid gap-8">
         {(f === 'all' || f === 'running') && (
           <Group title="Rodando" items={by('running')} render={(t) => {
             const team = teamById(t.team_id)!
             return (
-              <Card key={t.id}>
+              <Card key={t.id} task={t}>
                 <Ring value={t.progress} color={team.cor} size={48} />
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-medium">{t.titulo}</div>
@@ -38,35 +44,38 @@ export function TasksView() {
                     <span className="font-mono text-[10px] text-white/45">{t.agent_id} · {t.etapa}</span>
                   </div>
                 </div>
+                <SeeWork id={t.id} />
               </Card>
             )
           }} />
         )}
         {(f === 'all' || f === 'waiting') && (
           <Group title="Aguardando você" items={by('waiting')} render={(t) => (
-            <Card key={t.id} highlight>
+            <Card key={t.id} task={t} highlight>
               <span className="grid h-12 w-12 place-items-center rounded-full bg-amber-400/15 text-xl">⏳</span>
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-medium">{t.titulo}</div>
                 <div className="mt-1 flex items-center gap-2"><TeamChip id={t.team_id} /><span className="font-mono text-[10px] text-white/45">{t.etapa} · {ago(t.updated_at)}</span></div>
               </div>
+              <SeeWork id={t.id} />
               {t.payload?.scenes ? (
-                <button onClick={() => set({ reviewTask: t.id })} className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-bold ring-1 ring-white/20 hover:bg-white/20">Revisar</button>
+                <button onClick={(e) => { e.stopPropagation(); set({ reviewTask: t.id }) }} className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-bold ring-1 ring-white/20 hover:bg-white/20">Revisar</button>
               ) : (
-                <button onClick={() => decide(t.id, 'approved')} className="rounded-lg bg-amber-400 px-3 py-1.5 text-xs font-bold text-night-950 shadow-[0_0_18px_#fbbf2466] hover:bg-amber-300">Aprovar</button>
+                <button onClick={(e) => { e.stopPropagation(); decide(t.id, 'approved') }} className="rounded-lg bg-amber-400 px-3 py-1.5 text-xs font-bold text-night-950 shadow-[0_0_18px_#fbbf2466] hover:bg-amber-300">Aprovar</button>
               )}
             </Card>
           )} />
         )}
         {(f === 'all' || f === 'done') && (
           <Group title="Concluídas hoje" items={by('done')} render={(t) => (
-            <Card key={t.id}>
+            <Card key={t.id} task={t}>
               <span className="grid h-12 w-12 place-items-center rounded-full bg-emerald-400/15 text-xl text-emerald-300">✓</span>
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-medium">{t.titulo}</div>
                 <div className="mt-1 flex items-center gap-2"><TeamChip id={t.team_id} /><span className="font-mono text-[10px] text-white/45">{ago(t.updated_at)}{t.qa_score ? ` · QA ${t.qa_score}/10` : ''}</span></div>
               </div>
-              {t.drive_url && <a href={t.drive_url} target="_blank" rel="noreferrer" className="font-mono text-[11px] text-sky-300 hover:underline">Drive ↗</a>}
+              <SeeWork id={t.id} />
+              <DriveBtn t={t} />
             </Card>
           )} />
         )}
@@ -90,10 +99,28 @@ function Group({ title, items, render }: { title: string; items: Task[]; render:
   )
 }
 
-function Card({ children, highlight }: { children: React.ReactNode; highlight?: boolean }) {
+function SeeWork({ id }: { id: string }) {
+  const set = useHQ((s) => s.set)
   return (
-    <motion.div layout initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-      className={`flex items-center gap-3 rounded-2xl bg-white/[.04] p-3 ring-1 ${highlight ? 'ring-amber-300/30' : 'ring-white/8 ring-white/10'}`}>
+    <button onClick={(e) => { e.stopPropagation(); set({ detailTask: id }) }}
+      className="whitespace-nowrap rounded-lg bg-white/10 px-2.5 py-1.5 text-xs font-bold ring-1 ring-white/20 hover:bg-white/20">👀 Ver trabalho</button>
+  )
+}
+
+function DriveBtn({ t }: { t: Task }) {
+  return (
+    <a href={t.drive_url || driveSearch(t.titulo)} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}
+      className="whitespace-nowrap rounded-lg bg-emerald-400 px-2.5 py-1.5 text-xs font-bold text-night-950 hover:bg-emerald-300">
+      {t.drive_url ? '▶ Drive' : '🔎 Drive'}
+    </a>
+  )
+}
+
+function Card({ children, highlight, task }: { children: React.ReactNode; highlight?: boolean; task: Task }) {
+  const set = useHQ((s) => s.set)
+  return (
+    <motion.div layout initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} onClick={() => set({ detailTask: task.id })}
+      className={`flex cursor-pointer items-center gap-3 rounded-2xl bg-white/[.04] p-3 ring-1 transition hover:bg-white/[.08] ${highlight ? 'ring-amber-300/30' : 'ring-white/10'}`}>
       {children}
     </motion.div>
   )

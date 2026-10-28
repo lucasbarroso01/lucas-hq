@@ -137,13 +137,13 @@ export function TeamDrawer({ teamId }: { teamId: string }) {
           <div className="space-y-2 pt-2">
             {tasks.length === 0 && <p className="text-sm text-white/45">Nenhuma tarefa.</p>}
             {tasks.map((t) => (
-              <div key={t.id} className="flex items-center gap-3 rounded-xl bg-white/5 p-3 ring-1 ring-white/5">
+              <div key={t.id} onClick={() => set({ detailTask: t.id })} className="flex cursor-pointer items-center gap-3 rounded-xl bg-white/5 p-3 ring-1 ring-white/5 hover:bg-white/10">
                 {t.status === 'done' ? <span className="grid h-11 w-11 place-items-center text-xl text-emerald-400">✓</span> : <Ring value={t.progress} color={team.cor} />}
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-[13px] font-medium">{t.titulo}</div>
                   <div className="font-mono text-[10px] text-white/45">{t.etapa} · {t.status} · {ago(t.updated_at)}</div>
                 </div>
-                {t.status === 'waiting' && <button onClick={() => decide(t.id, 'approved')} className="rounded-lg bg-amber-400 px-2.5 py-1 text-xs font-bold text-night-950">Aprovar</button>}
+                {t.status === 'waiting' && <button onClick={(e) => { e.stopPropagation(); decide(t.id, 'approved') }} className="rounded-lg bg-amber-400 px-2.5 py-1 text-xs font-bold text-night-950">Aprovar</button>}
               </div>
             ))}
           </div>
