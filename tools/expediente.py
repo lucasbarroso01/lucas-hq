@@ -160,6 +160,11 @@ def cmd_turnos(_a, _now):
         print(f"| {t['id']} | {t.get('pagina', '—')} | {t['inicio']}{dias} | {t['prazo']} | {t['agente']} | {t['faz']} | {t.get('depende_de') or '—'} |")
 
 
+def crontab_lines() -> list[str]:
+    return [f"{cron_for(t).split(' ', 1)[1]} $HOME/lucas-hq/iniciar.sh --turno {t['id']} >> $HOME/lucas-hq/out/_turnos.log 2>&1"
+            for t in CFG["turnos"] if not t.get("humano")]
+
+
 def cmd_agendamentos(_a, _now):
     lines = ["# Agendamentos dos turnos (gerado por `python3 tools/expediente.py agendamentos`)", "",
              f"Fuso: **{CFG['fuso']}**. Um turno por tarefa agendada. Cada disparo roda `/turno <id>`, que chama "
@@ -172,8 +177,7 @@ def cmd_agendamentos(_a, _now):
               "O cron do Debian não entende `CRON_TZ`, então o relógio do Linux precisa estar em "
               f"{CFG['fuso']}. O computador precisa estar ligado e com o Linux aberto no horário. "
               "Instale com `./iniciar.sh --agendar`, que grava estas linhas no `crontab`:", "", "```cron"]
-    for t in auto:
-        lines.append(f"{cron_for(t).split(' ', 1)[1]} $HOME/lucas-hq/iniciar.sh --turno {t['id']} >> $HOME/lucas-hq/out/_turnos.log 2>&1")
+    lines += crontab_lines()
     lines += ["```", ""]
     out = ROOT / "config" / "agendamentos.md"
     out.write_text("\n".join(lines))
@@ -194,6 +198,7 @@ x = sub.add_parser("proximo-horario")
 x.add_argument("--pagina", required=True, choices=list(CFG["paginas"]))
 sub.add_parser("turnos")
 sub.add_parser("agendamentos")
+sub.add_parser("crontab", help="só as linhas do crontab (usado pelo iniciar.sh --agendar)")
 a = ap.parse_args()
 
 try:
@@ -209,6 +214,8 @@ try:
         cmd_proximo(a, now)
     elif a.cmd == "turnos":
         cmd_turnos(a, now)
+    elif a.cmd == "crontab":
+        print("\n".join(crontab_lines()))
     elif a.cmd == "agendamentos":
         cmd_agendamentos(a, now)
 except SystemExit:

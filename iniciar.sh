@@ -26,11 +26,12 @@ if [ "$1" = "--agendar" ]; then
     exit 1;; esac
   command -v crontab >/dev/null || { echo "Instale o cron: sudo apt install -y cron"; exit 1; }
   source .venv/bin/activate
-  python3 tools/expediente.py agendamentos >/dev/null
-  LINES=$(sed -n '/^```cron$/,/^```$/p' config/agendamentos.md | grep -v '^```')
-  { crontab -l 2>/dev/null | grep -v 'lucas-hq/iniciar.sh --turno'; echo "$LINES"; } | crontab -
+  LINES=$(python3 tools/expediente.py crontab)
+  N=$(printf '%s\n' "$LINES" | grep -c 'iniciar.sh --turno' || true)
+  [ "$N" -gt 0 ] || { echo "Não consegui gerar os horários (python3 tools/expediente.py crontab)"; exit 1; }
+  { crontab -l 2>/dev/null | grep -v 'lucas-hq/iniciar.sh --turno' || true; printf '%s\n' "$LINES"; } | crontab -
   sudo service cron start >/dev/null 2>&1 || true
-  echo "Agendado ($(echo "$LINES" | wc -l) turnos). Confira com: crontab -l"
+  echo "Agendado: $N turnos. Confira com: crontab -l"
   exit 0
 fi
 
