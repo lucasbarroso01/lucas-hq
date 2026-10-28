@@ -1,0 +1,6 @@
+{"type": "entity", "name": "regras-worldframe", "entityType": "regras", "observations": ["5 vídeos por dia: 09:00 12:00 15:00 18:00 21:00", "Vertical 1080x1920, 30-45s, faceless", "Gancho nos primeiros 2s", "Lucas aprova os 5 no Drive antes de postar"]}
+{"type": "entity", "name": "regras-funnypets", "entityType": "regras", "observations": ["1 vídeo por dia às 19:30", "Estética caseira de celular, sem fala", "Nada é gerado no Higgsfield antes de Lucas aprovar as cenas"]}
+{"type": "entity", "name": "estilo-legendas", "entityType": "estilo", "observations": ["Palavra a palavra, destaque amarelo #FFD633", "Máx. 3 palavras por linha", "Margem inferior de 560px, nunca encostar na borda"]}
+{"type": "entity", "name": "temas-usados", "entityType": "lista", "observations": []}
+{"type": "entity", "name": "virais-de-referencia", "entityType": "lista", "observations": []}
+{"type": "entity", "name": "licoes", "entityType": "licoes", "observations": ["Legenda saindo da borda reprova no QA: manter margem lateral de 90px"]}

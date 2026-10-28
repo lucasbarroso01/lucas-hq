@@ -1,0 +1,45 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 tools/cut.py:*)",
+      "Bash(python3 tools/captions.py:*)",
+      "Bash(python3 tools/reframe.py:*)",
+      "Bash(python3 tools/thumbnail.py:*)",
+      "Bash(python3 tools/frames.py:*)",
+      "Bash(python3 tools/drive_upload.py:*)",
+      "Bash(python3 tools/hq.py:*)",
+      "Bash(ls:*)",
+      "Read(./**)",
+      "Write(./out/**)",
+      "Write(./inbox/**)",
+      "Write(./brain/**)",
+      "mcp__memory__search_nodes",
+      "mcp__memory__open_nodes",
+      "mcp__memory__read_graph",
+      "mcp__memory__add_observations",
+      "mcp__memory__create_entities",
+      "mcp__memory__create_relations",
+      "mcp__google-drive__search_files",
+      "mcp__google-drive__read_file_content",
+      "mcp__higgsfield__balance",
+      "mcp__higgsfield__jobs_wait"
+    ],
+    "ask": [
+      "Bash(mv out/:* done/:*)",
+      "mcp__higgsfield__generate_video",
+      "mcp__higgsfield__generate_image"
+    ],
+    "deny": [
+      "Bash(rm:*)",
+      "Bash(rmdir:*)",
+      "Bash(git push --force:*)",
+      "mcp__memory__delete_entities",
+      "mcp__memory__delete_observations",
+      "mcp__higgsfield__publish_project",
+      "mcp__higgsfield__tiktok_publish_status",
+      "mcp__higgsfield__tiktok_prepare_publish",
+      "mcp__google-drive__trash_file",
+      "mcp__google-drive__share_file"
+    ]
+  }
+}

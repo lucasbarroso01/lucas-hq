@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"],
+      "env": { "MEMORY_FILE_PATH": "brain/memory.jsonl" }
+    },
+    "google-drive": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-gdrive"],
+      "env": { "GDRIVE_CREDENTIALS_PATH": "${GDRIVE_CREDENTIALS_PATH}" }
+    },
+    "higgsfield": {
+      "type": "http",
+      "url": "https://mcp.higgsfield.ai/mcp"
+    }
+  }
+}
