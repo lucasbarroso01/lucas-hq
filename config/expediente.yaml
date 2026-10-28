@@ -1,0 +1,150 @@
+# Lucas HQ · expediente dos agentes (fonte única de horários, prazos e limites)
+# Agentes leem via tools/expediente.py; a interface importa este arquivo no build.
+fuso: America/Sao_Paulo
+
+silencio:            # nenhum agente roda (exceto manutencao)
+  inicio: "23:30"
+  fim: "04:30"
+
+limites:
+  subagentes_simultaneos: 5      # em todo o escritório
+  rodadas_por_time: 1
+  tentativas_por_item: 2         # na 3ª falha: status error com motivo
+  espera_upstream_min: 15        # depois disso: waiting_upstream e encerra
+  intervalo_minimo_posts_h: 2    # mesma página
+  higgsfield_geracoes_dia: 1
+  higgsfield_refacoes_dia: 1
+  aviso_antes_post_min: 15
+
+paginas:
+  Worldframe:
+    cor: "#7B5CE0"
+    posts: ["08:00", "11:30", "14:00", "18:00", "21:00"]
+  Funny Pets:
+    cor: "#E5893B"
+    posts: ["20:00"]
+
+turnos:
+  # Worldframe
+  - id: radar-worldframe
+    agente: radar-worldframe
+    time: radar
+    pagina: Worldframe
+    inicio: "04:30"
+    prazo: "05:00"
+    faz: Levanta até 8 temas, escolhe 5, grava no cérebro
+    depende_de: null
+  - id: roteiros-worldframe
+    agente: roteirista-lead
+    time: roteiros
+    pagina: Worldframe
+    inicio: "05:00"
+    prazo: "05:45"
+    faz: 5 roteiros (faceless-video-direction + ig-reel-scripts)
+    depende_de: radar-worldframe
+  - id: producao-worldframe
+    agente: editor-lead
+    time: producao-wf
+    pagina: Worldframe
+    inicio: "05:45"
+    prazo: "06:45"
+    faz: Divide em 5 sub-agentes video-editor (máx. 5 em paralelo)
+    depende_de: roteiros-worldframe
+  - id: qa-worldframe
+    agente: brand-checker
+    time: qualidade
+    pagina: Worldframe
+    inicio: "06:45"
+    prazo: "07:15"
+    faz: QA dos 5 vídeos (nota ≥ 8 ou devolve)
+    depende_de: producao-worldframe
+  - id: social-worldframe
+    agente: social-scheduler
+    time: social
+    pagina: Worldframe
+    inicio: "07:15"
+    prazo: "07:30"
+    faz: Sobe no Drive, gera o relatório e lança os 5 posts na Agenda
+    depende_de: qa-worldframe
+  - id: aprovacao-worldframe
+    agente: lucas
+    pagina: Worldframe
+    inicio: "07:30"
+    prazo: "08:00"
+    faz: Lucas aprova os vídeos no Drive
+    humano: true
+  # Funny Pets (radar e roteiro na véspera, produção no dia)
+  - id: radar-pets
+    prepara_dia_seguinte: true   # roda à noite para o post de amanhã
+    agente: radar-pets
+    time: radar
+    pagina: Funny Pets
+    inicio: "19:00"
+    prazo: "19:20"
+    faz: Tema do dia seguinte (pasta de modelagem + virais)
+    depende_de: null
+  - id: cenas-pets
+    prepara_dia_seguinte: true   # roda à noite para o post de amanhã
+    agente: roteirista-lead
+    time: roteiros
+    pagina: Funny Pets
+    inicio: "19:20"
+    prazo: "19:45"
+    faz: 4 a 6 cenas → status "aguardando você"
+    depende_de: radar-pets
+  - id: aprovacao-pets
+    agente: lucas
+    pagina: Funny Pets
+    inicio: "19:45"
+    prazo: "08:30"
+    faz: Lucas aprova ou ajusta as cenas na interface
+    humano: true
+  - id: producao-pets
+    agente: pets-producer
+    time: producao-pets
+    pagina: Funny Pets
+    inicio: "09:00"
+    prazo: "10:00"
+    faz: Gera no Higgsfield só se aprovado
+    depende_de: cenas-pets
+    exige_aprovacao: true
+  - id: qa-pets
+    agente: brand-checker
+    time: qualidade
+    pagina: Funny Pets
+    inicio: "10:00"
+    prazo: "10:20"
+    faz: QA do vídeo
+    depende_de: producao-pets
+  - id: social-pets
+    agente: social-scheduler
+    time: social
+    pagina: Funny Pets
+    inicio: "10:20"
+    prazo: "10:30"
+    faz: Drive + post das 20:00 na Agenda
+    depende_de: qa-pets
+  # Outros
+  - id: analytics-diario
+    agente: analista
+    time: analytics
+    inicio: "22:30"
+    prazo: "22:45"
+    faz: Registra as views informadas e escreve lições no cérebro
+    depende_de: null
+  - id: manutencao-cerebro
+    agente: analista
+    time: analytics
+    dias: [dom]
+    inicio: "23:00"
+    prazo: "23:59"
+    faz: Condensa o cérebro (junta repetidas, arquiva temas antigos)
+    depende_de: null
+    manutencao: true      # pode rodar no horário de silêncio
+
+sob_demanda:
+  agencia:
+    agentes: [briefing, roteirista-b2b]
+    janela: { inicio: "09:00", fim: "18:00" }
+    clientes_por_vez: 1
+    fila: fifo

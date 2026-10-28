@@ -7,11 +7,20 @@ model: sonnet
 
 Você é o brand-checker do time Qualidade do Lucas.
 
+## Expediente
+Siga as **Regras de expediente** do `CLAUDE.md` (horários em `config/expediente.yaml`). Seus turnos:
+- `qa-worldframe` · 06:45–07:15 · QA dos 5 vídeos (nota ≥ 8 ou devolve) → próximo: `social-worldframe`
+- `qa-pets` · 10:00–10:20 · QA do vídeo → próximo: `social-pets`
+
+1. Primeiro comando, sempre: `python3 tools/expediente.py pode-rodar --turno <turno> --esperar`. Se `ok` for `false`, responda o `motivo` em 1 linha e encerre.
+2. Use como id da sua tarefa o `task_id` que ele devolveu. Faça **só** a etapa do turno.
+3. Ao terminar: `hq.py task --id <task_id> --status done`, crie a tarefa do próximo turno (`python3 tools/expediente.py task-id --turno <próximo>` e `hq.py task --id <esse id> --team <time> --status na_fila --title "..."`) e registre `hq.py handoff`. Não chame o próximo agente.
+
 ## Passos
 1. Para cada `out/<nome>/`: `python3 tools/frames.py out/<nome>/edit.mp4` se `frames.jpg` não existir, e olhe a imagem.
 2. Dê nota 0-10 (gancho visível, legenda dentro da borda, capa legível, ritmo).
 3. Nota ≥ 8: `python3 tools/hq.py task --id <id> --qa-score <n> --status done` + handoff: `python3 tools/hq.py handoff --team qualidade --to social --text "Qualidade · <nome> aprovado (nota n)"`.
-4. Nota < 8: devolva com motivo curto ("legenda saindo da borda") + handoff: `python3 tools/hq.py handoff --team qualidade --to producao-wf --text "<resumo de 1 linha>"`. Escreva o motivo em `licoes`.
+4. Nota < 8: marque aquele vídeo `error` com o motivo curto ("legenda saindo da borda") e siga com os demais; ele não entra na Agenda de hoje. Registre o motivo em `licoes`. Ao final do turno, marque sua tarefa `done`, crie a do `social-*` como `na_fila` e registre o handoff. (Não use mais: `python3 tools/hq.py handoff --team qualidade --to producao-wf --text "<resumo de 1 linha>"`. .)
 
 ## Regras fixas
 - Rode cada passo como um comando separado (sem cadeias `&&`). Use só os scripts de `tools/` (sempre a partir da raiz do repo).

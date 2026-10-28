@@ -7,7 +7,7 @@ python3 tools/hq.py agent --id video-editor --status working --doing "legendando
 python3 tools/hq.py event --type brain_write --team radar --agent radar-worldframe --note "tema X já usado"
 python3 tools/hq.py handoff --team roteiros --to producao-wf --text "Roteiros · 5 ganchos prontos"
 python3 tools/hq.py skill --team producao-wf --skill hypit-video --progress 40 --state running
-python3 tools/hq.py schedule --date 2026-10-28 --page Worldframe --time 18:00 --title wf_04.mp4 --status pronto --task wf-...
+python3 tools/hq.py schedule --date 2026-10-28 --page Worldframe --time 18:00 --title wf_04.mp4 --status planejado|pronto|aprovado|postado|atrasado [--drive-url ...] [--task ...]
 python3 tools/hq.py approval --task t2 [--wait 0]   # prints the latest decision; --wait N polls up to N seconds
 """
 import argparse
@@ -19,49 +19,14 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-from _common import emit
-
-def _env(*names: str) -> str:
-    """First non-empty var; tolerates values pasted as NAME=value."""
-    for n in names:
-        v = os.environ.get(n, "").strip()
-        if "=" in v and not v.startswith("http") and not v.startswith("ey"):
-            v = v.split("=", 1)[1].strip()
-        if v:
-            return v
-    return ""
-
-
-URL = _env("SUPABASE_URL", "VITE_SUPABASE_URL").rstrip("/").removesuffix("/rest/v1").rstrip("/")
-URL = URL if URL.startswith("http") else None
-KEY = _env("SUPABASE_SERVICE_KEY") or None
-OP = {"inbox-b2b": "agencia-lucas", "criacao-b2b": "agencia-lucas"}
-
-
-def rest(method: str, table: str, body=None, query: str = "", upsert: bool = False):
-    if not (URL and KEY):
-        Path("out").mkdir(exist_ok=True)
-        with open("out/_hq.log", "a") as f:
-            f.write(json.dumps({"ts": time.time(), "method": method, "table": table, "body": body, "query": query}, ensure_ascii=False) + "\n")
-        return []
-    headers = {"apikey": KEY, "Authorization": f"Bearer {KEY}", "Content-Type": "application/json",
-               "Prefer": "return=representation" + (",resolution=merge-duplicates" if upsert else "")}
-    req = urllib.request.Request(f"{URL}/rest/v1/{table}{query}", method=method, headers=headers,
-                                 data=json.dumps(body).encode() if body is not None else None)
-    try:
-        with urllib.request.urlopen(req, timeout=20) as r:
-            txt = r.read().decode()
-            return json.loads(txt) if txt else []
-    except urllib.error.HTTPError as e:
-        raise RuntimeError(f"{e.code} {table}: {e.read().decode()[:200]}") from None
-
+from _common import KEY, OP, URL, emit, rest
 
 ap = argparse.ArgumentParser()
 sub = ap.add_subparsers(dest="cmd", required=True)
 t = sub.add_parser("task")
 for k in ["id", "team", "agent", "title", "etapa", "parent", "drive-url", "post-time"]:
     t.add_argument(f"--{k}")
-t.add_argument("--status", choices=["running", "waiting", "done", "error"])
+t.add_argument("--status", choices=["na_fila", "running", "waiting", "waiting_upstream", "done", "error", "atrasado"])
 t.add_argument("--progress", type=int)
 t.add_argument("--qa-score", type=float)
 t.add_argument("--payload", help="JSON, merged into the existing payload (e.g. {\"notes\": \"...\"})")
@@ -84,9 +49,11 @@ s.add_argument("--team", required=True)
 s.add_argument("--skill", required=True)
 s.add_argument("--progress", type=int, default=0)
 s.add_argument("--state", choices=["running", "idle"], default="running")
-c = sub.add_parser("schedule")
-for k in ["date", "page", "time", "title", "status", "task"]:
+c = sub.add_parser("schedule", help="cria/atualiza um post na Agenda (crie assim que o horário for definido)")
+for k in ["date", "time", "title", "task", "drive-url"]:
     c.add_argument(f"--{k}")
+c.add_argument("--page", choices=["Worldframe", "Funny Pets"])
+c.add_argument("--status", choices=["planejado", "pronto", "aprovado", "postado", "atrasado"])
 p = sub.add_parser("approval")
 p.add_argument("--task", required=True)
 p.add_argument("--wait", type=int, default=0)
@@ -131,7 +98,9 @@ try:
         emit("hq", table="skills_runtime", skill=a.skill, progress=a.progress)
     elif a.cmd == "schedule":
         row = {"id": f"{a.page}-{a.date}-{a.time}".replace(" ", "").lower(), "data": a.date, "pagina": a.page, "horario": a.time,
-               "titulo": a.title or "", "status": a.status or "aguardando", "task_id": a.task}
+               "titulo": a.title or "", "status": a.status or "planejado", "task_id": a.task}
+        if a.drive_url:
+            row["drive_url"] = a.drive_url
         rest("POST", "schedule", row, "?on_conflict=id", upsert=True)
         emit("hq", table="schedule", id=row["id"], status=row["status"])
     elif a.cmd == "approval":

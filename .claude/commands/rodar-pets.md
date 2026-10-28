@@ -1,6 +1,10 @@
 ---
-description: Produz o Funny Pets aprovado e prepara as cenas do próximo (aguardando você).
+description: Rodada manual do Funny Pets, turno a turno. Respeita a aprovação das cenas.
+argument-hint: "[teste]"
 ---
-1. Veja se há tarefa de Funny Pets com aprovação: `python3 tools/hq.py approval --task <id>`.
-2. Se `approved`: `pets-producer` gera no Higgsfield, `brand-checker` confere, `social-scheduler` sobe com horário 19:30.
-3. Em seguida, `radar-pets` escolhe o próximo viral e `pets-producer` escreve as cenas do próximo com status **waiting** (nada é gerado sem meu OK).
+Argumentos: $ARGUMENTS
+
+Execute, cada um como `/turno <id>` faria (com `--teste` no `pode-rodar` se pedido):
+1. Se `cenas-pets` de hoje já foi aprovado: `producao-pets` → `qa-pets` → `social-pets`.
+2. Depois prepare o de amanhã: `radar-pets` → `cenas-pets` (termina em "aguardando você"; nada é gerado sem o OK do Lucas).
+Pare no primeiro `ok: false` e mostre o motivo.

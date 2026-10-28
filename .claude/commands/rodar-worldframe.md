@@ -1,14 +1,12 @@
 ---
-description: Pipeline Worldframe completo (Radar → Roteiros → Produção 5x paralelo → Qualidade → Social). Use `teste` para 1 vídeo.
+description: Rodada manual do Worldframe, turno a turno (Radar → Roteiros → Produção → Qualidade → Social). Use `teste` para 1 vídeo fora do horário.
 argument-hint: "[teste]"
 ---
-Rode a Máquina Viral para a página Worldframe de hoje. Argumentos: $ARGUMENTS
+Argumentos: $ARGUMENTS
 
-Se o argumento for `teste`: use só 1 vídeo (`inbox/teste_wf.mp4`) e pule Radar/Roteiros. O upload vai de verdade para o Drive (com `--task`), para o link aparecer no escritório.
+Rodada manual: execute os turnos **em ordem**, cada um exatamente como `/turno <id>` faria (passos 2 a 5 do `.claude/commands/turno.md`), sem pular verificações e sem um agente fazer o trabalho de outro:
+`radar-worldframe` → `roteiros-worldframe` → `producao-worldframe` → `qa-worldframe` → `social-worldframe`.
 
-1. `radar-worldframe` → 5 temas (Task).
-2. `roteirista-lead` → 5 roteiros (ele divide em sub-agentes).
-3. `editor-lead` → 5 sub-agentes `video-editor` **em paralelo**, um por vídeo.
-4. `brand-checker` → nota ≥ 8 ou devolve (máx. 2 voltas por vídeo).
-5. `social-scheduler` → Drive em `Central de Conteúdo — Lucas/01 Máquina Viral/Worldframe/AAAA-MM-DD`, horários e relatório.
-6. Pare em "aguardando você": eu aprovo os 5 vídeos no Drive pela interface. Mostre o relatório final com os horários.
+- Com `teste`: use `--teste` no `pode-rodar`, só 1 vídeo (`inbox/teste_wf.mp4`), comece direto em `producao-worldframe` (crie antes as tarefas `radar-worldframe-<data>` e `roteiros-worldframe-<data>` como `done`, com `--log "pulado no teste"`). O upload vai de verdade para o Drive (com `--task`).
+- Se um turno parar com `ok: false`, pare a rodada e mostre o motivo.
+- No fim, pare em "aguardando você" e mostre o relatório com os horários.

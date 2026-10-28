@@ -15,6 +15,20 @@ Times e agentes ficam em `.claude/agents/`; comandos em `.claude/commands/` (`/r
 - Nunca publique em redes, nunca apague arquivos, nunca use `rm`.
 - Líderes dividem trabalho com a Task tool em sub-agentes **paralelos**, sem chat compartilhado, e conferem cada entrega.
 
+## Regras de expediente
+Fonte única: `config/expediente.yaml` (fuso America/Sao_Paulo). Nunca escreva horários soltos: consulte `python3 tools/expediente.py`.
+1. **Um agente, uma função.** Faça só a sua etapa. Nunca faça o trabalho de outro time nem adiante a próxima etapa.
+2. **Só no seu horário e com a entrega anterior pronta.** Comece com `python3 tools/expediente.py pode-rodar --turno <id> --esperar`. Se `ok=false`, encerre sem fazer nada (ele já registra `waiting_upstream` quando a etapa anterior não entregou em 15 min).
+3. **Bastão só pela tabela `tasks`.** Ao terminar: sua tarefa (`expediente.py task-id --turno <id>`) vira `done`, crie a tarefa do próximo turno com `--status na_fila` e registre `hq.py handoff`. Não chame o próximo agente.
+4. **Limites:** máx. 5 sub-agentes no escritório (`expediente.py vagas`), 1 rodada por time, 2 tentativas por item (na 3ª falha: `error` com motivo e siga com os demais), Higgsfield 1 geração/dia (+1 refação) com saldo checado antes.
+5. **Prazo estourado:** entregue o que estiver pronto, marque o resto `atrasado` e use `expediente.py proximo-horario --pagina <p>` (nunca 2 posts da mesma página com menos de 2h).
+6. **Não refaça o que está pronto:** confira `tasks` e `temas-usados` no cérebro antes de começar.
+7. **Silêncio 23:30–04:30:** ninguém roda, exceto a manutenção de domingo.
+8. **Humano no loop:** nada é publicado, apagado ou pago sem aprovação; pare em "aguardando você".
+9. **Relatório curto:** no máximo 3 linhas (o que fez, onde está, o que ficou pendente).
+
+Turnos: `python3 tools/expediente.py turnos`. Disparo: `/turno <id>` (um turno por tarefa agendada, ver `config/agendamentos.md`).
+
 ## Ambiente
 - `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` (agentes). Sem elas, `hq.py` grava em `out/_hq.log` (modo offline).
 - Drive (Gmail pessoal): cliente OAuth em `~/.config/lucas-hq/oauth-client.json` e login único com `python3 tools/drive_upload.py --login`. Sem isso, os arquivos ficam em `out/_drive/`.

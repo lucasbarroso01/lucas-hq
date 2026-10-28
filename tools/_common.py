@@ -1,8 +1,14 @@
 """Shared helpers for the deterministic tools. Every tool prints exactly one JSON line."""
 import json
+import os
 import subprocess
 import sys
+import time
+import urllib.error
+import urllib.request
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
 
 FILLERS = {"um", "uh", "é", "éé", "ééé", "hum", "hã", "tipo", "né", "ahn", "eh"}
 
@@ -54,3 +60,41 @@ BOLD_FONT = next(
     ] if p.exists()),
     None,
 )
+
+
+# --- Supabase (service key, REST). Offline without keys: appends to out/_hq.log ---
+def _env(*names: str) -> str:
+    """First non-empty var; tolerates values pasted as NAME=value."""
+    for n in names:
+        v = os.environ.get(n, "").strip()
+        if "=" in v and not v.startswith("http") and not v.startswith("ey"):
+            v = v.split("=", 1)[1].strip()
+        if v:
+            return v
+    return ""
+
+
+URL = _env("SUPABASE_URL", "VITE_SUPABASE_URL").rstrip("/").removesuffix("/rest/v1").rstrip("/")
+URL = URL if URL.startswith("http") else None
+KEY = _env("SUPABASE_SERVICE_KEY") or None
+OP = {"inbox-b2b": "agencia-lucas", "criacao-b2b": "agencia-lucas"}
+
+
+def rest(method: str, table: str, body=None, query: str = "", upsert: bool = False):
+    if not (URL and KEY):
+        (ROOT / "out").mkdir(exist_ok=True)
+        with open(ROOT / "out" / "_hq.log", "a") as f:
+            f.write(json.dumps({"ts": time.time(), "method": method, "table": table, "body": body, "query": query}, ensure_ascii=False) + "\n")
+        return []
+    headers = {"apikey": KEY, "Authorization": f"Bearer {KEY}", "Content-Type": "application/json",
+               "Prefer": "return=representation" + (",resolution=merge-duplicates" if upsert else "")}
+    req = urllib.request.Request(f"{URL}/rest/v1/{table}{query}", method=method, headers=headers,
+                                 data=json.dumps(body).encode() if body is not None else None)
+    try:
+        with urllib.request.urlopen(req, timeout=20) as r:
+            txt = r.read().decode()
+            return json.loads(txt) if txt else []
+    except urllib.error.HTTPError as e:
+        raise RuntimeError(f"{e.code} {table}: {e.read().decode()[:200]}") from None
+
+
