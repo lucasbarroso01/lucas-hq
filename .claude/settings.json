@@ -7,6 +7,7 @@
       "Bash(python3 tools/thumbnail.py:*)",
       "Bash(python3 tools/frames.py:*)",
       "Bash(python3 tools/drive_upload.py:*)",
+      "Bash(python3 tools/drive_sync.py:*)",
       "Bash(python3 tools/hq.py:*)",
       "Bash(python3 tools/worldframe/produzir.py:*)",
       "Bash(python3 tools/expediente.py:*)",
