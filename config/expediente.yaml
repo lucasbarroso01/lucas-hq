@@ -15,6 +15,7 @@ limites:
   higgsfield_geracoes_dia: 1
   higgsfield_refacoes_dia: 1
   aviso_antes_post_min: 15
+  renders_simultaneos: 1        # render sem GPU: um vídeo por vez no notebook (os outros esperam a vez)
 
 recuperacao:          # notebook fechado no horário: o turno roda assim que o Linux voltar
   ativa: true
@@ -24,7 +25,7 @@ recuperacao:          # notebook fechado no horário: o turno roda assim que o L
 paginas:
   Worldframe:
     cor: "#7B5CE0"
-    posts: ["08:00", "11:30", "14:00", "18:00", "21:00"]
+    posts: ["11:30", "14:00", "16:00", "18:00", "21:00"]   # 1º post às 11:30 para caber a produção em código
   Funny Pets:
     cor: "#E5893B"
     posts: ["20:00"]
@@ -52,30 +53,30 @@ turnos:
     time: producao-wf
     pagina: Worldframe
     inicio: "05:45"
-    prazo: "06:45"
-    faz: Divide em 5 sub-agentes video-editor (máx. 5 em paralelo)
+    prazo: "08:45"
+    faz: Gera os 5 vídeos em código (sub-agentes video-editor; 1 render por vez)
     depende_de: roteiros-worldframe
   - id: qa-worldframe
     agente: brand-checker
     time: qualidade
     pagina: Worldframe
-    inicio: "06:45"
-    prazo: "07:15"
+    inicio: "08:45"
+    prazo: "09:15"
     faz: QA dos 5 vídeos (nota ≥ 8 ou devolve)
     depende_de: producao-worldframe
   - id: social-worldframe
     agente: social-scheduler
     time: social
     pagina: Worldframe
-    inicio: "07:15"
-    prazo: "07:30"
+    inicio: "09:15"
+    prazo: "09:30"
     faz: Sobe no Drive, gera o relatório e lança os 5 posts na Agenda
     depende_de: qa-worldframe
   - id: aprovacao-worldframe
     agente: lucas
     pagina: Worldframe
-    inicio: "07:30"
-    prazo: "08:00"
+    inicio: "09:30"
+    prazo: "11:30"
     faz: Lucas aprova os vídeos no Drive
     humano: true
   # Funny Pets (radar e roteiro na véspera, produção no dia)

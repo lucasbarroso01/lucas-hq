@@ -18,7 +18,7 @@ Siga as **Regras de expediente** do `CLAUDE.md` (horários em `config/expediente
 ## Passos
 A produção é **gerada em código** a partir dos roteiros (animação 3D/motion, faceless, narração Kokoro). Não existe vídeo bruto: `inbox/` só tem os roteiros.
 1. Liste os roteiros do dia: `inbox/roteiros/<data>_*.json` (o roteirista entregou 5).
-2. Confira `python3 tools/expediente.py vagas` e dispare até esse número de sub-agentes `video-editor` **em paralelo** (Task tool), um roteiro cada. Cada sub-tarefa usa `--parent <seu task_id>`.
+2. Confira `python3 tools/expediente.py vagas` e dispare até esse número de sub-agentes `video-editor` **em paralelo** (Task tool), um roteiro cada. Voz, trilha e revisão rodam em paralelo; o render é 1 por vez (o `produzir.py` faz a fila sozinho). Cada sub-tarefa usa `--parent <seu task_id>`.
 3. Ao voltar, confira cada `out/<data>_<slug>_contato.jpg` (texto sobreposto, título cobrindo a cena, texto fora da faixa 168 a 1330 px) e o `.mp4`. Máx. 2 tentativas por vídeo; na 3ª falha, marque o vídeo `error` com o motivo e siga com os demais.
 4. Prazo estourado: entregue os prontos e marque os outros `atrasado`.
 5. Marque `done`, crie a tarefa do QA com o `proximo_task_id` como `na_fila` e registre o handoff para `qualidade`.

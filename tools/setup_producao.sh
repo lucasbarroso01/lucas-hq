@@ -5,7 +5,7 @@
 set -uo pipefail
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$DIR"
-mkdir -p out models assets/fonts assets/lib video "$HOME/.config/lucas-hq"
+mkdir -p out models assets/fonts assets/lib video inbox/roteiros "$HOME/.config/lucas-hq"
 LOG="$DIR/out/_turnos.log"
 FAIL=0
 log() { echo "$(date '+%F %T') [setup] $*" | tee -a "$LOG"; }

@@ -148,8 +148,17 @@ try:
     # 6. render + mux
     silent = proj / "video_mudo.mp4"
     env = dict(os.environ)
-    rend = subprocess.run([npx, "hyperframes", "render", "-q", "draft" if a.rascunho else "delivery", "-o", str(silent)],
-                          cwd=hf, capture_output=True, text=True, env=env)
+    import fcntl
+    lockf = Path.home() / ".config" / "lucas-hq" / "render.lock"   # limites.renders_simultaneos = 1
+    lockf.parent.mkdir(parents=True, exist_ok=True)
+    with open(lockf, "w") as lk:
+        hq(a.task, "NA FILA DO RENDER", 48, "esperando a vez do render (1 por vez)")
+        fcntl.flock(lk, fcntl.LOCK_EX)
+        hq(a.task, "RENDER", 50, "renderizando")
+        t_r = dt.datetime.now()
+        rend = subprocess.run([npx, "hyperframes", "render", "-q", "draft" if a.rascunho else "delivery", "-o", str(silent)],
+                              cwd=hf, capture_output=True, text=True, env=env)
+    log(f"render levou {(dt.datetime.now() - t_r).seconds // 60} min {(dt.datetime.now() - t_r).seconds % 60} s")
     if rend.returncode != 0 or not silent.exists():
         raise RuntimeError("render falhou: " + (rend.stdout + rend.stderr)[-600:])
     log("render: ok")
