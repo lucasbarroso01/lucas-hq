@@ -161,9 +161,17 @@ try:
                                capture_output=True, text=True).stdout.strip())
     if abs(dur - tl["total"]) > 0.5:
         raise RuntimeError(f"duração {dur:.2f}s não bate com a timeline {tl['total']:.2f}s")
+    loud = subprocess.run(["ffmpeg", "-hide_banner", "-i", str(final), "-af", "loudnorm=I=-14:TP=-1:print_format=json",
+                           "-f", "null", "-"], capture_output=True, text=True).stderr
+    lj = json.loads(loud[loud.rindex("{"): loud.rindex("}") + 1])
+    if abs(float(lj["input_i"]) + 14) > 1 or float(lj["input_tp"]) > -1:
+        raise RuntimeError(f"áudio final fora do master: {lj['input_i']} LUFS, TP {lj['input_tp']}")
+    # contact sheet também do arquivo final (quadros decodificados do mp4)
+    subprocess.run([PY, str(ROOT / "tools/frames.py"), str(final), "--grid", "4x3", "-o", str(ROOT / "out" / f"{nome}_final.jpg")],
+                   cwd=ROOT, capture_output=True)
     (ROOT / "out" / f"{nome}.txt").write_text(r["legenda_post"].strip() + "\n")
     hq(a.task, "PRONTO", 100, f"{final.name} ({dur:.1f}s) pronto")
-    log(f"fim {nome}: {final.relative_to(ROOT)} ({dur:.1f}s)")
+    log(f"fim {nome}: {final.relative_to(ROOT)} ({dur:.1f}s, {lj['input_i']} LUFS, TP {lj['input_tp']})")
     emit("produzir", video=str(final.relative_to(ROOT)), segundos=round(dur, 2), legenda=f"out/{nome}.txt",
          contato=str(contato.relative_to(ROOT)))
 except Exception as e:  # noqa: BLE001

@@ -140,12 +140,12 @@ try:
     out = proj / "audio"
     out.mkdir(exist_ok=True)
     sf.write(out / "premaster.wav", mix.astype("float32"), SR)
-    # master: loudnorm em 2 passagens (-14 LUFS integrado, true peak -1 dB)
+    # master: loudnorm em 2 passagens (-14 LUFS; true peak -1.5 dB para sobrar margem depois do AAC e ficar ≤ -1)
     meas = subprocess.run(["ffmpeg", "-hide_banner", "-i", str(out / "premaster.wav"), "-af",
-                           "loudnorm=I=-14:TP=-1:LRA=11:print_format=json", "-f", "null", "-"],
+                           "loudnorm=I=-14:TP=-1.5:LRA=11:print_format=json", "-f", "null", "-"],
                           capture_output=True, text=True).stderr
     m = json.loads(meas[meas.rindex("{"): meas.rindex("}") + 1])
-    af = (f"loudnorm=I=-14:TP=-1:LRA=11:measured_I={m['input_i']}:measured_TP={m['input_tp']}:"
+    af = (f"loudnorm=I=-14:TP=-1.5:LRA=11:measured_I={m['input_i']}:measured_TP={m['input_tp']}:"
           f"measured_LRA={m['input_lra']}:measured_thresh={m['input_thresh']}:offset={m['target_offset']}:linear=true")
     subprocess.run(["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-i", str(out / "premaster.wav"),
                     "-af", af, "-ar", str(SR), str(out / "mix.wav")], check=True)

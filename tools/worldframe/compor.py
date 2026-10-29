@@ -172,7 +172,7 @@ def build(proj: Path):
                     tweens.append(f'tl.fromTo("#cap{cap_id}t",{{opacity:0,y:18}},{{opacity:1,y:0,duration:.12,ease:"power2.out"}},{a:.3f});')
                 cap_id += 1
         # dial: FACT 01/10
-        clip(f"dl{i}", s0, d, f'<div class="dialtxt"><span class="dl">{html.escape(r.get("dial", "FACT"))}</span>'
+        clip(f"dl{i}", s0, (total - LOOP - s0) if last else d, f'<div class="dialtxt"><span class="dl">{html.escape(r.get("dial", "FACT"))}</span>'
                               f'<span class="dn">{i + 1:02d}/{N:02d}</span></div>', cls="dialbox")
 
     # cartão final: pergunta binária + opções + follow
@@ -324,10 +324,11 @@ TEMPLATE = """<!doctype html>
         el.textContent = casas ? o.v.toFixed(casas) : Math.round(o.v).toLocaleString("en-US"); }} }}, at);
     }}
     tl.fromTo("#recdot", {{ opacity: 1 }}, {{ opacity: .15, duration: .5, ease: "steps(1)", repeat: {reps}, yoyo: true }}, 0);
-    tl.fromTo("#bk0", {{ x: 0, y: 0 }}, {{ x: 80, y: 60, duration: {total}, ease: "sine.inOut" }}, 0);
-    tl.fromTo("#bk1", {{ x: 0, y: 0 }}, {{ x: -70, y: 90, duration: {total}, ease: "sine.inOut" }}, 0);
-    tl.fromTo("#bk2", {{ x: 0, y: 0 }}, {{ x: -90, y: -50, duration: {total}, ease: "sine.inOut" }}, 0);
-    tl.fromTo("#bk3", {{ x: 0, y: 0 }}, {{ x: 60, y: -70, duration: {total}, ease: "sine.inOut" }}, 0);
+    // fundo desfocado vai e volta: termina onde começou (o último frame emenda com o primeiro)
+    tl.fromTo("#bk0", {{ x: 0, y: 0 }}, {{ x: 80, y: 60, duration: {total} / 2, ease: "sine.inOut", repeat: 1, yoyo: true }}, 0);
+    tl.fromTo("#bk1", {{ x: 0, y: 0 }}, {{ x: -70, y: 90, duration: {total} / 2, ease: "sine.inOut", repeat: 1, yoyo: true }}, 0);
+    tl.fromTo("#bk2", {{ x: 0, y: 0 }}, {{ x: -90, y: -50, duration: {total} / 2, ease: "sine.inOut", repeat: 1, yoyo: true }}, 0);
+    tl.fromTo("#bk3", {{ x: 0, y: 0 }}, {{ x: 60, y: -70, duration: {total} / 2, ease: "sine.inOut", repeat: 1, yoyo: true }}, 0);
     {dial_steps}
     tl.to("#dialarc", {{ attr: {{ "stroke-dashoffset": 364.4 }}, duration: .3 }}, {total} - {loop});
       {tweens}
