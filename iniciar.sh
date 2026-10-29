@@ -31,7 +31,8 @@ if [ "$1" = "--agendar" ]; then
   [ "$N" -gt 0 ] || { echo "Não consegui gerar os horários (python3 tools/expediente.py crontab)"; exit 1; }
   { crontab -l 2>/dev/null | grep -v 'lucas-hq/iniciar.sh --turno' || true; printf '%s\n' "$LINES"; } | crontab -
   sudo service cron start >/dev/null 2>&1 || true
-  echo "Agendado: $N turnos. Confira com: crontab -l"
+  R=$(printf '%s\n' "$LINES" | grep -c 'iniciar.sh --recuperar' || true)
+  echo "Agendado: $N turnos + $R verificações de recuperação (a cada 5 min e ao ligar). Confira com: crontab -l"
   exit 0
 fi
 
