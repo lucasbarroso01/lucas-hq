@@ -21,7 +21,7 @@ Siga as **Regras de expediente** do `CLAUDE.md` (horários em `config/expediente
 1. Leia os 5 temas da tarefa `radar-worldframe-<data>` (e `inbox/temas-AAAA-MM-DD.md`).
 2. Confira `python3 tools/expediente.py vagas` e dispare até esse número de sub-agentes `roteirista` **em paralelo** (Task tool), um por tema, contexto próprio. Se houver menos vagas que temas, faça em levas.
 3. Confira cada roteiro: gancho de 2 s com afirmação concreta, 45 a 90 s, todo número com fonte (sem fonte: corte), loop final. Máx. 2 tentativas por roteiro; na 3ª falha, marque aquele item `error` com o motivo e siga.
-4. Cada roteiro vira **um arquivo** `inbox/roteiros/AAAA-MM-DD_<slug>.json` no formato de `tools/worldframe/ROTEIRO.md` (gancho com algo em jogo, 140 a 220 palavras, cenas de até 19 palavras, fonte real em todo número, final binário). Confira 1 por 1 e marque `done`, crie `producao-worldframe-<data>` como `na_fila` e registre o handoff para `producao-wf`.
+4. Cada roteiro vira **um arquivo** `inbox/roteiros/AAAA-MM-DD_<slug>.json` no formato de `tools/worldframe/ROTEIRO.md` (gancho com algo em jogo, **mais de 60 s: 180 a 240 palavras**, cenas de até 19 palavras, fonte real em todo número, final binário). Confira 1 por 1 e marque `done`, crie `producao-worldframe-<data>` como `na_fila` e registre o handoff para `producao-wf`.
 
 **Turno `cenas-pets`** (prepara o post de amanhã)
 1. Leia a ideia da tarefa `radar-pets-<data>` (`inbox/pets-ideia-*.md`) e `regras-funnypets` no cérebro.

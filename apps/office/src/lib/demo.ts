@@ -51,6 +51,7 @@ export function startDemo() {
 
   const tick = () => {
     const s = useHQ.getState()
+    if (s.pausa.pausado) return   // operação pausada: ninguém trabalha
     const r = Math.random()
     if (r < 0.28) {
       const [from, to, text] = pick(PIPELINE)

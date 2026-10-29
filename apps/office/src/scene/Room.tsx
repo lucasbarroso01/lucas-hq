@@ -19,7 +19,8 @@ export function Room({ team, dimmed }: { team: Team; dimmed: boolean }) {
   const selected = useHQ((s) => s.selectedTeam === team.id)
   const [hover, setHover] = useState(false)
   const working = agents.filter((a) => a.status === 'working').length
-  const running = working > 0 || runningTasks > 0
+  const pausado = useHQ((s) => s.pausa.pausado)
+  const running = !pausado && (working > 0 || runningTasks > 0)
   const glow = useRef<MeshStandardMaterial>(null)
   const floor = useRef<MeshStandardMaterial>(null)
 

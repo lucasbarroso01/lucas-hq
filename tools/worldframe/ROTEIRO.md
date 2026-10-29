@@ -4,7 +4,7 @@ O `roteirista-lead` escreve um arquivo por vídeo; o `video-editor` passa ele pa
 Exemplo completo: `tools/worldframe/exemplo_roteiro.json`.
 
 ## Regras de conteúdo
-- Inglês, 45 a 90 s. O Kokoro fala ~2,9 palavras/s na velocidade 1.1: mire **140 a 220 palavras** no total.
+- Inglês, **mais de 60 s** (monetização no Facebook) e até 90 s. O Kokoro fala ~2,9 palavras/s na velocidade 1.1: mire **180 a 240 palavras** no total (12 a 16 cenas). O `produzir.py` barra roteiro curto.
 - Uma frase/ideia por cena, **no máximo 19 palavras**. `fala` com números por extenso; `legenda` com dígitos.
 - **Gancho** (cena 1): afirmação concreta, fala com "you" e tem algo em jogo. Nunca "What if…?".
 - Estrutura: gancho → número que surpreende → escada de 4 a 6 fatos, cada um maior → virada → momento para printar → pergunta final binária que divide sem tomar partido.

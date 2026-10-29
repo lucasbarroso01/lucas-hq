@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useHQ, teamById, type View } from '../store'
+import { PauseButton } from './PauseButton'
 
 const OPS = [['all', 'Todas'], ['maquina-viral', 'Máquina Viral'], ['agencia-lucas', 'Agência Lucas']] as const
 
@@ -49,6 +50,7 @@ export function TopBar() {
           <span>🔍</span><span className="truncate">Pergunte a qualquer agente</span>
           <span className="ml-auto font-mono text-[10px] text-white/40">⌘K</span>
         </button>
+        <PauseButton />
         <div className="hidden items-center gap-1.5 whitespace-nowrap rounded-full bg-emerald-400/10 px-3 py-1 font-mono text-[11px] text-emerald-300 ring-1 ring-emerald-400/25 sm:flex">
           <span className="animate-pulse">●</span> {total} agentes · {running} rodando
         </div>

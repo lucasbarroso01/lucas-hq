@@ -20,7 +20,7 @@ from zoneinfo import ZoneInfo
 
 import yaml
 
-from _common import KEY, ROOT, URL, emit, rest
+from _common import KEY, ROOT, URL, emit, pausa, rest
 
 CFG = yaml.safe_load((ROOT / "config" / "expediente.yaml").read_text())
 TZ = ZoneInfo(CFG["fuso"])
@@ -76,6 +76,9 @@ def check(t: dict, now: dt.datetime, teste: bool, ocorrencia: dt.datetime | None
     """(ok, motivo, status_a_registrar). Com `ocorrencia` (recuperação), datas e ids vêm do horário perdido
     e só o silêncio é checado no relógio real."""
     clock = now.time()
+    pausado, motivo = pausa()
+    if pausado:
+        return False, "operação pausada pelo Lucas" + (f": {motivo}" if motivo else ""), None
     if ocorrencia is not None:
         if not t.get("manutencao") and in_window(clock, CFG["silencio"]["inicio"], CFG["silencio"]["fim"]):
             return False, f"horário de silêncio ({CFG['silencio']['inicio']}–{CFG['silencio']['fim']})", None

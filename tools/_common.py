@@ -98,3 +98,15 @@ def rest(method: str, table: str, body=None, query: str = "", upsert: bool = Fal
         raise RuntimeError(f"{e.code} {table}: {e.read().decode()[:200]}") from None
 
 
+
+
+def pausa() -> tuple[bool, str]:
+    """(pausado, motivo) do botão "Pausar operação". Sem Supabase ou sem a tabela: não pausado."""
+    if not (URL and KEY):
+        f = ROOT / "out" / "_pausa"
+        return (True, f.read_text().strip()) if f.exists() else (False, "")
+    try:
+        rows = rest("GET", "controle", None, "?id=eq.operacao&select=pausado,motivo")
+        return (bool(rows[0]["pausado"]), rows[0].get("motivo") or "") if rows else (False, "")
+    except Exception:  # noqa: BLE001  (migração 0003 ainda não rodou)
+        return (False, "")

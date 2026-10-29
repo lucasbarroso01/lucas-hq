@@ -30,6 +30,8 @@ async function load() {
     supabase.from('skills_runtime').select('*'),
     supabase.from('events').select('id', { count: 'exact', head: true }).eq('type', 'brain_write'),
   ])
+  const ctl = await supabase.from('controle').select('*').eq('id', 'operacao').maybeSingle()
+  if (ctl.data) hq.set({ pausa: { pausado: ctl.data.pausado, motivo: ctl.data.motivo, atualizado_em: ctl.data.atualizado_em } })
   if (agents.error) { console.warn('[supabase]', agents.error.message); return false }
   hq.set({
     live: 'supabase',
@@ -46,6 +48,10 @@ async function load() {
     .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, (p) => p.new && useHQ.getState().upsertTask(p.new as Task))
     .on('postgres_changes', { event: '*', schema: 'public', table: 'agents' }, (p) => p.new && useHQ.getState().upsertAgent(p.new as Agent))
     .on('postgres_changes', { event: '*', schema: 'public', table: 'skills_runtime' }, (p) => p.new && useHQ.getState().upsertSkill(p.new as SkillRuntime))
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'controle' }, (p) => {
+      const n = p.new as { pausado?: boolean; motivo?: string; atualizado_em?: string }
+      if (n && 'pausado' in n) useHQ.getState().set({ pausa: { pausado: !!n.pausado, motivo: n.motivo ?? '', atualizado_em: n.atualizado_em } })
+    })
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'events' }, (p) => useHQ.getState().ingestEvent(p.new as HQEvent))
     .on('postgres_changes', { event: '*', schema: 'public', table: 'schedule' }, async () => {
       const { data } = await supabase!.from('schedule').select('*')
@@ -78,5 +84,17 @@ export async function markPosted(id: string) {
   if (supabase) {
     const { error } = await supabase.from('schedule').update({ status: 'postado' }).eq('id', id)
     if (error) console.warn('[supabase] schedule', error.message)
+  }
+}
+
+/** Botão "Pausar operação": nenhum turno começa e a produção para antes do render até retomar. */
+export async function setPausa(pausado: boolean, motivo = '') {
+  const hq = useHQ.getState()
+  const atualizado_em = new Date().toISOString()
+  hq.set({ pausa: { pausado, motivo: pausado ? motivo : '', atualizado_em } })
+  hq.pushToast(null, pausado ? `Operação pausada${motivo ? ` · ${motivo}` : ''}` : 'Operação retomada · os turnos perdidos rodam agora')
+  if (supabase) {
+    const { error } = await supabase.from('controle').update({ pausado, motivo: pausado ? motivo : '', atualizado_em }).eq('id', 'operacao')
+    if (error) { console.warn('[supabase] pausa', error.message); hq.pushToast(null, 'Não consegui gravar a pausa: rode supabase/pausa.sql') }
   }
 }

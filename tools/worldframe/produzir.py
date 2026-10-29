@@ -19,9 +19,15 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tools"))
-from _common import emit  # noqa: E402
+from _common import emit, pausa  # noqa: E402
 
 LOG = ROOT / "out" / "_turnos.log"
+import yaml  # noqa: E402
+
+EXP = yaml.safe_load((ROOT / "config" / "expediente.yaml").read_text())
+PAG = EXP["paginas"]["Worldframe"]
+DUR_MIN = float(PAG.get("duracao_min_s", 0))
+WPS = 2.9  # palavras por segundo do Kokoro na velocidade 1.1 (medido)
 PY = sys.executable
 WF = ROOT / "tools" / "worldframe"
 PRE = [ROOT / "models/kokoro-v1.0.onnx", ROOT / "models/voices-v1.0.bin", ROOT / "assets/lib/gsap.min.js",
@@ -60,8 +66,13 @@ def checar_roteiro(r: dict) -> list[str]:
     probs = []
     falas = [c["fala"] for c in r["cenas"]]
     palavras = sum(len(f.split()) for f in falas)
-    if not 100 <= palavras <= 220:
-        probs.append(f"{palavras} palavras (mire 140 a 220 para 45 a 90 s)")
+    pausas = 0.3 * len(falas) + 2.6  # respiro entre cenas + cartão final
+    estimado = palavras / WPS + pausas
+    if DUR_MIN and estimado < DUR_MIN:
+        falta = int((DUR_MIN - estimado) * WPS) + 1
+        probs.append(f"curto demais: ~{estimado:.0f} s; o Worldframe precisa de mais de {DUR_MIN - 1:.0f} s (acrescente ~{falta} palavras em cenas novas)")
+    if palavras > 240:
+        probs.append(f"{palavras} palavras: passa de 90 s (máx. ~240)")
     for i, c in enumerate(r["cenas"]):
         if len(c["fala"].split()) > 19:
             probs.append(f"cena {i + 1} tem {len(c['fala'].split())} palavras (máx. 19)")
@@ -113,6 +124,11 @@ try:
     step("voz", [PY, str(WF / "tts.py"), str(proj / "roteiro.json"), str(proj / "voz")])
     hq(a.task, "VOZ", 20, "narração Kokoro pronta")
     step("composição", [PY, str(WF / "compor.py"), str(proj)])
+    total = json.loads((proj / "timeline.json").read_text())["total"]
+    if DUR_MIN and total < DUR_MIN:
+        falta = int((DUR_MIN - total) * WPS) + 1
+        raise RuntimeError(f"roteiro reprovado: vídeo de {total:.1f} s; o Worldframe precisa de mais de {DUR_MIN - 1:.0f} s "
+                           f"(acrescente ~{falta} palavras)")
     step("trilha", [PY, str(WF / "trilha.py"), str(proj)])
     hq(a.task, "TRILHA", 35, "trilha e master −14 LUFS prontos")
 
@@ -145,6 +161,11 @@ try:
     log(f"contact sheet: {contato.relative_to(ROOT)}")
     hq(a.task, "REVISÃO", 45, "lint ok, 12 snapshots e contact sheet")
 
+    # pausa: o Lucas apertou "Pausar operação"? para antes do render (a parte cara)
+    pz, mot = pausa()
+    if pz:
+        hq(a.task, "PAUSADO", 45, "operação pausada: parou antes do render")
+        raise RuntimeError("operação pausada pelo Lucas" + (f": {mot}" if mot else "") + " (roda de novo ao retomar)")
     # 6. render + mux
     silent = proj / "video_mudo.mp4"
     env = dict(os.environ)
@@ -179,9 +200,19 @@ try:
     subprocess.run([PY, str(ROOT / "tools/frames.py"), str(final), "--grid", "4x3", "-o", str(ROOT / "out" / f"{nome}_final.jpg")],
                    cwd=ROOT, capture_output=True)
     (ROOT / "out" / f"{nome}.txt").write_text(r["legenda_post"].strip() + "\n")
+    # Drive assim que fica pronto (o Social só define o horário depois, com --txt-only)
+    drive = {}
+    if PAG.get("drive_ao_terminar") and not a.rascunho:
+        cmd = [PY, str(ROOT / "tools/drive_upload.py"), str(final), "--page", "Worldframe", "--caption", r["legenda_post"],
+               "--date", nome[:10]] + (["--task", a.task] if a.task else [])
+        try:
+            drive = step("drive", cmd)
+        except RuntimeError as e:  # o vídeo está pronto em out/: o Social tenta de novo no turno dele
+            log(f"drive falhou (o Social tenta de novo): {e}")
     hq(a.task, "PRONTO", 100, f"{final.name} ({dur:.1f}s) pronto")
     log(f"fim {nome}: {final.relative_to(ROOT)} ({dur:.1f}s, {lj['input_i']} LUFS, TP {lj['input_tp']})")
     emit("produzir", video=str(final.relative_to(ROOT)), segundos=round(dur, 2), legenda=f"out/{nome}.txt",
+         drive=drive.get("url") or drive.get("local"),
          contato=str(contato.relative_to(ROOT)))
 except Exception as e:  # noqa: BLE001
     log(f"ERRO: {e}")

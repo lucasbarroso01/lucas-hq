@@ -11,6 +11,7 @@ import { BrainView } from './brain/BrainView'
 import { ReviewModal } from './ui/ReviewModal'
 import { TaskDetail } from './ui/TaskDetail'
 import { NextPosts, PostAlarm } from './ui/NextPosts'
+import { PauseBanner } from './ui/PauseButton'
 import { useHQ } from './store'
 import { connectSupabase } from './lib/supabase'
 import { startDemo } from './lib/demo'
@@ -31,6 +32,7 @@ export function App() {
         <Office />
       </div>
       <TopBar />
+      <PauseBanner />
       {view === 'office' && <MiniMap />}
       {view === 'office' && !selected && <NextPosts />}
       <PostAlarm />

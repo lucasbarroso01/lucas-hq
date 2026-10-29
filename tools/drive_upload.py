@@ -35,14 +35,15 @@ ap.add_argument("--login", action="store_true", help="authorize your Google acco
 ap.add_argument("--page", choices=["Worldframe", "Funny Pets"])
 ap.add_argument("--caption")
 ap.add_argument("--hashtags", default="")
-ap.add_argument("--time", help="HH:MM")
+ap.add_argument("--time", default="a definir", help="HH:MM (pode ficar \"a definir\": o Social define depois)")
 ap.add_argument("--date", default=dt.date.today().isoformat())
 ap.add_argument("--name", help="file name in Drive (default: video name)")
 ap.add_argument("--dry-run", action="store_true")
+ap.add_argument("--txt-only", action="store_true", help="só atualiza a legenda/horário (.txt); o vídeo já está no Drive")
 ap.add_argument("--task", help="task id: saves the Drive links on it so the office shows an \"Abrir no Drive\" button")
 a = ap.parse_args()
-if not a.login and not (a.video and a.page and a.caption and a.time):
-    ap.error("video, --page, --caption e --time são obrigatórios (ou use --login)")
+if not a.login and not (a.video and a.page and a.caption):
+    ap.error("video, --page e --caption são obrigatórios (ou use --login)")
 
 
 def oauth_creds(interactive: bool):
@@ -90,6 +91,16 @@ def folder(svc, parent, title):
     return svc.files().create(body=meta, fields="id", supportsAllDrives=True).execute()["id"]
 
 
+def put(svc, parent, title, media):
+    """Cria ou substitui (mesmo nome na mesma pasta): subir de novo nunca duplica."""
+    q = f"name = '{title}' and '{parent}' in parents and trashed = false"
+    hit = svc.files().list(q=q, fields="files(id)", supportsAllDrives=True, includeItemsFromAllDrives=True).execute()["files"]
+    if hit:
+        return svc.files().update(fileId=hit[0]["id"], media_body=media, fields="id,webViewLink", supportsAllDrives=True).execute()
+    return svc.files().create(body={"name": title, "parents": [parent]}, media_body=media, fields="id,webViewLink",
+                              supportsAllDrives=True).execute()
+
+
 try:
     if not Path(a.video).exists():
         raise FileNotFoundError(a.video)
@@ -98,7 +109,8 @@ try:
     if a.dry_run or not (use_oauth or sa):
         dst = Path("out/_drive").joinpath(*parts)
         dst.mkdir(parents=True, exist_ok=True)
-        shutil.copy(a.video, dst / name)
+        if not a.txt_only:
+            shutil.copy(a.video, dst / name)
         (dst / Path(name).with_suffix(".txt")).write_text(txt)
         emit("drive_upload", mode="staged", path="/".join(parts), file=name, local=str(dst), post_time=a.time)
     else:
@@ -115,10 +127,15 @@ try:
         parent = None
         for p in parts:
             parent = folder(svc, parent, p)
-        vid = svc.files().create(body={"name": name, "parents": [parent]}, media_body=MediaFileUpload(a.video, resumable=True),
-                                 fields="id,webViewLink", supportsAllDrives=True).execute()
-        svc.files().create(body={"name": Path(name).with_suffix(".txt").name, "parents": [parent]},
-                           media_body=MediaInMemoryUpload(txt.encode(), mimetype="text/plain"), fields="id", supportsAllDrives=True).execute()
+        if a.txt_only:
+            q = f"name = '{name}' and '{parent}' in parents and trashed = false"
+            hit = svc.files().list(q=q, fields="files(id,webViewLink)", supportsAllDrives=True, includeItemsFromAllDrives=True).execute()["files"]
+            if not hit:
+                raise FileNotFoundError(f"{name} ainda não está no Drive: rode sem --txt-only")
+            vid = hit[0]
+        else:
+            vid = put(svc, parent, name, MediaFileUpload(a.video, resumable=True))
+        put(svc, parent, Path(name).with_suffix(".txt").name, MediaInMemoryUpload(txt.encode(), mimetype="text/plain"))
         folder_url = f"https://drive.google.com/drive/folders/{parent}"
         if a.task:
             import subprocess

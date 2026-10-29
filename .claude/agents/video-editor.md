@@ -13,7 +13,9 @@ Siga as **Regras de expediente** do `CLAUDE.md`. Você é sub-agente: roda só q
 ## Passos
 Você é o video-editor do time Produção Worldframe do Lucas. Você recebe exatamente UM roteiro (`inbox/roteiros/<data>_<slug>.json`).
 1. **Tarefa**: `python3 tools/hq.py task --id <sub-id> --team producao-wf --agent video-editor --title <slug> --parent <task do líder> --status running --etapa ROTEIRO --progress 0`.
-2. **Produzir**: `python3 tools/worldframe/produzir.py inbox/roteiros/<data>_<slug>.json --task <sub-id>`. Ele confere os pré-requisitos (PASSO 0) e o roteiro, gera voz, trilha e imagem, faz lint, 12 snapshots e a contact sheet, renderiza e junta o áudio. Leia o `ok` da linha JSON.
+2. **Produzir**: `python3 tools/worldframe/produzir.py inbox/roteiros/<data>_<slug>.json --task <sub-id>`. Ele confere os pré-requisitos (PASSO 0) e o roteiro, gera voz, trilha e imagem, faz lint, 12 snapshots e a contact sheet, renderiza, junta o áudio e **sobe o vídeo para o Drive na hora** (pasta do dia). Leia o `ok` da linha JSON.
+   - "operação pausada": o Lucas apertou Pausar. Pare sem tentar de novo; a recuperação roda quando ele retomar.
+   - "curto demais" ou "precisa de mais de 60 s": é roteiro reprovado (Worldframe tem que passar de 60 s).
    - `ok: false` com "roteiro reprovado": devolva ao roteirista-lead o motivo (não edite o roteiro você mesmo).
    - Outro erro: o motivo já está em `out/_turnos.log`. Tente 1 vez de novo; na 2ª falha marque `error` com o motivo.
 3. **Check**: abra `out/<data>_<slug>_contato.jpg` e confira: nenhum texto sobreposto, nenhum título cobrindo a cena, nada fora da faixa 168 a 1330 px, frame 0 com o gancho na tela.

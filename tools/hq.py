@@ -9,6 +9,7 @@ python3 tools/hq.py handoff --team roteiros --to producao-wf --text "Roteiros ·
 python3 tools/hq.py skill --team producao-wf --skill hypit-video --progress 40 --state running
 python3 tools/hq.py schedule --date 2026-10-28 --page Worldframe --time 18:00 --title wf_04.mp4 --status planejado|pronto|aprovado|postado|atrasado [--drive-url ...] [--task ...]
 python3 tools/hq.py approval --task t2 [--wait 0]   # prints the latest decision; --wait N polls up to N seconds
+python3 tools/hq.py pausa [--on --motivo "..." | --off]   # botão Pausar operação
 """
 import argparse
 import json
@@ -19,7 +20,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-from _common import KEY, OP, URL, emit, rest
+from _common import KEY, OP, URL, emit, pausa, rest
 
 ap = argparse.ArgumentParser()
 sub = ap.add_subparsers(dest="cmd", required=True)
@@ -54,6 +55,10 @@ for k in ["date", "time", "title", "task", "drive-url"]:
     c.add_argument(f"--{k}")
 c.add_argument("--page", choices=["Worldframe", "Funny Pets"])
 c.add_argument("--status", choices=["planejado", "pronto", "aprovado", "postado", "atrasado"])
+z = sub.add_parser("pausa", help="liga/desliga o botão Pausar operação (sem opções: mostra o estado)")
+z.add_argument("--on", action="store_true")
+z.add_argument("--off", action="store_true")
+z.add_argument("--motivo", default="")
 p = sub.add_parser("approval")
 p.add_argument("--task", required=True)
 p.add_argument("--wait", type=int, default=0)
@@ -103,6 +108,18 @@ try:
             row["drive_url"] = a.drive_url
         rest("POST", "schedule", row, "?on_conflict=id", upsert=True)
         emit("hq", table="schedule", id=row["id"], status=row["status"])
+    elif a.cmd == "pausa":
+        if a.on or a.off:
+            import datetime as _dt
+            if URL and KEY:
+                rest("PATCH", "controle", {"pausado": bool(a.on), "motivo": a.motivo if a.on else "",
+                                           "atualizado_em": _dt.datetime.now(_dt.timezone.utc).isoformat()}, "?id=eq.operacao")
+            else:
+                from _common import ROOT
+                f = ROOT / "out" / "_pausa"
+                f.write_text(a.motivo) if a.on else f.unlink(missing_ok=True)
+        st, mot = pausa()
+        emit("hq", table="controle", pausado=st, motivo=mot)
     elif a.cmd == "approval":
         deadline = time.time() + a.wait
         while True:
