@@ -102,6 +102,10 @@ PlayfairDisplay-Italic.ttf playfairdisplay/PlayfairDisplay-Italic%5Bwght%5D.ttf
 EBGaramond.ttf ebgaramond/EBGaramond%5Bwght%5D.ttf
 EBGaramond-Italic.ttf ebgaramond/EBGaramond-Italic%5Bwght%5D.ttf
 Cinzel.ttf cinzel/Cinzel%5Bwght%5D.ttf
+InstrumentSerif-Regular.ttf instrumentserif/InstrumentSerif-Regular.ttf
+InstrumentSerif-Italic.ttf instrumentserif/InstrumentSerif-Italic.ttf
+Barlow-Light.ttf barlow/Barlow-Light.ttf
+Barlow-Regular.ttf barlow/Barlow-Regular.ttf
 EOF
 
 # 7. Bibliotecas locais (sem CDN) + dados do mapa

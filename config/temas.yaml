@@ -1,0 +1,32 @@
+# Worldframe · filtro de temas (o Radar escolhe só dentro disto; o produzir.py barra o resto)
+pagina: Worldframe
+proposta: >
+  Página sobre política, economia, geopolítica e guerras, e as curiosidades ligadas a esses temas.
+  Todo vídeo explica um mecanismo do mundo real: por que algo acontece, quem ganha, quem perde, o que está em jogo.
+
+editorias:            # o roteiro precisa declarar uma (campo "categoria")
+  geopolitica: "estreitos, rotas, fronteiras, alianças, sanções, disputas por território e recursos"
+  guerras: "conflitos atuais e históricos, estratégia, logística, armas, custo da guerra"
+  economia: "dinheiro, inflação, dívida, comércio, petróleo, ouro, crises, bancos centrais, cadeias de suprimento"
+  politica: "eleições, sistemas de governo, poder, leis e decisões que mudam países (sempre sem tomar partido)"
+  curiosidades: "fatos surpreendentes LIGADOS às editorias acima (ex.: todo o ouro já minerado cabe num cubo de 22 m)"
+
+bons_exemplos:        # nível de referência aprovado pelo Lucas
+  - "O Estreito de Ormuz: um gargalo por onde passa 1/5 do petróleo do mundo (tema atual)"
+  - "Todo o ouro já minerado cabe num único cubo (curiosidade de economia)"
+
+fora:                 # nunca vira vídeo do Worldframe, mesmo viral
+  - animais, pets, fantasias, Halloween e datas comemorativas sem ligação com poder ou dinheiro
+  - celebridades, fofoca, cultura pop, filmes, séries, games, esportes
+  - tecnologia ou internet como curiosidade solta (história da internet, primeira palavra enviada...)
+  - comida, saúde, lifestyle, autoajuda, ciência pura sem ligação com política ou economia
+
+palavras_fora:        # se aparecerem no tema ou no slug, o tema é barrado
+  [pet, pets, cat, dog, costume, costumes, halloween, christmas, celebrity, movie, film, series, game, gaming,
+   football, soccer, nba, recipe, food, diet, fitness, horoscope, "first word", meme]
+
+criterios:            # o Radar dá nota 0-10 em cada; só passa média ≥ 7 e "explica" ≥ 7
+  explica: "o vídeo explica um mecanismo (causa → efeito), não só um fato solto"
+  em_jogo: "tem algo em jogo para quem assiste (bolso, segurança, poder, futuro)"
+  atual: "está nas notícias desta semana OU é curiosidade atemporal forte das editorias"
+  dados: "dá para sustentar com 3+ números de fonte confiável"

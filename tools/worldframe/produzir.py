@@ -28,6 +28,13 @@ EXP = yaml.safe_load((ROOT / "config" / "expediente.yaml").read_text())
 PAG = EXP["paginas"]["Worldframe"]
 DUR_MIN = float(PAG.get("duracao_min_s", 0))
 WPS = 2.9  # palavras por segundo do Kokoro na velocidade 1.1 (medido)
+sys.path.insert(0, str(ROOT / "tools" / "worldframe"))
+from temas import checar as checar_tema  # noqa: E402
+
+# fim de todo vídeo: pergunta (do roteiro) → like → follow (fixo, acrescentado aqui)
+CTA = {"fala": "Hit like if this surprised you, and follow for more videos like this.",
+       "legenda": "Hit LIKE if this surprised you, and FOLLOW for more videos like this.",
+       "destaques": ["LIKE", "FOLLOW"], "fonte": "", "visual": "cta", "camera": None, "globo": {"cabos": 1}}
 PY = sys.executable
 WF = ROOT / "tools" / "worldframe"
 PRE = [ROOT / "models/kokoro-v1.0.onnx", ROOT / "models/voices-v1.0.bin", ROOT / "assets/lib/gsap.min.js",
@@ -64,9 +71,11 @@ def hq(task: str | None, etapa: str, progress: int, text: str):
 def checar_roteiro(r: dict) -> list[str]:
     """Regras do roteiro: duração, cena ≤ 19 palavras, fonte em todo número, gancho, final, legenda do post."""
     probs = []
+    # tema: editoria da página + notas do Radar
+    probs += checar_tema(r.get("categoria", ""), f"{r.get('slug', '')} {r.get('titulo', '')}", r.get("notas_tema"))
     falas = [c["fala"] for c in r["cenas"]]
     palavras = sum(len(f.split()) for f in falas)
-    pausas = 0.3 * len(falas) + 2.6  # respiro entre cenas + cartão final
+    pausas = 0.3 * (len(falas) + 1) + 2.6 + len(CTA["fala"].split()) / WPS  # respiros + CTA + cartão final
     estimado = palavras / WPS + pausas
     if DUR_MIN and estimado < DUR_MIN:
         falta = int((DUR_MIN - estimado) * WPS) + 1
@@ -80,6 +89,31 @@ def checar_roteiro(r: dict) -> list[str]:
             probs.append(f"cena {i + 1}: número em dígitos na fala (escreva por extenso)")
         if (c.get("numero") or re.search(r"\d", c.get("legenda", ""))) and not c.get("fonte"):
             probs.append(f"cena {i + 1}: número sem fonte (corte o número ou cite a fonte)")
+    # palavra-chave em toda frase (vira itálico verde-limão na legenda)
+    for i, c in enumerate(r["cenas"]):
+        if c.get("visual") in ("pergunta", "cta"):
+            continue
+        leg = c.get("legenda", "").lower()
+        if not c.get("destaques") or not any(d.lower() in leg for d in c["destaques"]):
+            probs.append(f"cena {i + 1}: sem palavra-chave em `destaques` que apareça na legenda")
+    # final: a última cena do roteiro é a pergunta (o like e o follow são acrescentados depois)
+    ult = r["cenas"][-1]
+    if ult.get("visual") != "pergunta" or "comment" not in ult["fala"].lower():
+        probs.append("a última cena precisa ser a pergunta (visual \"pergunta\") e pedir o comentário (\"Comment...\")")
+    # conectores: o fim de cada frase abre curiosidade para a próxima (5 variações avaliadas)
+    con = {k["cena"]: k for k in r.get("conectores", [])}
+    for i in range(len(r["cenas"]) - 1):
+        k = con.get(i + 1)
+        if not k:
+            probs.append(f"cena {i + 1}: falta o conector para a cena {i + 2} (5 variações avaliadas)")
+            continue
+        v, nt, e = k.get("variacoes", []), k.get("notas", []), k.get("escolhida")
+        if len(v) != 5 or len(nt) != 5 or e is None or not 0 <= e < 5:
+            probs.append(f"cena {i + 1}: conector precisa de 5 variações, 5 notas e a escolhida")
+        elif nt[e] != max(nt):
+            probs.append(f"cena {i + 1}: a variação escolhida não é a de maior nota")
+        elif re.sub(r"\W+", " ", v[e].lower()).strip() not in re.sub(r"\W+", " ", r["cenas"][i]["fala"].lower()):
+            probs.append(f"cena {i + 1}: a fala não usa o conector escolhido")
     g = r["cenas"][0]["fala"].lower()
     if g.startswith("what if") or g.rstrip().endswith("?"):
         probs.append("gancho em forma de pergunta genérica: faça uma afirmação concreta com algo em jogo")
@@ -97,6 +131,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument("roteiro")
 ap.add_argument("--task", help="id da tarefa na Supabase (atualiza etapa e log ao vivo)")
 ap.add_argument("--rascunho", action="store_true", help="render draft (mais rápido, para conferir)")
+ap.add_argument("--checar", action="store_true", help="só valida o roteiro (tema, duração, conectores, final) e sai")
 a = ap.parse_args()
 
 try:
@@ -104,7 +139,8 @@ try:
     r = json.loads(src.read_text())
     nome = src.stem if re.match(r"\d{4}-\d{2}-\d{2}_", src.stem) else f"{dt.date.today()}_{r['slug']}"
     proj = ROOT / "out" / f"_proj_{nome}"
-    log(f"início {nome} ({len(r['cenas'])} cenas)")
+    if not a.checar:
+        log(f"início {nome} ({len(r['cenas'])} cenas)")
 
     # 0. pré-requisitos (PASSO 0); se faltar algo, instala
     if any(not p.exists() for p in PRE):
@@ -114,9 +150,14 @@ try:
 
     # 1. roteiro
     probs = checar_roteiro(r)
+    if a.checar:
+        emit("produzir", ok=not probs, roteiro=str(src), problemas=probs or ["roteiro ok"])
+        raise SystemExit
     if probs:
         raise RuntimeError("roteiro reprovado: " + "; ".join(probs))
     proj.mkdir(parents=True, exist_ok=True)
+    cta = dict(CTA, camera=r["cenas"][0].get("camera"), globo=r["cenas"][0].get("globo", {}))   # emenda com o frame 0
+    r["cenas"].append(cta)   # pergunta → like → follow
     (proj / "roteiro.json").write_text(json.dumps(r, ensure_ascii=False, indent=1))
     hq(a.task, "ROTEIRO", 5, f"roteiro ok: {nome}")
 
@@ -214,6 +255,8 @@ try:
     emit("produzir", video=str(final.relative_to(ROOT)), segundos=round(dur, 2), legenda=f"out/{nome}.txt",
          drive=drive.get("url") or drive.get("local"),
          contato=str(contato.relative_to(ROOT)))
+except SystemExit:
+    raise
 except Exception as e:  # noqa: BLE001
     log(f"ERRO: {e}")
     emit("produzir", ok=False, error=str(e))

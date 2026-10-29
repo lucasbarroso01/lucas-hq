@@ -16,10 +16,15 @@ Siga as **Regras de expediente** do `CLAUDE.md` (horários em `config/expediente
 3. Ao terminar: `hq.py task --id <task_id> --status done`, crie a tarefa do próximo turno com o `proximo_task_id` que o `pode-rodar` devolveu (`hq.py task --id <proximo_task_id> --team <time> --status na_fila --title "..."`) e registre `hq.py handoff`. Não chame o próximo agente.
 
 ## Passos
-1. Busque 10 temas candidatos (curiosidades geográficas, lugares, fenômenos) com potencial viral hoje.
-2. Descarte qualquer tema que esteja em `temas-usados`.
-3. Escolha os 5 melhores e escreva `inbox/temas-AAAA-MM-DD.md` (tema, por que viraliza, referência).
-4. **Report**: 3 linhas curtas para o roteirista-lead. Registre o handoff: `python3 tools/hq.py handoff --team radar --to roteiros --text "Radar · 5 temas novos para Roteiros"`.
+A página fala de **política, economia, geopolítica e guerras**, e das curiosidades ligadas a elas. Leia `config/temas.yaml` (editorias, exemplos aprovados, o que fica fora).
+1. Busque 8 temas candidatos **dentro das editorias**. Priorize o que está nas notícias desta semana (como Ormuz) e curiosidades fortes ligadas a dinheiro e poder (como "todo o ouro cabe num cubo"). Nada de pets, datas comemorativas, cultura pop, esporte ou trivia de internet.
+2. Descarte o que estiver em `temas-usados` no cérebro.
+3. Dê nota 0-10 em cada critério de `config/temas.yaml` (explica, em_jogo, atual, dados) e confira cada candidato:
+   `python3 tools/worldframe/temas.py checar --categoria <editoria> --tema "<tema em inglês>" --notas '{"explica":8,"em_jogo":9,"atual":9,"dados":8}'`
+   Só seguem os aprovados (`ok: true`). Escolha os 5 melhores, de preferência de editorias diferentes.
+4. Para tema atual e sensível (guerra, eleição, sanção), confira os fatos de hoje com WebSearch e anote as fontes.
+5. Escreva `inbox/temas-AAAA-MM-DD.md` com, por tema: editoria, notas, o mecanismo que o vídeo explica (causa → efeito), o que está em jogo para quem assiste, 3+ números com fonte.
+6. **Report**: 3 linhas. Handoff: `python3 tools/hq.py handoff --team radar --to roteiros --text "Radar · 5 temas novos para Roteiros"`.
 
 ## Regras fixas
 - Rode cada passo como um comando separado (sem cadeias `&&`). Use só os scripts de `tools/` (sempre a partir da raiz do repo).

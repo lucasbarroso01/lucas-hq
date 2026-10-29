@@ -16,18 +16,18 @@ sys.path.insert(0, str(ROOT / "tools"))
 from _common import emit  # noqa: E402
 
 W, H, FPS = 1080, 1920, 30
-RA = 310            # raio dos anéis em volta do globo (px)
+RA = 292            # raio dos anéis em volta do globo (px)
 FINAL_TAIL = 2.6     # cartão final depois da última fala
 LOOP = 0.6           # últimos segundos voltam ao frame 0 (loop)
 BAND = (168, 1330)   # faixa onde todo texto precisa caber
 
 PALETAS = {
     "principal": dict(bg="#07080C", glow="#121A3A", cor="#1F4BFF", funda="#0B1F7A", destaque="#C6FF1A",
-                      texto="#F2F4F8", sec="#8A90A6", fonte_leg="'Oswald'", peso_leg=600, caixa="uppercase",
-                      titulo="'League Gothic'"),
+                      texto="#F2F4F8", sec="#8A90A6", fonte_leg="'Instrument Serif'", peso_leg=400, caixa="none",
+                      titulo="'Instrument Serif'", rotulo="'Barlow'"),
     "alternativa": dict(bg="#EFE6D2", glow="#E2D6BC", cor="#8E9A8B", funda="#6E7A6B", destaque="#6B1F2A",
                         texto="#2A2522", sec="#6B6359", fonte_leg="'Playfair Display'", peso_leg=500, caixa="none",
-                        titulo="'Cinzel'"),
+                        titulo="'Cinzel'", rotulo="'Barlow'"),
 }
 
 # Rotas ilustrativas por corredores reais de cabos (lat, lon)
@@ -81,7 +81,10 @@ def build(proj: Path):
     for d in dur:
         cenas.append({"inicio": round(t, 3), "dur": d})
         t += d
-    final_ini = cenas[-1]["inicio"] + 0.2
+    vis_list = [c.get("visual") for c in r["cenas"]]
+    ip = vis_list.index("pergunta") if "pergunta" in vis_list else len(cenas) - 1
+    iq = vis_list.index("cta") if "cta" in vis_list else None
+    final_ini = cenas[ip]["inicio"] + 0.2
     total = round(t + FINAL_TAIL, 3)
     tl = {"cenas": cenas, "final": {"inicio": round(final_ini, 3)}, "total": total, "fps": FPS}
     (proj / "timeline.json").write_text(json.dumps(tl, indent=1))
@@ -157,7 +160,7 @@ def build(proj: Path):
                 if vis in ("contador", "numero", "globo", "printar"):
                     vis0 = vis0.replace(f'<g id="lg0">', f'<g id="lg0" transform="rotate({-40 if vis == "contador" else 0} {cx} {cy})">')
         # legendas (não na pergunta final: ela fica no cartão)
-        if vis != "pergunta":
+        if vis not in ("pergunta", "cta"):
             groups = chunks(c["legenda"], c.get("destaques", []))
             chars = [sum(len(w) + 1 for w, _ in g) for g in groups]
             speak = max(0.5, d - 0.30)
@@ -179,14 +182,21 @@ def build(proj: Path):
     f = r["final"]
     fd = total - final_ini - LOOP
     opts = "".join(f'<div class="pill" id="op{k}">{html.escape(o)}</div>' for k, o in enumerate(f["opcoes"]))
-    clip("fin", final_ini, fd, f'<div id="finq" class="finq">{html.escape(f["pergunta"])}</div>'
-                               f'<div id="fincm" class="fincm">COMMENT…</div><div class="pills">{opts}</div>'
-                               f'<div id="finfw" class="finfw">Follow to understand the world in 60s</div>', cls="final")
+    chaves = {w.lower().strip("?.,") for w in f.get("destaque", "").split()}
+    pq = " ".join(f'<i class="k">{html.escape(w)}</i>' if w.lower().strip("?.,") in chaves else html.escape(w) for w in f["pergunta"].split())
+    clip("fin", final_ini, fd, f'<div id="finq" class="finq">{pq}</div>'
+                               f'<div id="fincm" class="fincm">COMMENT YOUR ANSWER</div><div class="pills">{opts}</div>'
+                               f'<div class="cta"><div id="finlk" class="ctab">♥ <i>Like</i></div><div id="finfl" class="ctab">+ <i>Follow</i></div></div>'
+                               f'<div id="finfw" class="finfw">for more videos like this</div>', cls="final")
+    lk = (cenas[iq]["inicio"] + 0.1) if iq is not None else final_ini + 1.2
+    fl = (cenas[iq]["inicio"] + cenas[iq]["dur"] * 0.42) if iq is not None else final_ini + 1.8
     tweens += [f'tl.fromTo("#finq",{{opacity:0,y:30}},{{opacity:1,y:0,duration:.4,ease:"power3.out"}},{final_ini:.3f});',
                f'tl.fromTo("#fincm",{{opacity:0}},{{opacity:1,duration:.3}},{final_ini + 0.3:.3f});',
                f'tl.fromTo("#op0",{{opacity:0,x:-60}},{{opacity:1,x:0,duration:.35,ease:"back.out(2)"}},{final_ini + 0.5:.3f});',
                f'tl.fromTo("#op1",{{opacity:0,x:60}},{{opacity:1,x:0,duration:.35,ease:"back.out(2)"}},{final_ini + 0.6:.3f});',
-               f'tl.fromTo("#finfw",{{opacity:0}},{{opacity:1,duration:.3}},{final_ini + 1.0:.3f});',
+               f'tl.fromTo("#finlk",{{opacity:0,scale:.6}},{{opacity:1,scale:1,duration:.35,ease:"back.out(2.5)"}},{lk:.3f});',
+               f'tl.fromTo("#finfl",{{opacity:0,scale:.6}},{{opacity:1,scale:1,duration:.35,ease:"back.out(2.5)"}},{fl:.3f});',
+               f'tl.fromTo("#finfw",{{opacity:0}},{{opacity:1,duration:.3}},{fl + 0.2:.3f});',
                f'tl.fromTo("#gl",{{opacity:1}},{{opacity:.22,duration:.5,ease:"power2.out"}},{final_ini:.3f});',
                f'tl.to("#gl",{{opacity:1,duration:{LOOP * 0.8:.3f},ease:"power2.inOut"}},{total - LOOP:.3f});']
     # loop: os últimos LOOP s repetem o frame 0 (número, legenda, fonte e dial da cena 1)
@@ -241,14 +251,16 @@ TEMPLATE = """<!doctype html>
 <title>{titulo}</title>
 <script src="assets/lib/gsap.min.js"></script>
 <style>
-  @font-face {{ font-family: 'League Gothic'; src: url('assets/fonts/LeagueGothic.ttf'); }}
-  @font-face {{ font-family: 'Oswald'; src: url('assets/fonts/Oswald.ttf'); font-weight: 200 700; }}
   @font-face {{ font-family: 'Playfair Display'; src: url('assets/fonts/PlayfairDisplay-Italic.ttf'); font-style: italic; font-weight: 400 900; }}
   @font-face {{ font-family: 'Cinzel'; src: url('assets/fonts/Cinzel.ttf'); font-weight: 400 900; }}
+  @font-face {{ font-family: 'Instrument Serif'; src: url('assets/fonts/InstrumentSerif-Regular.ttf'); font-style: normal; }}
+  @font-face {{ font-family: 'Instrument Serif'; src: url('assets/fonts/InstrumentSerif-Italic.ttf'); font-style: italic; }}
+  @font-face {{ font-family: 'Barlow'; src: url('assets/fonts/Barlow-Light.ttf'); font-weight: 300; }}
+  @font-face {{ font-family: 'Barlow'; src: url('assets/fonts/Barlow-Regular.ttf'); font-weight: 400; }}
   :root {{ --bg: {P[bg]}; --glow: {P[glow]}; --cor: {P[cor]}; --funda: {P[funda]}; --hi: {P[destaque]}; --tx: {P[texto]}; --sec: {P[sec]}; }}
   * {{ margin: 0; padding: 0; box-sizing: border-box; }}
   html, body {{ width: {W}px; height: {H}px; overflow: hidden; background: var(--bg); }}
-  #root {{ position: relative; width: {W}px; height: {H}px; overflow: hidden; background: var(--bg); font-family: 'Oswald'; color: var(--tx); }}
+  #root {{ position: relative; width: {W}px; height: {H}px; overflow: hidden; background: var(--bg); font-family: {P[rotulo]}; font-weight: 300; color: var(--tx); }}
   #glow {{ position: absolute; left: 90px; top: 340px; width: 900px; height: 900px; border-radius: 50%;
           background: radial-gradient(circle, var(--glow) 0%, rgba(0,0,0,0) 68%); }}
   .bokeh {{ position: absolute; border-radius: 50%; filter: blur(38px); opacity: .32; background: var(--funda); }}
@@ -266,33 +278,37 @@ TEMPLATE = """<!doctype html>
   .dot2 {{ fill: var(--tx); }}
   .topo {{ position: absolute; left: 0; right: 0; top: 232px; height: 214px; text-align: center; }}
   .numwrap {{ display: block; transform-origin: 50% 60%; }}
-  .num {{ font-family: {P[titulo]}; font-size: 176px; line-height: 160px; color: var(--hi); letter-spacing: .01em; }}
-  .num .suf {{ font-size: 120px; margin-left: 6px; }}
-  .rot {{ margin-top: 10px; font-weight: 600; font-size: 30px; letter-spacing: .22em; color: var(--sec); }}
+  .num {{ font-family: {P[titulo]}; font-size: 200px; line-height: 170px; color: var(--hi); letter-spacing: -.01em; }}
+  .num .suf {{ font-size: 120px; margin-left: 8px; font-style: italic; }}
+  .rot {{ margin-top: 10px; font-family: {P[rotulo]}; font-weight: 300; font-size: 28px; letter-spacing: .32em; color: var(--sec); }}
   .cap {{ position: absolute; left: 70px; right: 70px; top: 1100px; height: 140px; display: flex; align-items: center; justify-content: center; }}
-  .captxt {{ font-family: {P[fonte_leg]}; font-weight: {P[peso_leg]}; text-transform: {P[caixa]}; font-size: 66px; line-height: 70px;
+  .captxt {{ font-family: {P[fonte_leg]}; font-weight: {P[peso_leg]}; text-transform: {P[caixa]}; font-size: 80px; line-height: 84px; letter-spacing: -.005em;
              text-align: center; color: var(--tx); text-shadow: 0 4px 24px rgba(0,0,0,.9); }}
-  .captxt .k {{ color: var(--hi); font-weight: inherit; }}
+  .captxt .k {{ color: var(--hi); font-weight: inherit; font-style: italic; }}
   .fonte {{ position: absolute; left: 70px; right: 70px; top: 1250px; height: 32px; text-align: center; font-size: 21px;
            letter-spacing: .08em; color: var(--sec); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
-  #marca {{ position: absolute; left: 0; right: 0; top: 1294px; height: 32px; text-align: center; font-weight: 600; font-size: 24px;
-           letter-spacing: .55em; color: var(--sec); opacity: .7; }}
+  #marca {{ position: absolute; left: 0; right: 0; top: 1294px; height: 32px; text-align: center; font-weight: 400; font-size: 24px;
+           letter-spacing: .6em; color: var(--sec); opacity: .7; }}
   #rec {{ position: absolute; left: 64px; top: 184px; height: 38px; display: flex; align-items: center; gap: 12px;
-         font-weight: 600; font-size: 26px; letter-spacing: .2em; color: var(--tx); }}
+         font-weight: 400; font-size: 26px; letter-spacing: .28em; color: var(--tx); }}
   #recdot {{ width: 18px; height: 18px; border-radius: 50%; background: var(--tx); }}
   #dial {{ position: absolute; left: 866px; top: 176px; width: 140px; height: 140px; }}
   .dialbox {{ position: absolute; left: 866px; top: 176px; width: 140px; height: 140px; display: flex; align-items: center; justify-content: center; }}
   .dialtxt {{ display: flex; flex-direction: column; align-items: center; line-height: 1; }}
-  .dl {{ font-size: 17px; letter-spacing: .25em; color: var(--sec); font-weight: 600; }}
-  .dn {{ margin-top: 6px; font-family: 'League Gothic'; font-size: 40px; color: var(--tx); }}
+  .dl {{ font-size: 16px; letter-spacing: .3em; color: var(--sec); font-weight: 400; }}
+  .dn {{ margin-top: 4px; font-family: {P[titulo]}; font-size: 42px; color: var(--tx); }}
   .final {{ position: absolute; left: 70px; right: 70px; top: 300px; height: 940px; text-align: center; }}
-  .finq {{ font-family: {P[titulo]}; font-size: 104px; line-height: 104px; color: var(--tx); text-transform: uppercase; }}
-  .fincm {{ margin-top: 210px; font-weight: 600; font-size: 34px; letter-spacing: .3em; color: var(--sec); }}
+  .finq {{ font-family: {P[titulo]}; font-size: 96px; line-height: 100px; color: var(--tx); letter-spacing: -.01em; }}
+  .finq .k {{ color: var(--hi); font-style: italic; }}
+  .fincm {{ margin-top: 150px; font-weight: 400; font-size: 30px; letter-spacing: .32em; color: var(--sec); }}
   .pills {{ margin-top: 26px; display: flex; justify-content: center; gap: 40px; }}
-  .pill {{ min-width: 260px; padding: 18px 46px; border-radius: 999px; font-family: 'League Gothic'; font-size: 88px; line-height: 92px;
+  .pill {{ min-width: 260px; padding: 18px 46px; border-radius: 999px; font-family: {P[titulo]}; font-style: italic; font-size: 84px; line-height: 88px;
           color: var(--bg); background: var(--hi); }}
   .pill + .pill {{ background: var(--tx); }}
-  .finfw {{ margin-top: 190px; font-weight: 600; font-size: 36px; letter-spacing: .06em; color: var(--tx); }}
+  .cta {{ margin-top: 70px; display: flex; justify-content: center; gap: 36px; }}
+  .ctab {{ padding: 14px 40px; border-radius: 999px; border: 2px solid var(--tx); font-family: {P[titulo]}; font-size: 64px; line-height: 70px; color: var(--tx); }}
+  .ctab + .ctab {{ border-color: var(--hi); color: var(--hi); }}
+  .finfw {{ margin-top: 26px; font-family: {P[titulo]}; font-style: italic; font-size: 44px; color: var(--sec); }}
 </style>
 </head>
 <body>
