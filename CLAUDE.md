@@ -13,6 +13,7 @@ Times e agentes ficam em `.claude/agents/`; comandos em `.claude/commands/` (`/r
   - Funny Pets: cenas aprovadas antes de gerar no Higgsfield.
   - Worldframe: os 5 vídeos aprovados no Drive antes de mover para `done/`.
 - Nunca publique em redes, nunca apague arquivos, nunca use `rm`.
+- Drive **só pelos scripts** (`tools/drive_upload.py`, `tools/drive_sync.py`): eles sobem o vídeo junto com a legenda. Nunca crie, copie ou renomeie arquivos no Drive pelo conector.
 - Líderes dividem trabalho com a Task tool em sub-agentes **paralelos**, sem chat compartilhado, e conferem cada entrega.
 
 ## Regras de expediente

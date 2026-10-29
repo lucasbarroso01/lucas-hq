@@ -31,7 +31,8 @@ async function load() {
     supabase.from('events').select('id', { count: 'exact', head: true }).eq('type', 'brain_write'),
   ])
   const ctl = await supabase.from('controle').select('*').eq('id', 'operacao').maybeSingle()
-  if (ctl.data) hq.set({ pausa: { pausado: ctl.data.pausado, motivo: ctl.data.motivo, atualizado_em: ctl.data.atualizado_em } })
+  if (ctl.data) hq.set({ pausa: { pausado: ctl.data.pausado, motivo: ctl.data.motivo, atualizado_em: ctl.data.atualizado_em },
+    drive: { raiz: ctl.data.drive_raiz ?? undefined, dia: ctl.data.drive_dia ?? undefined, data: ctl.data.drive_dia_data ?? undefined } })
   if (agents.error) { console.warn('[supabase]', agents.error.message); return false }
   hq.set({
     live: 'supabase',
@@ -49,8 +50,9 @@ async function load() {
     .on('postgres_changes', { event: '*', schema: 'public', table: 'agents' }, (p) => p.new && useHQ.getState().upsertAgent(p.new as Agent))
     .on('postgres_changes', { event: '*', schema: 'public', table: 'skills_runtime' }, (p) => p.new && useHQ.getState().upsertSkill(p.new as SkillRuntime))
     .on('postgres_changes', { event: '*', schema: 'public', table: 'controle' }, (p) => {
-      const n = p.new as { pausado?: boolean; motivo?: string; atualizado_em?: string }
-      if (n && 'pausado' in n) useHQ.getState().set({ pausa: { pausado: !!n.pausado, motivo: n.motivo ?? '', atualizado_em: n.atualizado_em } })
+      const n = p.new as { pausado?: boolean; motivo?: string; atualizado_em?: string; drive_raiz?: string; drive_dia?: string; drive_dia_data?: string }
+      if (n && 'pausado' in n) useHQ.getState().set({ pausa: { pausado: !!n.pausado, motivo: n.motivo ?? '', atualizado_em: n.atualizado_em },
+        drive: { raiz: n.drive_raiz, dia: n.drive_dia, data: n.drive_dia_data } })
     })
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'events' }, (p) => useHQ.getState().ingestEvent(p.new as HQEvent))
     .on('postgres_changes', { event: '*', schema: 'public', table: 'schedule' }, async () => {

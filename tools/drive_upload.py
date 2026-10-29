@@ -137,6 +137,14 @@ try:
             vid = put(svc, parent, name, MediaFileUpload(a.video, resumable=True))
         put(svc, parent, Path(name).with_suffix(".txt").name, MediaInMemoryUpload(txt.encode(), mimetype="text/plain"))
         folder_url = f"https://drive.google.com/drive/folders/{parent}"
+        try:  # botão "Abrir Drive" do site: pasta raiz e pasta do dia mais recente
+            from _common import KEY, URL, rest
+            if URL and KEY:
+                raiz = folder(svc, None, ROOT)
+                rest("PATCH", "controle", {"drive_raiz": f"https://drive.google.com/drive/folders/{raiz}",
+                                           "drive_dia": folder_url, "drive_dia_data": a.date}, "?id=eq.operacao")
+        except Exception:  # noqa: BLE001  (migração 0004 ainda não rodou)
+            pass
         if a.task:
             import subprocess
             import sys

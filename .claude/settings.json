@@ -44,7 +44,9 @@
       "mcp__claude_ai_Google_Drive__share_file",
       "mcp__claude_ai_higgsfield__tiktok_prepare_publish",
       "mcp__claude_ai_higgsfield__publish_website",
-      "mcp__claude_ai_Google_Drive__update_file"
+      "mcp__claude_ai_Google_Drive__update_file",
+      "mcp__claude_ai_Google_Drive__create_file",
+      "mcp__claude_ai_Google_Drive__copy_file"
     ]
   }
 }

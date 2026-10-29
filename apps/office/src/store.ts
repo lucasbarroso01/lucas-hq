@@ -28,6 +28,7 @@ interface State {
   live: 'supabase' | 'demo' | 'local'
   camera: { x: number; z: number; zoom: number }
   pausa: { pausado: boolean; motivo: string; atualizado_em?: string }
+  drive: { raiz?: string; dia?: string; data?: string }
 
   walkers: Walker[]
   pulses: Pulse[]
@@ -65,6 +66,7 @@ export const useHQ = create<State>((set, get) => ({
   live: 'local',
   camera: { x: 0, z: 0, zoom: 1 },
   pausa: { pausado: false, motivo: '' },
+  drive: {},
 
   walkers: [],
   pulses: [],

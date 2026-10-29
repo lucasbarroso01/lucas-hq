@@ -5,13 +5,14 @@ import { Ring, ago } from './bits'
 import { decide } from '../lib/supabase'
 import type { Task } from '../data/types'
 import { driveSearch, statusPt } from './TaskDetail'
+import { driveHref } from './DriveButton'
 
-const DRIVE_HOME = (import.meta.env.VITE_DRIVE_URL as string | undefined) || driveSearch('Central de Conteúdo — Lucas')
 
 type F = 'all' | 'running' | 'waiting' | 'done'
 
 export function TasksView() {
-  const { tasks: all, operation, set } = useHQ()
+  const { tasks: all, operation, set, drive } = useHQ()
+  const DRIVE_HOME = driveHref(drive).href
   const [f, setF] = useState<F>('all')
   const tasks = all.filter((t) => operation === 'all' || t.operacao === operation)
   const by = (s: Task['status']) => tasks.filter((t) => t.status === s)
