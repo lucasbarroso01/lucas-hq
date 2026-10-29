@@ -6,7 +6,7 @@ Times e agentes ficam em `.claude/agents/`; comandos em `.claude/commands/` (`/r
 ## Regras para todo agente
 - O agente decide; os scripts de `tools/` fazem os pixels. Não edite vídeo à mão, rode o script.
 - Um comando por vez, sem `&&`. Sempre a partir da raiz do repo. Cada script imprime 1 linha JSON: leia `ok`.
-- Fluxo de arquivos: `inbox/` (entrada) → `out/<nome>/` (trabalho) → `done/` (só após aprovação do Lucas).
+- Fluxo de arquivos: `inbox/roteiros/` (roteiros .json) → `out/` (vídeo, legenda e contact sheet) → `done/` (só após aprovação do Lucas). Worldframe é **gerado em código** por `tools/worldframe/produzir.py`: não há vídeo bruto.
 - Cérebro: MCP `memory` (`brain/memory.jsonl`). Leia antes (`search_nodes`), escreva depois (`add_observations`). Toda leitura/escrita vira evento com `tools/hq.py event --type brain_read|brain_write`.
 - Estado ao vivo: `tools/hq.py task|agent|event|skill|schedule` a cada mudança de etapa. A interface (`apps/office`) mostra tudo.
 - Humano no loop: tudo que é público ou custa dinheiro espera o OK do Lucas (`tools/hq.py approval --task <id>`).
@@ -34,3 +34,4 @@ Turnos: `python3 tools/expediente.py turnos`. Disparo: `/turno <id>` (um turno p
 - `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` (agentes). Sem elas, `hq.py` grava em `out/_hq.log` (modo offline).
 - Drive (Gmail pessoal): cliente OAuth em `~/.config/lucas-hq/oauth-client.json` e login único com `python3 tools/drive_upload.py --login`. Sem isso, os arquivos ficam em `out/_drive/`.
 - Python: `pip install -r tools/requirements.txt`; precisa de `ffmpeg`.
+- Produção Worldframe: `bash tools/setup_producao.sh` (PASSO 0: Node 22+, ffmpeg, Kokoro e modelo, HyperFrames e Chrome, fontes e bibliotecas locais). Formato do roteiro: `tools/worldframe/ROTEIRO.md`.

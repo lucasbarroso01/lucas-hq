@@ -10,3 +10,9 @@ done/*
 __pycache__
 *.tsbuildinfo
 .venv/
+models/
+video/node_modules/
+video/package-lock.json
+assets/lib/
+assets/fonts/*.ttf
+.hyperframes/

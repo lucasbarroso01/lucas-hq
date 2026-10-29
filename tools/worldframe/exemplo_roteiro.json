@@ -1,0 +1,111 @@
+{
+  "slug": "undersea-cables",
+  "titulo": "The internet lies on the ocean floor",
+  "paleta": "principal",
+  "voz": "am_michael",
+  "velocidade": 1.1,
+  "dial": "FACT",
+  "fontes_checadas_em": "2026-10-29",
+  "cenas": [
+    {
+      "fala": "About every two days, an internet cable on the ocean floor breaks. And you never notice.",
+      "legenda": "About every 2 days an internet cable on the ocean floor breaks. And you never notice.",
+      "destaques": ["2 days", "breaks"],
+      "numero": {"de": 0, "ate": 2, "casas": 0, "sufixo": "", "rotulo": "DAYS BETWEEN CABLE BREAKS"},
+      "fonte": "TeleGeography, ICPC fault data (avg. 199 faults/yr since 2010)",
+      "visual": "contador",
+      "camera": {"lat": 20, "lon": -40, "dist": 3.2},
+      "globo": {"cabos": 1, "quebras": 1}
+    },
+    {
+      "fala": "Your messages, your videos, your bank transfers. They cross oceans mostly through cables, not satellites.",
+      "legenda": "Your messages, your videos, your bank transfers cross oceans mostly through cables, not satellites.",
+      "destaques": ["cables"],
+      "fonte": "TeleGeography Submarine Cable Map",
+      "visual": "globo",
+      "camera": {"lat": 35, "lon": -20, "dist": 2.7},
+      "globo": {"cabos": 1, "quebras": 0}
+    },
+    {
+      "fala": "There are about six hundred cable systems in the world.",
+      "legenda": "There are about 600 cable systems in the world.",
+      "destaques": ["600"],
+      "numero": {"de": 0, "ate": 600, "casas": 0, "sufixo": "", "rotulo": "CABLE SYSTEMS"},
+      "fonte": "TeleGeography, early 2026",
+      "visual": "numero",
+      "camera": {"lat": 10, "lon": 60, "dist": 3.0},
+      "globo": {"cabos": 1, "quebras": 0}
+    },
+    {
+      "fala": "Laid end to end, they run more than one point five million kilometers.",
+      "legenda": "Laid end to end, they run more than 1.5 million kilometers.",
+      "destaques": ["1.5 million"],
+      "numero": {"de": 0, "ate": 1.5, "casas": 1, "sufixo": "M", "rotulo": "KILOMETERS OF CABLE"},
+      "fonte": "TeleGeography, early 2026",
+      "visual": "numero",
+      "camera": {"lat": -10, "lon": 120, "dist": 2.6},
+      "globo": {"cabos": 1, "quebras": 0}
+    },
+    {
+      "fala": "That is enough to wrap around the Earth thirty seven times.",
+      "legenda": "That is enough to wrap around the Earth 37 times.",
+      "destaques": ["37 times"],
+      "numero": {"de": 0, "ate": 37, "casas": 0, "sufixo": "×", "rotulo": "TIMES AROUND THE EARTH"},
+      "fonte": "1.5M km ÷ 40,075 km (Earth's circumference)",
+      "visual": "voltas",
+      "camera": {"lat": 5, "lon": 160, "dist": 3.4},
+      "globo": {"cabos": 1, "quebras": 0, "anel": 1}
+    },
+    {
+      "fala": "And they break. About two hundred times, every single year.",
+      "legenda": "And they break. About 200 times every single year.",
+      "destaques": ["200 times"],
+      "numero": {"de": 0, "ate": 199, "casas": 0, "sufixo": "", "rotulo": "FAULTS PER YEAR (AVG.)"},
+      "fonte": "TeleGeography, ICPC data, 2010 to 2025",
+      "visual": "contador",
+      "camera": {"lat": 30, "lon": -150, "dist": 2.9},
+      "globo": {"cabos": 1, "quebras": 3}
+    },
+    {
+      "fala": "Not sharks. Not spies. More than eight in ten breaks come from fishing gear and ship anchors.",
+      "legenda": "Not sharks. Not spies. More than 8 in 10 breaks come from fishing gear and ship anchors.",
+      "destaques": ["8 in 10", "anchors"],
+      "numero": {"de": 0, "ate": 80, "casas": 0, "sufixo": "%+", "rotulo": "OF BREAKS: FISHING AND ANCHORS"},
+      "fonte": "ITU and ICPC",
+      "visual": "anel",
+      "anel": 80,
+      "camera": {"lat": 50, "lon": 0, "dist": 2.2},
+      "globo": {"cabos": 1, "quebras": 2}
+    },
+    {
+      "fala": "The internet you think lives in the cloud actually rests on the seabed.",
+      "legenda": "The internet you think lives in the cloud actually rests on the seabed.",
+      "destaques": ["seabed"],
+      "fonte": "TeleGeography Submarine Cable Map",
+      "visual": "globo",
+      "camera": {"lat": -35, "lon": -10, "dist": 1.9},
+      "globo": {"cabos": 1, "quebras": 0, "fundo": 1}
+    },
+    {
+      "fala": "One and a half million kilometers of glass, lying in the dark.",
+      "legenda": "1.5 million kilometers of glass, lying in the dark.",
+      "destaques": ["glass"],
+      "numero": {"de": 1.5, "ate": 1.5, "casas": 1, "sufixo": "M KM", "rotulo": "OF GLASS FIBER"},
+      "fonte": "TeleGeography, early 2026",
+      "visual": "printar",
+      "camera": {"lat": 15, "lon": -60, "dist": 3.6},
+      "globo": {"cabos": 1, "quebras": 0}
+    },
+    {
+      "fala": "Should countries guard these cables like their borders? Comment yes or no.",
+      "legenda": "Should countries guard these cables like borders? Comment YES or NO.",
+      "destaques": ["YES", "NO"],
+      "fonte": "",
+      "visual": "pergunta",
+      "camera": {"lat": 20, "lon": -40, "dist": 3.2},
+      "globo": {"cabos": 1, "quebras": 0}
+    }
+  ],
+  "final": {"pergunta": "Should countries guard these cables like borders?", "opcoes": ["YES", "NO"]},
+  "legenda_post": "About every two days a cable on the ocean floor breaks and the internet keeps going. 600 systems, 1.5 million km of glass, and most breaks come from fishing gear and anchors. Should countries guard these cables like their borders?"
+}

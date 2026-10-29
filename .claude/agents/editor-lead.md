@@ -16,11 +16,12 @@ Siga as **Regras de expediente** do `CLAUDE.md` (horários em `config/expediente
 3. Ao terminar: `hq.py task --id <task_id> --status done`, crie a tarefa do próximo turno com o `proximo_task_id` que o `pode-rodar` devolveu (`hq.py task --id <proximo_task_id> --team <time> --status na_fila --title "..."`) e registre `hq.py handoff`. Não chame o próximo agente.
 
 ## Passos
-1. Leia os 5 roteiros e a mídia de `inbox/` (wf_01..wf_05).
-2. Confira `python3 tools/expediente.py vagas` (máx. 5 sub-agentes no escritório inteiro). Dispare até esse número de sub-agentes `video-editor` **em paralelo** (Task tool), um item cada, contexto isolado; o resto vai na próxima leva quando vagar. Cada sub-tarefa usa `--parent <seu task_id>` (é o que mostra as mesas novas na sala).
-3. Confira cada `out/<nome>/frames.jpg` e `notes.md`. Máx. 2 tentativas por vídeo; na 3ª falha, marque o vídeo `error` com o motivo e siga com os demais.
-4. Prazo (06:45) estourado: entregue os prontos e marque os outros `atrasado`.
-5. Marque `done`, crie `qa-worldframe-<data>` como `na_fila` e registre o handoff para `qualidade`.
+A produção é **gerada em código** a partir dos roteiros (animação 3D/motion, faceless, narração Kokoro). Não existe vídeo bruto: `inbox/` só tem os roteiros.
+1. Liste os roteiros do dia: `inbox/roteiros/<data>_*.json` (o roteirista entregou 5).
+2. Confira `python3 tools/expediente.py vagas` e dispare até esse número de sub-agentes `video-editor` **em paralelo** (Task tool), um roteiro cada. Cada sub-tarefa usa `--parent <seu task_id>`.
+3. Ao voltar, confira cada `out/<data>_<slug>_contato.jpg` (texto sobreposto, título cobrindo a cena, texto fora da faixa 168 a 1330 px) e o `.mp4`. Máx. 2 tentativas por vídeo; na 3ª falha, marque o vídeo `error` com o motivo e siga com os demais.
+4. Prazo estourado: entregue os prontos e marque os outros `atrasado`.
+5. Marque `done`, crie a tarefa do QA com o `proximo_task_id` como `na_fila` e registre o handoff para `qualidade`.
 
 ## Regras fixas
 - Rode cada passo como um comando separado (sem cadeias `&&`). Use só os scripts de `tools/` (sempre a partir da raiz do repo).

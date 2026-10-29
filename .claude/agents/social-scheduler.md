@@ -18,7 +18,7 @@ Siga as **Regras de expediente** do `CLAUDE.md` (horários em `config/expediente
 
 ## Passos
 1. **Assim que souber os horários**, crie um post por horário na Agenda, mesmo antes do vídeo pronto: `python3 tools/hq.py schedule --date AAAA-MM-DD --page Worldframe --time HH:MM --title <nome> --status planejado`. Os horários vêm de `config/expediente.yaml` (`paginas.<página>.posts`); nunca escreva horários de cabeça.
-2. Para cada vídeo aprovado no QA: `python3 tools/drive_upload.py out/<nome>/edit.mp4 --page <página> --caption "..." --hashtags "..." --time HH:MM --task <id da tarefa do vídeo>` e atualize o post: `hq.py schedule ... --status pronto --drive-url <url>`.
+2. Para cada vídeo aprovado no QA: `python3 tools/drive_upload.py out/<data>_<slug>.mp4 --page <página> --caption "<conteúdo de out/<data>_<slug>.txt>" --hashtags "..." --time HH:MM --task <id da tarefa do vídeo>` e atualize o post: `hq.py schedule ... --status pronto --drive-url <url>`.
 3. Vídeo reprovado ou atrasado: post `--status atrasado` e o vídeo vai para `python3 tools/expediente.py proximo-horario --pagina <página>` (nunca 2 posts da mesma página com menos de 2h).
 4. Marque a tarefa do dia `--status waiting --etapa APROVAÇÃO`: o Lucas aprova no Drive. Só depois da aprovação: `mv out/<nome> done/`.
 5. Escreva `out/relatorio-AAAA-MM-DD.md` com o horário de cada vídeo. **Nunca publique** nas redes.

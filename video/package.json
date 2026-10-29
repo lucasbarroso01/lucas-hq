@@ -1,0 +1,10 @@
+{
+  "name": "lucas-hq-video",
+  "private": true,
+  "description": "Bibliotecas locais da Produção Worldframe (copiadas para assets/lib pelo tools/setup_producao.sh)",
+  "dependencies": {
+    "gsap": "^3.12.5",
+    "three": "^0.169.0",
+    "world-atlas": "^2.0.2"
+  }
+}
