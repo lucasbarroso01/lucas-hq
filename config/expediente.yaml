@@ -16,6 +16,11 @@ limites:
   higgsfield_refacoes_dia: 1
   aviso_antes_post_min: 15
 
+recuperacao:          # notebook fechado no horário: o turno roda assim que o Linux voltar
+  ativa: true
+  verificar_a_cada_min: 5   # o cron procura turnos perdidos com essa frequência (e ao ligar)
+  max_horas: 16             # turno perdido há mais que isso não é recuperado (fica para o próximo ciclo)
+
 paginas:
   Worldframe:
     cor: "#7B5CE0"

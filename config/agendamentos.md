@@ -17,6 +17,10 @@ Fuso: **America/Sao_Paulo**. Um turno por tarefa agendada. Cada disparo roda `/t
 | Lucas HQ · analytics-diario | `CRON_TZ=America/Sao_Paulo 30 22 * * *` | `/turno analytics-diario` |
 | Lucas HQ · manutencao-cerebro | `CRON_TZ=America/Sao_Paulo 0 23 * * 0` | `/turno manutencao-cerebro` |
 
+## Recuperação (notebook fechado no horário)
+
+A cada 5 min e ao ligar, `iniciar.sh --recuperar` roda os turnos perdidos, um por vez, do post mais urgente ao menos urgente, respeitando o silêncio e as dependências. Perdido há mais de 16h, fica para o próximo ciclo. No máximo 2 tentativas por turno; depois, `error` na tarefa.
+
 ## No seu computador (cron do Linux)
 
 O cron do Debian não entende `CRON_TZ`, então o relógio do Linux precisa estar em America/Sao_Paulo. O computador precisa estar ligado e com o Linux aberto no horário. Instale com `./iniciar.sh --agendar`, que grava estas linhas no `crontab`:
@@ -34,4 +38,6 @@ O cron do Debian não entende `CRON_TZ`, então o relógio do Linux precisa esta
 20 10 * * * $HOME/lucas-hq/iniciar.sh --turno social-pets >> $HOME/lucas-hq/out/_turnos.log 2>&1
 30 22 * * * $HOME/lucas-hq/iniciar.sh --turno analytics-diario >> $HOME/lucas-hq/out/_turnos.log 2>&1
 0 23 * * 0 $HOME/lucas-hq/iniciar.sh --turno manutencao-cerebro >> $HOME/lucas-hq/out/_turnos.log 2>&1
+*/5 * * * * $HOME/lucas-hq/iniciar.sh --recuperar >> $HOME/lucas-hq/out/_turnos.log 2>&1
+@reboot sleep 90; $HOME/lucas-hq/iniciar.sh --recuperar >> $HOME/lucas-hq/out/_turnos.log 2>&1
 ```

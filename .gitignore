@@ -9,3 +9,4 @@ done/*
 *.pyc
 __pycache__
 *.tsbuildinfo
+.venv/

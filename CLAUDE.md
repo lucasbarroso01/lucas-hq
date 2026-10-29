@@ -19,13 +19,14 @@ Times e agentes ficam em `.claude/agents/`; comandos em `.claude/commands/` (`/r
 Fonte única: `config/expediente.yaml` (fuso America/Sao_Paulo). Nunca escreva horários soltos: consulte `python3 tools/expediente.py`.
 1. **Um agente, uma função.** Faça só a sua etapa. Nunca faça o trabalho de outro time nem adiante a próxima etapa.
 2. **Só no seu horário e com a entrega anterior pronta.** Comece com `python3 tools/expediente.py pode-rodar --turno <id> --esperar`. Se `ok=false`, encerre sem fazer nada (ele já registra `waiting_upstream` quando a etapa anterior não entregou em 15 min).
-3. **Bastão só pela tabela `tasks`.** Ao terminar: sua tarefa (`expediente.py task-id --turno <id>`) vira `done`, crie a tarefa do próximo turno com `--status na_fila` e registre `hq.py handoff`. Não chame o próximo agente.
+3. **Bastão só pela tabela `tasks`.** Ao terminar: sua tarefa (`expediente.py task-id --turno <id>`) vira `done`, crie a tarefa do próximo turno (`proximo_task_id` do `pode-rodar`) com `--status na_fila` e registre `hq.py handoff`. Não chame o próximo agente.
 4. **Limites:** máx. 5 sub-agentes no escritório (`expediente.py vagas`), 1 rodada por time, 2 tentativas por item (na 3ª falha: `error` com motivo e siga com os demais), Higgsfield 1 geração/dia (+1 refação) com saldo checado antes.
 5. **Prazo estourado:** entregue o que estiver pronto, marque o resto `atrasado` e use `expediente.py proximo-horario --pagina <p>` (nunca 2 posts da mesma página com menos de 2h).
 6. **Não refaça o que está pronto:** confira `tasks` e `temas-usados` no cérebro antes de começar.
 7. **Silêncio 23:30–04:30:** ninguém roda, exceto a manutenção de domingo.
 8. **Humano no loop:** nada é publicado, apagado ou pago sem aprovação; pare em "aguardando você".
 9. **Relatório curto:** no máximo 3 linhas (o que fez, onde está, o que ficou pendente).
+10. **Recuperação (notebook fechado no horário):** o turno perdido roda assim que o Linux voltar (`iniciar.sh --recuperar`, a cada 5 min e ao ligar), um por vez, do post mais urgente ao menos urgente, respeitando o silêncio e as dependências; perdido há mais de 16h, fica para o próximo ciclo. Rodando com `atrasado: true`, entregue normalmente e aplique a regra 5 (posts que já passaram vão para `proximo-horario`).
 
 Turnos: `python3 tools/expediente.py turnos`. Disparo: `/turno <id>` (um turno por tarefa agendada, ver `config/agendamentos.md`).
 

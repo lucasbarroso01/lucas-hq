@@ -13,8 +13,8 @@ Siga as **Regras de expediente** do `CLAUDE.md` (horários em `config/expediente
 - `cenas-pets` · 19:20–19:45 · 4 a 6 cenas → status "aguardando você" → próximo: `producao-pets`
 
 1. Primeiro comando, sempre: `python3 tools/expediente.py pode-rodar --turno <turno> --esperar`. Se `ok` for `false`, responda o `motivo` em 1 linha e encerre.
-2. Use como id da sua tarefa o `task_id` que ele devolveu. Faça **só** a etapa do turno.
-3. Ao terminar: `hq.py task --id <task_id> --status done`, crie a tarefa do próximo turno (`python3 tools/expediente.py task-id --turno <próximo>` e `hq.py task --id <esse id> --team <time> --status na_fila --title "..."`) e registre `hq.py handoff`. Não chame o próximo agente.
+2. Use como id da sua tarefa o `task_id` que ele devolveu. Faça **só** a etapa do turno. Se vier `atrasado: true` (turno recuperado), faça normalmente e aplique a regra 5 do `CLAUDE.md`.
+3. Ao terminar: `hq.py task --id <task_id> --status done`, crie a tarefa do próximo turno com o `proximo_task_id` que o `pode-rodar` devolveu (`hq.py task --id <proximo_task_id> --team <time> --status na_fila --title "..."`) e registre `hq.py handoff`. Não chame o próximo agente.
 
 ## Passos
 **Turno `roteiros-worldframe`**

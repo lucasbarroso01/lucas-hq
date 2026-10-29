@@ -36,11 +36,40 @@ if [ "$1" = "--agendar" ]; then
 fi
 
 cd "$DIR"
+LOCK="$HOME/.config/lucas-hq/turno.lock"   # um turno por vez no notebook (agendado ou recuperado)
 if [ "$1" = "--turno" ]; then
-  # disparo agendado: sem perguntas, sem git pull interativo
+  # disparo agendado: sem perguntas; espera um turno em andamento terminar
   source .venv/bin/activate
   source "$ENV_FILE"
-  exec claude -p "/turno $2"
+  exec flock -w 7200 "$LOCK" claude -p "/turno $2"
+fi
+if [ "$1" = "--recuperar" ]; then
+  # notebook estava fechado no horário: roda os turnos perdidos, do post mais urgente ao menos urgente
+  source .venv/bin/activate
+  source "$ENV_FILE"
+  exec 9>"$LOCK"
+  flock -n 9 || exit 0                      # já tem turno rodando: tenta de novo no próximo ciclo
+  TRIES="$HOME/.config/lucas-hq/tentativas"; mkdir -p "$TRIES"
+  MAX=$(python3 -c 'import yaml; print(yaml.safe_load(open("config/expediente.yaml"))["limites"]["tentativas_por_item"])')
+  LAST=""
+  for _ in 1 2 3 4 5 6 7 8 9 10 11 12; do
+    NEXT=$(python3 tools/expediente.py proximo-pendente)
+    echo "$NEXT" | grep -q '"ok": true' || exit 0
+    read -r T O ID < <(echo "$NEXT" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["turno"], d["ocorrencia"].replace(" ", "T"), d["task_id"])')
+    O="${O/T/ }"
+    [ "$ID" = "$LAST" ] && exit 0            # o mesmo turno não andou: tenta no próximo ciclo
+    N=$(( $(cat "$TRIES/$ID" 2>/dev/null || echo 0) + 1 ))
+    if [ "$N" -gt "$MAX" ]; then
+      python3 tools/hq.py task --id "$ID" --status error --log "recuperação falhou $MAX vezes: veja out/_turnos.log" >/dev/null || true
+      echo "$(date '+%F %T') $T: $MAX tentativas sem sucesso, marcado como error"
+      LAST="$ID"; continue
+    fi
+    echo "$N" > "$TRIES/$ID"
+    echo "$(date '+%F %T') recuperando $T (perdido em $O, tentativa $N/$MAX)"
+    claude -p "/turno $T recuperar $O" || true
+    LAST="$ID"
+  done
+  exit 0
 fi
 echo "→ atualizando o código"
 git pull --ff-only || echo "  (não deu para atualizar; seguindo com a versão atual)"

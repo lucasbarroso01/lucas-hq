@@ -68,10 +68,21 @@ def running_subagents() -> int:
     return len(rows)
 
 
-def check(t: dict, now: dt.datetime, teste: bool) -> tuple[bool, str, str | None]:
-    """(ok, motivo, status_a_registrar)."""
+SKIP = {"done": "já está done (não refaça)", "waiting": "já entregou e espera o Lucas", "running": "já está rodando",
+        "error": "terminou com erro (veja o motivo na tarefa)", "atrasado": "já foi entregue com atraso"}
+
+
+def check(t: dict, now: dt.datetime, teste: bool, ocorrencia: dt.datetime | None = None) -> tuple[bool, str, str | None]:
+    """(ok, motivo, status_a_registrar). Com `ocorrencia` (recuperação), datas e ids vêm do horário perdido
+    e só o silêncio é checado no relógio real."""
     clock = now.time()
-    if not teste:
+    if ocorrencia is not None:
+        if not t.get("manutencao") and in_window(clock, CFG["silencio"]["inicio"], CFG["silencio"]["fim"]):
+            return False, f"horário de silêncio ({CFG['silencio']['inicio']}–{CFG['silencio']['fim']})", None
+        if now - ocorrencia > dt.timedelta(hours=CFG["recuperacao"]["max_horas"]):
+            return False, f"turno perdido há mais de {CFG['recuperacao']['max_horas']}h: fica para o próximo ciclo", None
+        now = ocorrencia
+    elif not teste:
         if t.get("dias") and DIAS[now.weekday()] not in t["dias"]:
             return False, f"turno só roda em {', '.join(t['dias'])}", None
         if not t.get("manutencao") and in_window(clock, CFG["silencio"]["inicio"], CFG["silencio"]["fim"]):
@@ -84,8 +95,8 @@ def check(t: dict, now: dt.datetime, teste: bool) -> tuple[bool, str, str | None
         return True, "offline (sem Supabase): dependências não verificadas", None
     own = task_id(t, now)
     mine = get_task(own)
-    if mine and mine["status"] == "done":
-        return False, f"{own} já está done (não refaça)", None
+    if mine and mine["status"] in SKIP:
+        return False, f"{own} {SKIP[mine['status']]}", None
     busy = running_in_team(t["time"], own)
     if busy:
         return False, f"o time {t['time']} já tem rodada em andamento: {', '.join(busy)}", None
@@ -103,10 +114,54 @@ def check(t: dict, now: dt.datetime, teste: bool) -> tuple[bool, str, str | None
     return True, "pode rodar", None
 
 
+def next_turno(t: dict) -> str | None:
+    return next((x["id"] for x in CFG["turnos"] if x.get("depende_de") == t["id"]), None)
+
+
+def occurrence(t: dict, now: dt.datetime) -> dt.datetime | None:
+    """Último horário de início do turno que já passou (hoje ou ontem), respeitando `dias`."""
+    for back in (0, 1, 2, 3, 4, 5, 6):
+        day = now.date() - dt.timedelta(days=back)
+        start = dt.datetime.combine(day, hm(t["inicio"]), TZ)
+        if start <= now and (not t.get("dias") or DIAS[day.weekday()] in t["dias"]):
+            return start
+    return None
+
+
+def pendentes(now: dt.datetime) -> list[dict]:
+    """Turnos cujo horário passou sem a tarefa ter sido feita, do mais antigo ao mais novo."""
+    out = []
+    for t in CFG["turnos"]:
+        if t.get("humano"):
+            continue
+        occ = occurrence(t, now)
+        if not occ or now - occ > dt.timedelta(hours=CFG["recuperacao"]["max_horas"]):
+            continue
+        tid = task_id(t, occ)
+        task = get_task(tid) if ONLINE else None
+        if task and task["status"] in SKIP:
+            continue
+        ok, why, _ = check(t, now, False, occ)
+        pg = CFG["paginas"].get(t.get("pagina") or "")
+        # urgência: o primeiro post da página na data servida; sem página (analytics) vai por último
+        post = f"{post_date(t, occ).isoformat()} {pg['posts'][0]}" if pg else "9999"
+        out.append({"turno": t["id"], "ocorrencia": occ.strftime("%Y-%m-%d %H:%M"), "task_id": tid, "pronto": ok,
+                    "motivo": why, "primeiro_post": post if pg else None})
+    return sorted(out, key=lambda x: (x["primeiro_post"] or "9999", x["ocorrencia"]))
+
+
 def cmd_pode_rodar(a, now):
     t = TURNOS.get(a.turno)
     if not t:
         emit("expediente", ok=False, error=f"turno desconhecido: {a.turno}. Válidos: {', '.join(TURNOS)}")
+    occ = dt.datetime.strptime(a.ocorrencia, "%Y-%m-%d %H:%M").replace(tzinfo=TZ) if a.ocorrencia else None
+    if occ is not None:  # recuperação: não espera nem registra nada, só responde
+        ok, why, _ = check(t, now, a.teste, occ)
+        nxt = next_turno(t)
+        print(json.dumps({"tool": "expediente", "ok": ok, "turno": t["id"], "agente": t["agente"], "task_id": task_id(t, occ),
+                          "proximo_task_id": f"{nxt}-{post_date(t, occ).isoformat()}" if nxt else None,
+                          "atrasado": True, "ocorrencia": a.ocorrencia, "prazo_original": t["prazo"], "motivo": why}, ensure_ascii=False))
+        return
     ok, why, st = check(t, now, a.teste)
     if not ok and st == "waiting_upstream" and a.esperar:
         deadline = time.time() + LIM["espera_upstream_min"] * 60
@@ -119,8 +174,10 @@ def cmd_pode_rodar(a, now):
                                "progress": 0}, "?on_conflict=id", upsert=True)
         rest("POST", "events", {"type": "toast", "team_id": t["time"], "agent_id": t["agente"],
                                 "payload": {"task": task_id(t, now), "text": f"{t['agente']} · esperando etapa anterior ({why})"}})
-    print_json = dict(turno=t["id"], agente=t["agente"], task_id=task_id(t, now), janela=f"{t['inicio']}–{t['prazo']}",
-                      prazo=t["prazo"], motivo=why)
+    nxt = next_turno(t)
+    print_json = dict(turno=t["id"], agente=t["agente"], task_id=task_id(t, now),
+                      proximo_task_id=f"{nxt}-{post_date(t, now).isoformat()}" if nxt else None,
+                      atrasado=False, janela=f"{t['inicio']}–{t['prazo']}", prazo=t["prazo"], motivo=why)
     print(json.dumps({"tool": "expediente", "ok": ok, **print_json}, ensure_ascii=False))
 
 
@@ -161,8 +218,14 @@ def cmd_turnos(_a, _now):
 
 
 def crontab_lines() -> list[str]:
-    return [f"{cron_for(t).split(' ', 1)[1]} $HOME/lucas-hq/iniciar.sh --turno {t['id']} >> $HOME/lucas-hq/out/_turnos.log 2>&1"
-            for t in CFG["turnos"] if not t.get("humano")]
+    log = ">> $HOME/lucas-hq/out/_turnos.log 2>&1"
+    lines = [f"{cron_for(t).split(' ', 1)[1]} $HOME/lucas-hq/iniciar.sh --turno {t['id']} {log}"
+             for t in CFG["turnos"] if not t.get("humano")]
+    if CFG["recuperacao"]["ativa"]:
+        n = CFG["recuperacao"]["verificar_a_cada_min"]
+        lines += [f"*/{n} * * * * $HOME/lucas-hq/iniciar.sh --recuperar {log}",
+                  f"@reboot sleep 90; $HOME/lucas-hq/iniciar.sh --recuperar {log}"]
+    return lines
 
 
 def cmd_agendamentos(_a, _now):
@@ -173,7 +236,12 @@ def cmd_agendamentos(_a, _now):
     auto = [t for t in CFG["turnos"] if not t.get("humano")]
     for t in auto:
         lines.append(f"| Lucas HQ · {t['id']} | `{cron_for(t)}` | `/turno {t['id']}` |")
-    lines += ["", "## No seu computador (cron do Linux)", "",
+    rc = CFG["recuperacao"]
+    lines += ["", "## Recuperação (notebook fechado no horário)", "",
+              f"A cada {rc['verificar_a_cada_min']} min e ao ligar, `iniciar.sh --recuperar` roda os turnos perdidos, um por vez, "
+              f"do post mais urgente ao menos urgente, respeitando o silêncio e as dependências. Perdido há mais de {rc['max_horas']}h, "
+              f"fica para o próximo ciclo. No máximo {LIM['tentativas_por_item']} tentativas por turno; depois, `error` na tarefa.",
+              "", "## No seu computador (cron do Linux)", "",
               "O cron do Debian não entende `CRON_TZ`, então o relógio do Linux precisa estar em "
               f"{CFG['fuso']}. O computador precisa estar ligado e com o Linux aberto no horário. "
               "Instale com `./iniciar.sh --agendar`, que grava estas linhas no `crontab`:", "", "```cron"]
@@ -191,6 +259,9 @@ p = sub.add_parser("pode-rodar")
 p.add_argument("--turno", required=True)
 p.add_argument("--esperar", action="store_true", help="espera a etapa anterior por até limites.espera_upstream_min")
 p.add_argument("--teste", action="store_true", help="ignora horário/silêncio (nunca as aprovações)")
+p.add_argument("--ocorrencia", help='recuperação: horário perdido "AAAA-MM-DD HH:MM" (dado por proximo-pendente)')
+sub.add_parser("pendentes", help="turnos perdidos (notebook fechado no horário)")
+sub.add_parser("proximo-pendente", help="o turno perdido mais antigo que já pode rodar")
 i = sub.add_parser("task-id")
 i.add_argument("--turno", required=True)
 sub.add_parser("vagas")
@@ -214,6 +285,14 @@ try:
         cmd_proximo(a, now)
     elif a.cmd == "turnos":
         cmd_turnos(a, now)
+    elif a.cmd == "pendentes":
+        emit("expediente", pendentes=pendentes(now) if CFG["recuperacao"]["ativa"] else [])
+    elif a.cmd == "proximo-pendente":
+        pend = [x for x in pendentes(now) if x["pronto"]] if CFG["recuperacao"]["ativa"] else []
+        if pend:
+            emit("expediente", **pend[0])
+        else:
+            print(json.dumps({"tool": "expediente", "ok": False, "motivo": "nenhum turno perdido pronto para rodar"}, ensure_ascii=False))
     elif a.cmd == "crontab":
         print("\n".join(crontab_lines()))
     elif a.cmd == "agendamentos":
