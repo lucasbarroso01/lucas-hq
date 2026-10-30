@@ -7,6 +7,7 @@ import { Toasts } from './ui/Toasts'
 import { TeamDrawer } from './ui/TeamDrawer'
 import { TasksView } from './ui/TasksView'
 import { AgendaView } from './ui/AgendaView'
+import { DashboardView } from './ui/DashboardView'
 import { BrainView } from './brain/BrainView'
 import { ReviewModal } from './ui/ReviewModal'
 import { TaskDetail } from './ui/TaskDetail'
@@ -38,6 +39,7 @@ export function App() {
       <PostAlarm />
       <Toasts />
       <AnimatePresence>{view === 'office' && selected && <TeamDrawer key={selected} teamId={selected} />}</AnimatePresence>
+      {view === 'dashboard' && <DashboardView />}
       {view === 'tasks' && <TasksView />}
       {view === 'agenda' && <AgendaView />}
       {view === 'brain' && <BrainView />}

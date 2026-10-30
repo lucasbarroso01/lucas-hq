@@ -11,7 +11,7 @@ export function TopBar() {
   const running = agents.filter((a) => a.status === 'working').length + tasks.filter((t) => t.parent_id && t.status === 'running').length
   const total = agents.length + tasks.filter((t) => t.parent_id && t.status === 'running').length
   const [palette, setPalette] = useState(false)
-  const tabs: [View, string][] = [['office', 'Office'], ['tasks', `Tarefas (${tasks.filter((t) => t.status !== 'done').length})`], ['agenda', 'Agenda'], ['brain', 'Cérebro']]
+  const tabs: [View, string][] = [['office', 'Office'], ['dashboard', 'Painel'], ['tasks', `Tarefas (${tasks.filter((t) => t.status !== 'done').length})`], ['agenda', 'Agenda'], ['brain', 'Cérebro']]
 
   useEffect(() => {
     const k = (e: KeyboardEvent) => {

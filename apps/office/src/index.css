@@ -2,6 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+/* tokens shadcn (escuro): canais RGB para o Tailwind e cores prontas (--color-*) para estilos inline */
+:root {
+  --background: 9 10 14; --foreground: 242 242 245;
+  --card: 19 20 26; --card-foreground: 242 242 245;
+  --muted: 34 35 44; --muted-foreground: 146 148 162;
+  --border: 40 41 52; --ring: 200 200 210;
+  --color-background: rgb(var(--background)); --color-foreground: rgb(var(--foreground));
+  --color-card: rgb(var(--card)); --color-muted: rgb(var(--muted));
+  --color-muted-foreground: rgb(var(--muted-foreground)); --color-border: rgb(var(--border));
+}
+
 html, body, #root { height: 100%; margin: 0; }
 body {
   font-family: Inter, system-ui, sans-serif;

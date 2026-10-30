@@ -1,7 +1,7 @@
 import { ROOM_POS } from './layout'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { useHQ } from '../store'
-import type { Agent, HQEvent, ScheduleItem, SkillRuntime, Task } from '../data/types'
+import type { Agent, Approval, HQEvent, ScheduleItem, SkillRuntime, Task } from '../data/types'
 
 // tolerate values pasted as NAME=value
 const clean = (v?: string) => v?.trim().replace(/^[A-Z_]+=/, '').replace(/\/rest\/v1\/?$/, '').replace(/\/+$/, '') || undefined
@@ -23,14 +23,16 @@ export async function connectSupabase() {
 async function load() {
   if (!supabase) return false
   const hq = useHQ.getState()
-  const [agents, tasks, events, schedule, skills, notes] = await Promise.all([
+  const [agents, tasks, events, schedule, skills, notes, approvals] = await Promise.all([
     supabase.from('agents').select('*'),
-    supabase.from('tasks').select('*').order('updated_at', { ascending: false }).limit(200),
+    supabase.from('tasks').select('*').order('updated_at', { ascending: false }).limit(1000),
     supabase.from('events').select('*').order('ts', { ascending: false }).limit(100),
     supabase.from('schedule').select('*'),
     supabase.from('skills_runtime').select('*'),
     supabase.from('events').select('id', { count: 'exact', head: true }).eq('type', 'brain_write'),
+    supabase.from('approvals').select('*').order('ts', { ascending: true }).limit(1000),
   ])
+  if (approvals.data) hq.set({ approvals: approvals.data as Approval[] })
   const ctl = await supabase.from('controle').select('*').eq('id', 'operacao').maybeSingle()
   if (ctl.data) hq.set({ pausa: { pausado: ctl.data.pausado, motivo: ctl.data.motivo, atualizado_em: ctl.data.atualizado_em },
     drive: { raiz: ctl.data.drive_raiz ?? undefined, dia: ctl.data.drive_dia ?? undefined, data: ctl.data.drive_dia_data ?? undefined } })

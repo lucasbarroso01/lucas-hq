@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { AGENTS, BRAIN_NOTES, SCHEDULE, SKILLS, TASKS, TEAMS } from './data/seed'
 import type { Agent, Approval, HQEvent, Operation, ScheduleItem, SkillRuntime, Task, Team } from './data/types'
 
-export type View = 'office' | 'tasks' | 'agenda' | 'brain'
+export type View = 'office' | 'dashboard' | 'tasks' | 'agenda' | 'brain'
 
 export interface Walker { id: string; from: string; to: string; color: string; born: number }
 export interface Pulse { id: string; team_id: string; dir: 'in' | 'out'; born: number }
