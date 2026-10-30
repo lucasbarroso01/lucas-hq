@@ -15,6 +15,11 @@ import re
 import shutil
 import subprocess
 import sys
+
+# Aberto fora do .venv (ex.: `claude` digitado à mão): reexecuta com o Python do projeto, que tem kokoro e soundfile.
+_VENV_PY = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".venv", "bin", "python3")
+if sys.prefix == sys.base_prefix and os.path.exists(_VENV_PY):
+    os.execv(_VENV_PY, [_VENV_PY, *sys.argv])
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
