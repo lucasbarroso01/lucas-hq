@@ -1,10 +1,12 @@
-// Worldframe · palco "diorama": um mundo em miniatura numa plataforma flutuante, com atores low-poly animados.
+// Worldframe · palco "diorama": um CENÁRIO de verdade que ocupa a tela toda (mar, cidade, armazém, campo),
+// com atores low-poly animados. Sem plataforma flutuante (pedido do Lucas, 30/10).
 // Tudo é função do tempo (o HyperFrames busca quadro a quadro): nada de relógio, nada de Math.random sem semente.
 //
 // Atores (cena.atores = [{tipo, qtd, acao}]):
 //   pessoas (acao: andar | multidao | fila | protesto), navios, avioes, drones, tanques, misseis,
-//   barras (barras de ouro empilhando), dinheiro (notas caindo), predios, fabrica, barris
-// Terreno (cena.terreno): mar | cidade | campo | cofre   (padrão: escolhido pelos atores)
+//   barras (barras de ouro empilhando), dinheiro (notas caindo), predios, fabrica, barris, carros,
+//   bonecos (manequins de madeira com placa de nome: cena.atores[].nomes = ["TRUMP", "LULA"])
+// Terreno (cena.terreno): mar | cidade | campo | cofre (armazém)   (padrão: escolhido pelos atores)
 
 const TAU = Math.PI * 2;
 const R = 1.55; // raio útil da plataforma
@@ -42,25 +44,49 @@ export class Diorama {
     const sol = new T.DirectionalLight(0xffffff, 1.4);
     sol.position.set(2, 4, 3);
     this.root.add(hemi, sol);
-    this.base = this.plataforma();
+    this.base = this.chao();
     this.cenas = SCENES.map((s, i) => this.montar(s, i));
     this.root.visible = false;
-    this.fog = new T.Fog(new T.Color(cores.bg), 6.5, 11);   // fundo some na névoa: o texto lê melhor
+    this.fog = new T.Fog(new T.Color(cores.bg), 3.2, 13);   // horizonte some na névoa: cenário até o fim da tela
     this.scene = scene;
   }
 
-  plataforma() {
-    const T = this.T, g = new T.Group();
-    const lado = new T.Mesh(new T.CylinderGeometry(1.75, 1.6, 0.28, 64), this.mat.plat);
-    lado.position.y = -0.14;
-    const topo = new T.Mesh(new T.CylinderGeometry(1.75, 1.75, 0.02, 64), this.mat.top);
-    const aro = new T.Mesh(new T.TorusGeometry(1.76, 0.012, 8, 128), this.mat.glow);
-    aro.rotation.x = Math.PI / 2;
-    const sombra = new T.Mesh(new T.CircleGeometry(1.9, 48), this.mat.sombra);
-    sombra.rotation.x = -Math.PI / 2; sombra.position.y = -0.62; sombra.scale.set(1, 0.6, 1);
-    g.add(lado, topo, aro, sombra);
-    this.root.add(g);
-    return g;
+  chao() { // chão sem bordas até o horizonte
+    const T = this.T;
+    const m = new T.Mesh(new T.PlaneGeometry(80, 80), this.mat.top);
+    m.rotation.x = -Math.PI / 2; m.position.y = -0.001;
+    this.root.add(m);
+    return m;
+  }
+  texto(txt, w = 0.5, h = 0.12, fundo = "#EDE6D6", cor = "#16130F") { // placa com texto (canvas)
+    const T = this.T, c = document.createElement("canvas"); c.width = 512; c.height = Math.round(512 * h / w);
+    const g = c.getContext("2d"); g.fillStyle = fundo; g.fillRect(0, 0, c.width, c.height);
+    g.fillStyle = cor; g.font = `700 ${Math.round(c.height * 0.55)}px Barlow, sans-serif`; g.textAlign = "center"; g.textBaseline = "middle";
+    g.fillText(txt, c.width / 2, c.height / 2 + 2);
+    return new T.Mesh(new T.PlaneGeometry(w, h), new T.MeshBasicMaterial({ map: new T.CanvasTexture(c), side: T.DoubleSide }));
+  }
+  boneco(mat, nome) { // manequim articulado de madeira, de terno, com placa de nome
+    const T = this.T, b = new T.Group(), pele = this._pele || (this._pele = new T.MeshLambertMaterial({ color: new T.Color("#D8C3A0"), flatShading: true }));
+    const tronco = new T.Mesh(new T.CylinderGeometry(0.07, 0.06, 0.22, 10), mat); tronco.position.y = 0.33;
+    const gravata = new T.Mesh(new T.BoxGeometry(0.018, 0.12, 0.005), this.mat.hi); gravata.position.set(0, 0.35, 0.068);
+    const cab = new T.Mesh(new T.SphereGeometry(0.055, 14, 10), pele); cab.position.y = 0.5;
+    const pesc = new T.Mesh(new T.CylinderGeometry(0.018, 0.018, 0.04, 6), pele); pesc.position.y = 0.45;
+    const pernas = [-1, 1].map((sx) => { const l = new T.Mesh(new T.CylinderGeometry(0.022, 0.02, 0.22, 6), mat); l.position.set(sx * 0.03, 0.11, 0); return l; });
+    const bracos = [-1, 1].map((sx) => { const a = new T.Group(); a.position.set(sx * 0.085, 0.43, 0);
+      const m = new T.Mesh(new T.CylinderGeometry(0.016, 0.014, 0.2, 6), mat); m.position.y = -0.1; a.add(m);
+      const mao = new T.Mesh(new T.SphereGeometry(0.018, 6, 4), pele); mao.position.y = -0.21; a.add(mao); return a; });
+    b.add(tronco, gravata, cab, pesc, ...pernas, ...bracos, this.sombraDe(0.2, 0.2));
+    if (nome) { const p = this.texto(nome, 0.3, 0.07, "#2A2622", "#EDE6D6"); p.position.set(0, 0.035, 0.16); p.rotation.x = -0.5; b.add(p); }
+    b.userData = { bracos, cab };
+    return b;
+  }
+  carro(rand) {
+    const T = this.T, c = new T.Group(), cores = ["#D7261E", "#E8B21A", "#EDE6D6", "#3B3B44", "#8C7B5E"];
+    const mat = new T.MeshLambertMaterial({ color: new T.Color(cores[Math.floor(rand() * cores.length)]), flatShading: true });
+    const base = new T.Mesh(new T.BoxGeometry(0.1, 0.03, 0.05), mat); base.position.y = 0.025;
+    const cab = new T.Mesh(new T.BoxGeometry(0.05, 0.025, 0.045), this.mat.funda); cab.position.set(-0.005, 0.05, 0);
+    c.add(base, cab);
+    return c;
   }
 
   // ---------- peças ----------
@@ -170,34 +196,44 @@ export class Diorama {
 
   terreno(tipo, rand, g) {
     const T = this.T;
-    if (tipo === "mar") {
-      const agua = new T.Mesh(new T.CircleGeometry(1.74, 64), this.mat.agua); agua.rotation.x = -Math.PI / 2; agua.position.y = 0.014; g.add(agua);
-      for (const s of [-1, 1]) { // duas margens (um estreito)
-        const m = new T.Mesh(new T.BoxGeometry(3.2, 0.12, 0.7), this.mat.funda); m.position.set(0, 0.06, s * 1.3); g.add(m);
+    const preencher = (fn, x0, x1, z0, z1, passo, vazio) => { // espalha objetos em grade até o horizonte
+      for (let x = x0; x <= x1; x += passo) for (let z = z0; z <= z1; z += passo) {
+        if (vazio && vazio(x, z)) continue; fn(x + (rand() - 0.5) * passo * 0.3, z + (rand() - 0.5) * passo * 0.3); } };
+    if (tipo === "mar") { // oceano/estreito até o horizonte, margens com cidades acesas
+      const agua = new T.Mesh(new T.PlaneGeometry(80, 80), this.mat.agua); agua.rotation.x = -Math.PI / 2; agua.position.y = 0.012; g.add(agua);
+      for (const sz of [-1, 1]) {
+        const m = new T.Mesh(new T.BoxGeometry(60, 0.1, 8), this.mat.funda); m.position.set(0, 0.05, sz * (1.15 + 4)); g.add(m);
+        preencher((x, z) => { const p = this.predio(rand); p.scale.setScalar(0.6); p.position.set(x, 0.1, z); g.add(p); }, -10, 10, sz > 0 ? 1.4 : -10, sz > 0 ? 9 : -1.4, 0.7, (x, z) => Math.hypot(x, z) < 4.2);
       }
       const ondas = [];
-      for (let k = 0; k < 14; k++) { const o = new T.Mesh(new T.PlaneGeometry(0.18, 0.006), this.mat.glow); o.rotation.x = -Math.PI / 2; o.position.set(-1.4 + rand() * 2.8, 0.02, -0.7 + rand() * 1.4); g.add(o); ondas.push(o); }
-      return (lt) => ondas.forEach((o, k) => { o.position.x = ((o.position.x + 1.5 + 0.004) % 3) - 1.5; o.material.opacity = 0.2 + 0.2 * Math.sin(lt * 2 + k); });
+      for (let k = 0; k < 60; k++) { const o = new T.Mesh(new T.PlaneGeometry(0.22, 0.008), this.mat.glow); o.rotation.x = -Math.PI / 2; o.position.set(-6 + rand() * 12, 0.02, -1 + rand() * 2); g.add(o); ondas.push(o); }
+      return (lt) => ondas.forEach((o, k) => { o.position.x = ((o.position.x + 6 + 0.006) % 12) - 6; o.material.opacity = 0.2 + 0.2 * Math.sin(lt * 2 + k); });
     }
-    if (tipo === "cidade") {
-      for (const z of [-0.35, 0.35]) { const rua = new T.Mesh(new T.PlaneGeometry(3.2, 0.22), this.mat.funda); rua.rotation.x = -Math.PI / 2; rua.position.set(0, 0.013, z); g.add(rua); }
+    if (tipo === "cidade") { // quarteirões até o horizonte, ruas com carros
+      const ruas = [-0.4, 0.4, -2.6, 2.4];
+      for (const z of ruas) { const rua = new T.Mesh(new T.PlaneGeometry(80, 0.3), this.mat.funda); rua.rotation.x = -Math.PI / 2; rua.position.set(0, 0.006, z); g.add(rua); }
+      for (const x of [-3, 3]) { const rua = new T.Mesh(new T.PlaneGeometry(0.3, 80), this.mat.funda); rua.rotation.x = -Math.PI / 2; rua.position.set(x, 0.007, 0); g.add(rua); }
       const jan = [];
-      for (let k = 0; k < 16; k++) {
-        const p = this.predio(rand); const a = rand() * TAU, rr = 0.75 + rand() * 0.75;
-        p.position.set(Math.cos(a) * rr, 0, Math.sin(a) * rr * 0.55 - (Math.sin(a) > 0 ? -0.55 : 0.55) * 0); if (Math.abs(p.position.z) < 0.55) p.position.z = Math.sign(p.position.z || 1) * (0.6 + rand() * 0.4);
-        g.add(p); jan.push(p.userData.jan);
-      }
-      return (lt) => jan.forEach((j, k) => { j.material.opacity = 0.25 + 0.2 * (Math.sin(lt * 1.3 + k * 1.7) > 0.6 ? 1 : 0); });
+      preencher((x, z) => { const p = this.predio(rand); const k = 1 + Math.min(2.5, Math.abs(z) * 0.25); p.scale.set(k, k * (1 + rand()), k); p.position.set(x, 0, z); g.add(p); jan.push(p.userData.jan); },
+        -11, 11, -12, 11, 0.55, (x, z) => Math.hypot(x, z) < 4.4 || ruas.some((r) => Math.abs(z - r) < 0.3) || Math.abs(Math.abs(x) - 3) < 0.3);
+      const carros = [];
+      for (let k = 0; k < 26; k++) { const c = this.carro(rand); const z = ruas[k % 4] + (k % 2 ? 0.07 : -0.07); c.position.set(-6 + rand() * 12, 0.006, z); if (k % 2) c.rotation.y = Math.PI; g.add(c); carros.push({ c, x0: c.position.x, sp: (0.35 + rand() * 0.3) * (k % 2 ? -1 : 1) }); }
+      return (lt) => { jan.forEach((j, k) => { j.material.opacity = 0.25 + 0.2 * (Math.sin(lt * 1.3 + k * 1.7) > 0.6 ? 1 : 0); });
+        carros.forEach((q) => { q.c.position.x = ((q.x0 + q.sp * lt + 6) % 12 + 12) % 12 - 6; }); };
     }
-    if (tipo === "cofre") {
-      const piso = new T.Mesh(new T.CircleGeometry(1.0, 6), this.mat.funda); piso.rotation.x = -Math.PI / 2; piso.position.y = 0.014; g.add(piso);
-      const aro = new T.Mesh(new T.TorusGeometry(1.0, 0.02, 6, 6), this.mat.glow); aro.rotation.x = Math.PI / 2; aro.position.y = 0.02; g.add(aro);
+    if (tipo === "cofre") { // armazém: corredor de paletes até o fundo, luzes no teto
+      const palete = new T.BoxGeometry(0.34, 0.3, 0.34), mp = new T.MeshLambertMaterial({ color: new T.Color("#B9AE7E"), flatShading: true });
+      preencher((x, z) => { const m = new T.Mesh(palete, mp); m.position.set(x, 0.15, z); g.add(m); }, -9, 9, -12, 9, 0.42, (x, z) => Math.hypot(x, z) < 3.8 || Math.abs(x) < 0.5);
+      const lampada = new T.MeshBasicMaterial({ color: 0xffffff });
+      for (let z = -12; z < 3; z += 1.2) for (const x of [-2, 0, 2]) { const l = new T.Mesh(new T.BoxGeometry(0.5, 0.02, 0.08), lampada); l.position.set(x, 2.4, z); g.add(l); }
+      const teto = new T.Mesh(new T.PlaneGeometry(40, 40), this.mat.plat); teto.rotation.x = Math.PI / 2; teto.position.y = 2.45; g.add(teto);
       return () => {};
     }
-    // campo
-    const lotes = [];
-    for (let k = 0; k < 10; k++) { const l = new T.Mesh(new T.PlaneGeometry(0.5 + rand() * 0.4, 0.3 + rand() * 0.3), rand() < 0.5 ? this.mat.funda : this.mat.plat); l.rotation.x = -Math.PI / 2; l.rotation.z = rand(); l.position.set(-1.1 + rand() * 2.2, 0.013, -0.9 + rand() * 1.8); g.add(l); lotes.push(l); }
-    const rua = new T.Mesh(new T.PlaneGeometry(3.2, 0.2), this.mat.funda); rua.rotation.x = -Math.PI / 2; rua.position.set(0, 0.014, 0.1); g.add(rua);
+    // campo: lotes e árvores até o horizonte
+    preencher((x, z) => { const l = new T.Mesh(new T.PlaneGeometry(0.8, 0.6), rand() < 0.5 ? this.mat.funda : this.mat.plat); l.rotation.x = -Math.PI / 2; l.position.set(x, 0.004, z); g.add(l); }, -9, 9, -10, 4, 0.9);
+    const arv = new T.ConeGeometry(0.06, 0.18, 6);
+    preencher((x, z) => { const a = new T.Mesh(arv, this.mat.cor); a.position.set(x, 0.09, z); g.add(a); }, -8, 8, -9, 3, 0.6, (x, z) => Math.abs(x) < 1.6 && Math.abs(z) < 0.8);
+    const rua = new T.Mesh(new T.PlaneGeometry(80, 0.22), this.mat.funda); rua.rotation.x = -Math.PI / 2; rua.position.set(0, 0.008, 0.1); g.add(rua);
     return () => {};
   }
 
@@ -208,7 +244,7 @@ export class Diorama {
     this.root.add(g);
     if (S.palco !== "diorama") return { g, up };
     const tipos = (S.atores || []).map((a) => a.tipo);
-    const terreno = S.terreno || (tipos.includes("navios") ? "mar" : tipos.some((t) => ["predios", "pessoas", "dinheiro"].includes(t)) ? "cidade" : tipos.some((t) => ["barras", "barris"].includes(t)) ? "cofre" : "campo");
+    const terreno = S.terreno || (tipos.includes("navios") ? "mar" : tipos.some((t) => ["predios", "pessoas", "dinheiro", "carros", "bonecos"].includes(t)) ? "cidade" : tipos.some((t) => ["barras", "barris"].includes(t)) ? "cofre" : "campo");
     up.push(this.terreno(terreno, rand, g));
     for (const a of S.atores || []) {
       const n = Math.max(1, Math.min(a.qtd || 1, 80));
@@ -291,6 +327,19 @@ export class Diorama {
           for (let j = 0; j < 6; j++) { const s = new T.Mesh(new T.IcosahedronGeometry(0.04, 0), this.mat.fumaca); g.add(s); fum.push({ s, x: f.position.x + 0.1, z: f.position.z, ph: j / 6 }); }
         }
         up.push((lt) => fum.forEach((q) => { const u = (lt * 0.35 + q.ph) % 1; q.s.position.set(q.x + u * 0.2, 0.38 + u * 0.7, q.z); q.s.scale.setScalar(0.6 + u * 1.6); q.s.material.opacity = 0.45 * (1 - u); }));
+      } else if (a.tipo === "bonecos") {
+        const nomes = a.nomes || [], bs = [];
+        for (let k = 0; k < Math.min(n, 7); k++) {
+          const b = this.boneco(k === 0 && destaque ? this.mat.funda : this.mat.funda, nomes[k]);
+          b.position.set((k - (Math.min(n, 7) - 1) / 2) * 0.42, 0, k % 2 ? -0.18 : 0.05); b.rotation.y = (rand() - 0.5) * 0.5; g.add(b); bs.push({ b, ph: rand() * TAU });
+        }
+        up.push((lt) => bs.forEach((q, k) => { const { bracos, cab } = q.b.userData;
+          bracos[0].rotation.z = -0.15 - Math.max(0, Math.sin(lt * 1.2 + q.ph)) * 0.9; bracos[1].rotation.z = 0.15;
+          cab.rotation.y = Math.sin(lt * 0.9 + q.ph) * 0.35; }));
+      } else if (a.tipo === "carros") {
+        const cs = [];
+        for (let k = 0; k < n; k++) { const c = this.carro(rand); c.position.set(-1.4 + rand() * 2.8, 0.006, k % 2 ? 0.25 : 0.4); if (k % 2) c.rotation.y = Math.PI; g.add(c); cs.push({ c, x0: c.position.x, sp: (0.3 + rand() * 0.3) * (k % 2 ? -1 : 1) }); }
+        up.push((lt) => cs.forEach((q) => { q.c.position.x = ((q.x0 + q.sp * lt + 1.6) % 3.2 + 3.2) % 3.2 - 1.6; }));
       } else if (a.tipo === "barris") {
         const bs = [];
         for (let k = 0; k < n; k++) { const b = this.barril(); const r2 = Math.floor(k / 6), c2 = k % 6; b.userData.alvo = new T.Vector3(-0.2 + c2 * 0.07, 0.054 + r2 * 0.082, 0.4); g.add(b); bs.push(b); }
@@ -311,17 +360,18 @@ export class Diorama {
     const S = this.S[i];
     const mid = smooth((lt - S.d * 0.5) / 0.7);
     const az = (S.cam && S.cam.lon ? S.cam.lon : 30) * Math.PI / 180 + lt * 0.12 + mid * 0.5;
-    const el = (30 + mid * 8) * Math.PI / 180;
-    const dist = (S.cam && S.cam.dist ? S.cam.dist : 3.2) * 2.15 * (1 - lt * 0.01 - mid * 0.07);
+    const el = (17 + mid * 6) * Math.PI / 180;   // câmera baixa, dentro do cenário: o chão ocupa a tela toda
+    const dist = this.dist(S) * (1 - lt * 0.012 - mid * 0.08);
     let x = Math.cos(az) * Math.cos(el) * dist, y = Math.sin(el) * dist, zz = Math.sin(az) * Math.cos(el) * dist;
     if (back > 0 && z0) { x += (z0.x - x) * back; y += (z0.y - y) * back; zz += (z0.z - zz) * back; }
     camera.position.set(x, y, zz);
-    camera.lookAt(0, 0.05, 0);
+    camera.lookAt(0, 0.22, 0);
     return { x, y, z: zz };
   }
+  dist(S) { return Math.min(3.6, Math.max(2.2, (S.cam && S.cam.dist ? S.cam.dist : 3.0) * 0.95)); }
   pose0() { // câmera do frame 0 (para o loop)
     const S = this.S[0];
-    const az = (S.cam && S.cam.lon ? S.cam.lon : 30) * Math.PI / 180, el = 30 * Math.PI / 180, d = (S.cam && S.cam.dist ? S.cam.dist : 3.2) * 2.15;
+    const az = (S.cam && S.cam.lon ? S.cam.lon : 30) * Math.PI / 180, el = 17 * Math.PI / 180, d = this.dist(S);
     return { x: Math.cos(az) * Math.cos(el) * d, y: Math.sin(el) * d, z: Math.sin(az) * Math.cos(el) * d };
   }
 }

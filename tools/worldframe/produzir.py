@@ -36,7 +36,9 @@ DUR_MAX = float(PAG.get("duracao_max_s", 0))
 GANCHO_MIN = float(PAG.get("gancho_min", 0))
 ATORES_MIN = float(PAG.get("cenas_com_atores_min", 0))
 HOOKSCORE = ROOT / ".claude" / "skills" / "ig-reel" / "hookscore.py"
-TIPOS_ATOR = {"pessoas", "navios", "avioes", "drones", "tanques", "misseis", "barras", "dinheiro", "predios", "fabrica", "barris"}
+TIPOS_ATOR = {"pessoas", "navios", "avioes", "drones", "tanques", "misseis", "barras", "dinheiro", "predios", "fabrica", "barris",
+              "carros", "bonecos"}
+GRAFICOS, TELAS = {"pizza", "linha", "barras", "velas"}, {"celular", "tv", "computador", "nenhuma"}
 WPS = 2.9  # palavras por segundo do Kokoro na velocidade 1.1 (medido)
 sys.path.insert(0, str(ROOT / "tools" / "worldframe"))
 from temas import checar as checar_tema  # noqa: E402
@@ -113,6 +115,14 @@ def checar_roteiro(r: dict) -> list[str]:
         for a in c.get("atores", []):
             if a.get("tipo") not in TIPOS_ATOR:
                 probs.append(f"cena {i + 1}: ator desconhecido '{a.get('tipo')}' (use: {', '.join(sorted(TIPOS_ATOR))})")
+    # gráfico redondo (anel) no máximo 1 vez por vídeo; os outros gráficos variam e aparecem em aparelhos
+    redondos = sum(1 for c in r["cenas"] if c.get("visual") == "anel" or (c.get("globo") or {}).get("anel"))
+    if redondos > 1:
+        probs.append(f"{redondos} gráficos redondos (anel): no máximo 1 por vídeo; use pizza, linha, barras ou velas em celular, TV ou computador")
+    for i, c in enumerate(r["cenas"]):
+        g = c.get("grafico")
+        if g and (g.get("tipo") not in GRAFICOS or g.get("tela", "nenhuma") not in TELAS or len(g.get("dados", [])) < 2):
+            probs.append(f"cena {i + 1}: grafico precisa de tipo ({', '.join(sorted(GRAFICOS))}), tela ({', '.join(sorted(TELAS))}) e 2+ dados")
     for i, c in enumerate(r["cenas"]):
         if len(c["fala"].split()) > 19:
             probs.append(f"cena {i + 1} tem {len(c['fala'].split())} palavras (máx. 19)")

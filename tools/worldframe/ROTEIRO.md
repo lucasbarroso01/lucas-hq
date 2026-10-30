@@ -19,8 +19,16 @@ Exemplo completo: `tools/worldframe/exemplo_roteiro.json`.
 - `legenda_post`: sem hífen nem travessão, termina com pergunta para comentário.
 - Fotos de pessoas: só as que o Lucas colocar em `assets/`. Nunca baixar da internet.
 
-## Animação: palcos e atores (o que prende a atenção)
-Pelo menos **metade das cenas** usa `"palco": "diorama"`, um mundo em miniatura com **atores animados**. As outras podem usar `"palco": "globo"` (mapas, rotas).
+## Animação: cenários, atores e camadas (o que prende a atenção)
+Pelo menos **metade das cenas** usa `"palco": "diorama"`: um **cenário de verdade que ocupa a tela toda** (oceano, cidade, armazém, campo), com câmera baixa dentro dele e **atores animados**. Nada de mini cenário em cima de plataforma flutuante (proibido desde 30/10). As outras cenas podem usar `"palco": "globo"` (mapa, rotas).
+
+**Camadas no meio da tela** (por cima do cenário, uma ou duas por cena, varie):
+- `"grafico": {"tipo": "linha"|"barras"|"pizza"|"velas", "tela": "celular"|"tv"|"computador"|"nenhuma", "titulo": "...", "dados": [..], "rotulos": [..], "mercado": true}`. Varie o tipo e coloque vários dentro de celular, TV ou computador. Com `"mercado": true` (bolsa, investimentos, preços) a alta sai em **verde** e a queda em **vermelho**.
+- `"recibo": {"itens": [["001 BAR", "$1,000,000"], ...], "total": "$51.36B"}`: recibo imprimindo linha a linha até o total.
+- `"letreiro": "GOOGL"`: letreiro de aeroporto (split-flap) girando até formar a palavra (até 9 letras).
+- `"carimbo": "CONFIRMED"`: carimbo vermelho batendo na tela (HACKED, FROZEN, BANNED...).
+- No número grande, `"variacao": "alta"` (verde ▲) ou `"baixa"` (vermelho ▼) em bolsa e investimentos.
+- **Gráfico redondo** (`visual: "anel"` ou `globo.anel`): **no máximo 1 por vídeo**, e não é obrigatório.
 | ator (`atores[].tipo`) | o que faz | use para |
 |---|---|---|
 | `pessoas` (`acao`: `andar`, `multidao`, `fila`, `protesto`) | gente andando, aglomerada, em fila, protestando | população, eleitores, consumidores, protestos |
@@ -34,8 +42,10 @@ Pelo menos **metade das cenas** usa `"palco": "diorama"`, um mundo em miniatura 
 | `predios` | cidade com janelas acesas | economia, países |
 | `fabrica` | fábricas soltando fumaça | indústria, produção |
 | `barris` | barris de petróleo empilhando | petróleo, energia |
+| `carros` | carros andando na rua | trânsito, consumo, cidades |
+| `bonecos` (+ `nomes`: ["TRUMP", "LULA"]) | manequins de madeira de terno, com placa de nome, gesticulando | política, líderes, quem disse o quê |
 
-`qtd` (1 a 80) e `destaque: true` (o primeiro sai na cor de destaque). `terreno` opcional: `mar`, `cidade`, `campo`, `cofre` (se faltar, ele escolhe pelos atores).
+`qtd` (1 a 80) e `destaque: true` (o primeiro sai na cor de destaque). `terreno` opcional: `mar` (oceano/estreito até o horizonte), `cidade` (quarteirões e ruas com carros), `campo`, `cofre` (armazém com corredor de paletes e luzes no teto). Se faltar, ele escolhe pelos atores.
 
 ## Campos
 | Campo | |

@@ -6,6 +6,7 @@ A timeline vem só das durações da voz (fonte única de verdade). Todo texto f
 """
 import html
 import json
+import math
 import re
 import shutil
 import sys
@@ -91,6 +92,119 @@ def fmt_js(n: dict) -> str:
     return json.dumps(n)
 
 
+VERDE, VERMELHO = "#22C55E", "#EF4444"   # alta e baixa (bolsa, investimentos)
+TELAS = {"celular": (306, 576), "tv": (868, 488), "computador": (832, 446), "nenhuma": (860, 520)}
+
+
+def grafico_svg(g: dict, i: int, s0: float, w: int, h: int) -> tuple[str, list[str]]:
+    """SVG do gráfico (pizza, linha, barras ou velas) + tweens que o desenham."""
+    tipo, dados = g.get("tipo", "barras"), [float(x) for x in g.get("dados", [])]
+    rot = [str(x) for x in g.get("rotulos", [])]
+    merc = g.get("mercado", False)
+    top, bot, lx = (96 if w < 400 else 80), 56, 30
+    ch, cw = h - top - bot, w - 2 * lx
+    tw, out = [], []
+    hi = "var(--hi)"
+    if tipo == "pizza":
+        cx, cy, r = w / 2, top + ch / 2, min(cw, ch) / 2 * 0.46
+        circ, acc, tot = 2 * 3.14159 * r, 0.0, sum(dados) or 1
+        cores = [hi, "var(--tx)", "var(--sec)", "var(--cor)", "#E8B21A", "#8C7B5E"]
+        for k, v in enumerate(dados):
+            frac = v / tot
+            out.append(f'<circle id="pz{i}_{k}" cx="{cx}" cy="{cy}" r="{r:.1f}" fill="none" style="stroke:{cores[k % len(cores)]}" stroke-width="{2 * r:.1f}" '
+                       f'stroke-dasharray="0 {circ:.1f}" transform="rotate({-90 + acc * 360:.1f} {cx} {cy})"/>')
+            tw.append(f'tl.to("#pz{i}_{k}",{{attr:{{"stroke-dasharray":"{frac * circ:.1f} {circ:.1f}"}},duration:.5,ease:"power2.out"}},{s0 + 0.3 + k * 0.35:.3f});')
+            if k < len(rot):
+                ang = (acc + frac / 2) * 6.28318 - 1.5708
+                tx, ty = cx + (r * 2.3) * math.cos(ang), cy + (r * 2.3) * math.sin(ang) + 10
+                out.append(f'<text id="pl{i}_{k}" x="{tx:.0f}" y="{ty:.0f}" text-anchor="middle" font-family="Barlow" font-size="{22 if w < 400 else 30}" fill="#E8E9EE" opacity="0">{html.escape(rot[k])} {v:g}%</text>')
+                tw.append(f'tl.to("#pl{i}_{k}",{{opacity:1,duration:.3}},{s0 + 0.6 + k * 0.35:.3f});')
+            acc += frac
+        return "".join(out), tw
+    lo, hi_v = min(dados + [0]) if tipo == "barras" else min(dados), max(dados)
+    span = (hi_v - lo) or 1
+    y = lambda v: top + ch - (v - lo) / span * ch
+    if tipo == "linha":
+        n = len(dados)
+        pts = " ".join(f"{lx + k * cw / max(1, n - 1):.1f},{y(v):.1f}" for k, v in enumerate(dados))
+        cor = (VERDE if dados[-1] >= dados[0] else VERMELHO) if merc else hi
+        ln = sum(((cw / max(1, n - 1)) ** 2 + (y(dados[k + 1]) - y(dados[k])) ** 2) ** .5 for k in range(n - 1)) + 10
+        out.append(f'<polyline id="ln{i}" points="{pts}" fill="none" style="stroke:{cor}" stroke-width="{5 if w < 400 else 7}" stroke-linejoin="round" '
+                   f'stroke-dasharray="{ln:.0f}" stroke-dashoffset="{ln:.0f}"/>')
+        ex, ey = lx + cw, y(dados[-1])
+        out.append(f'<circle id="lp{i}" cx="{ex:.0f}" cy="{ey:.0f}" r="10" style="fill:{cor}" opacity="0"/>')
+        if rot:
+            out.append(f'<text id="lv{i}" x="{ex - 6:.0f}" y="{ey - 22:.0f}" text-anchor="end" font-family="Barlow" font-size="{26 if w < 400 else 36}" style="fill:{cor}" opacity="0">{html.escape(rot[-1])}</text>')
+            tw.append(f'tl.to("#lv{i}",{{opacity:1,duration:.3}},{s0 + 1.6:.3f});')
+        tw.append(f'tl.to("#ln{i}",{{attr:{{"stroke-dashoffset":0}},duration:1.4,ease:"power1.inOut"}},{s0 + 0.25:.3f});')
+        tw.append(f'tl.to("#lp{i}",{{opacity:1,duration:.2}},{s0 + 1.6:.3f});')
+        return "".join(out), tw
+    if tipo == "velas":   # candles: verde sobe, vermelho cai
+        n = len(dados) - 1
+        bw = cw / max(1, n) * 0.55
+        for k in range(n):
+            a, b = dados[k], dados[k + 1]
+            cor = VERDE if b >= a else VERMELHO
+            x = lx + (k + 0.5) * cw / n
+            y1, y2 = y(max(a, b)), y(min(a, b))
+            out.append(f'<g id="cv{i}_{k}" opacity="0"><line x1="{x:.0f}" x2="{x:.0f}" y1="{y1 - 14:.0f}" y2="{y2 + 14:.0f}" stroke="{cor}" stroke-width="3"/>'
+                       f'<rect x="{x - bw / 2:.0f}" y="{y1:.0f}" width="{bw:.0f}" height="{max(4, y2 - y1):.0f}" fill="{cor}"/></g>')
+            tw.append(f'tl.to("#cv{i}_{k}",{{opacity:1,duration:.15}},{s0 + 0.25 + k * 0.12:.3f});')
+        return "".join(out), tw
+    # barras
+    n = len(dados)
+    bw = cw / max(1, n) * 0.62
+    for k, v in enumerate(dados):
+        cor = ((VERDE if k == 0 or v >= dados[k - 1] else VERMELHO) if merc else (hi if k == n - 1 else "var(--sec)"))
+        x, yt = lx + (k + 0.19) * cw / n, y(v)
+        out.append(f'<rect id="br{i}_{k}" x="{x:.0f}" y="{yt:.0f}" width="{bw:.0f}" height="{top + ch - yt:.0f}" style="fill:{cor}"/>')
+        if k < len(rot):
+            out.append(f'<text x="{x + bw / 2:.0f}" y="{top + ch + 34:.0f}" text-anchor="middle" font-family="Barlow" font-size="{18 if w < 400 else 24}" fill="#A7A9B2">{html.escape(rot[k])}</text>')
+        tw.append(f'tl.fromTo("#br{i}_{k}",{{scaleY:0,transformOrigin:"50% 100%"}},{{scaleY:1,duration:.5,ease:"back.out(1.4)"}},{s0 + 0.25 + k * 0.14:.3f});')
+    return "".join(out), tw
+
+
+def camadas(c: dict, i: int, s0: float, d: float) -> tuple[str, list[str]]:
+    """Camadas 2D no meio da tela: gráfico (em celular, TV ou computador), recibo, letreiro e carimbo."""
+    parts, tw = [], []
+    g = c.get("grafico")
+    if g:
+        tela = g.get("tela", "nenhuma")
+        w, h = TELAS.get(tela, TELAS["nenhuma"])
+        svg, t2 = grafico_svg(g, i, s0, w, h)
+        tit = f'<div class="gt">{html.escape(g.get("titulo", ""))}</div>' if g.get("titulo") else ""
+        dim = f' style="width:{w}px;height:{h}px"' if tela == "nenhuma" else ""
+        corpo = f'<div id="gr{i}" class="tela {tela}"{dim}>{tit}<svg viewBox="0 0 {w} {h}" width="{w}" height="{h}">{svg}</svg></div>'
+        if tela in ("tv", "computador"):
+            corpo = f'<div style="position:relative">{corpo}<div class="pe"></div></div>'
+        parts.append(corpo)
+        tw += [f'tl.fromTo("#gr{i}",{{opacity:0,y:60,scale:.9}},{{opacity:1,y:0,scale:1,duration:.4,ease:"power3.out"}},{s0:.3f});'] + t2
+    rc = c.get("recibo")
+    if rc:
+        linhas = "".join(f'<div class="li" id="rl{i}_{k}"><span>{html.escape(str(a))}</span><span>{html.escape(str(b))}</span></div>'
+                         for k, (a, b) in enumerate(rc.get("itens", [])))
+        parts.append(f'<div id="rc{i}" class="papel recibo">{linhas}<div class="tot" id="rt{i}">{html.escape(rc.get("total", ""))}</div>'
+                     f'<div class="ty">{html.escape(rc.get("rodape", "THANK YOU"))}</div></div>')
+        tw.append(f'tl.fromTo("#rc{i}",{{clipPath:"inset(0 0 100% 0)"}},{{clipPath:"inset(0 0 0% 0)",duration:{min(1.8, d * 0.6):.2f},ease:"steps(14)"}},{s0 + 0.1:.3f});')
+        tw.append(f'tl.fromTo("#rt{i}",{{scale:1.25,opacity:0}},{{scale:1,opacity:1,duration:.3,ease:"back.out(2)"}},{s0 + min(1.8, d * 0.6):.3f});')
+    lt = c.get("letreiro")
+    if lt:
+        txt = str(lt)[:9].upper()
+        cel = "".join(f'<div class="fc" id="fc{i}_{k}">{html.escape(ch)}</div>' for k, ch in enumerate(txt))
+        parts.append(f'<div class="flap" id="fl{i}">{cel}</div>')
+        tw.append(f'tl.fromTo("#fl{i}",{{opacity:0,y:40}},{{opacity:1,y:0,duration:.3}},{s0:.3f});')
+        for k, ch in enumerate(txt):   # gira por letras até parar na certa
+            tw.append(f'flap("#fc{i}_{k}","{ch}",{s0 + 0.2 + k * 0.12:.3f},{0.5 + k * 0.08:.2f});')
+    cb = c.get("carimbo")
+    if cb:
+        parts.append(f'<div class="carimbo" id="cb{i}">{html.escape(str(cb).upper())}</div>')
+        tw.append(f'tl.fromTo("#cb{i}",{{opacity:0,scale:2.4,xPercent:-50,yPercent:-50,rotation:-14}},{{opacity:.92,scale:1,xPercent:-50,yPercent:-50,rotation:-12,duration:.18,ease:"power4.in"}},{s0 + min(1.2, d * 0.5):.3f});')
+    if not parts:
+        return "", []
+    inner = parts[0] if len(parts) == 1 else f'<div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:24px">{"".join(parts)}</div>'
+    return inner, tw
+
+
 def build(proj: Path):
     r = json.loads((proj / "roteiro.json").read_text())
     dur = json.loads((proj / "voz" / "duracoes.json").read_text())["cenas"]
@@ -134,7 +248,9 @@ def build(proj: Path):
         n = c.get("numero")
         if n:
             v_ini = n["ate"] if (i == 0 or n["de"] == n["ate"]) else n["de"]   # frame 0 é a capa: já mostra o número
-            inner = (f'<div class="num"><span id="n{i}v">{v_ini}</span>'
+            var = n.get("variacao")   # bolsa/investimento: "alta" verde ▲, "baixa" vermelho ▼
+            seta = {"alta": "▲ ", "baixa": "▼ "}.get(var, "")
+            inner = (f'<div class="num {var or ""}">{seta}<span id="n{i}v">{v_ini}</span>'
                      f'<span class="suf">{html.escape(n.get("sufixo", ""))}</span></div>'
                      f'<div class="rot">{html.escape(n["rotulo"])}</div>')
             clip(f"num{i}", s0, d, f'<div id="num{i}in" class="numwrap">{inner}</div>', cls="topo")
@@ -149,8 +265,8 @@ def build(proj: Path):
         # visual SVG em volta do globo
         vis = c.get("visual", "globo")
         cx, cy = 540, 790
-        if vis in ("contador", "numero", "anel", "voltas", "globo", "printar"):
-            if vis == "anel":
+        if vis == "anel":   # gráfico redondo: no máximo 1 por vídeo (produzir.py confere)
+            if True:
                 pct = float(c.get("anel", 50))
                 circ = 2 * 3.14159 * RA
                 svg = (f'<circle cx="{cx}" cy="{cy}" r="{RA}" class="trk" stroke-width="20"/>'
@@ -180,6 +296,11 @@ def build(proj: Path):
                 vis0 = re.sub(r'id="(\w+)"', r'id="l\1"', svg)
                 if vis in ("contador", "numero", "globo", "printar"):
                     vis0 = vis0.replace(f'<g id="lg0">', f'<g id="lg0" transform="rotate({-40 if vis == "contador" else 0} {cx} {cy})">')
+        # camadas 2D no meio da tela (gráfico em aparelho, recibo, letreiro, carimbo)
+        meio, tw = camadas(c, i, s0, d)
+        if meio:
+            clip(f"mid{i}", s0, d, meio, cls="meio")
+            tweens += tw
         # legendas (não na pergunta final: ela fica no cartão)
         if vis not in ("pergunta", "cta"):
             groups = chunks(c["legenda"], c.get("destaques", []))
@@ -247,10 +368,9 @@ def build(proj: Path):
                    "palco": c.get("palco", "globo"), "atores": c.get("atores", []), "terreno": c.get("terreno")}
                   for c, tm in zip(r["cenas"], cenas)]
     reps = max(0, int(total / 1.0) - 1)
-    dial_steps = "".join(f'tl.to("#dialarc",{{attr:{{"stroke-dashoffset":{364.4 * (1 - (k + 1) / N):.1f}}},duration:.4,ease:"power2.out"}},{cenas[k]["inicio"]:.3f});' for k in range(N))
     doc = TEMPLATE.format(
         W=W, H=H, total=total, P=P, clips="\n      ".join(clips), tweens="\n      ".join(tweens),
-        scenes=json.dumps(scene_data), rotas=json.dumps(ROTAS), reps=reps, dial_steps=dial_steps, loop=LOOP,
+        scenes=json.dumps(scene_data), rotas=json.dumps(ROTAS), reps=reps, loop=LOOP,
         titulo=html.escape(r["titulo"]))
     (hf / "index.html").write_text(doc)
     (hf / "hyperframes.json").write_text(json.dumps({"name": r["slug"]}, indent=1))
@@ -274,6 +394,8 @@ TEMPLATE = """<!doctype html>
 <script src="assets/lib/gsap.min.js"></script>
 <style>
   @font-face {{ font-family: 'Playfair Display'; src: url('assets/fonts/PlayfairDisplay-Italic.ttf'); font-style: italic; font-weight: 400 900; }}
+  @font-face {{ font-family: 'League Gothic'; src: url('assets/fonts/LeagueGothic.ttf'); }}
+  @font-face {{ font-family: 'Oswald'; src: url('assets/fonts/Oswald.ttf'); font-weight: 200 700; }}
   @font-face {{ font-family: 'Cinzel'; src: url('assets/fonts/Cinzel.ttf'); font-weight: 400 900; }}
   @font-face {{ font-family: 'Instrument Serif'; src: url('assets/fonts/InstrumentSerif-Regular.ttf'); font-style: normal; }}
   @font-face {{ font-family: 'Instrument Serif'; src: url('assets/fonts/InstrumentSerif-Italic.ttf'); font-style: italic; }}
@@ -283,11 +405,8 @@ TEMPLATE = """<!doctype html>
   * {{ margin: 0; padding: 0; box-sizing: border-box; }}
   html, body {{ width: {W}px; height: {H}px; overflow: hidden; background: var(--bg); }}
   #root {{ position: relative; width: {W}px; height: {H}px; overflow: hidden; background: var(--bg); font-family: {P[rotulo]}; font-weight: 300; color: var(--tx); }}
-  #glow {{ position: absolute; left: 90px; top: 340px; width: 900px; height: 900px; border-radius: 50%;
-          background: radial-gradient(circle, var(--glow) 0%, rgba(0,0,0,0) 68%); }}
-  .bokeh {{ position: absolute; border-radius: 50%; filter: blur(38px); opacity: .32; background: var(--glow); }}
-  #shadow {{ position: absolute; left: 330px; top: 1140px; width: 500px; height: 60px; border-radius: 50%;
-            background: radial-gradient(ellipse, rgba(0,0,0,.75), rgba(0,0,0,0) 70%); }}
+  #veu {{ position: absolute; inset: 0; pointer-events: none;
+         background: linear-gradient(to bottom, var(--bg) 0%, transparent 34%, transparent 56%, var(--bg) 92%); opacity: .82; }}
   #gl {{ position: absolute; inset: 0; width: {W}px; height: {H}px; }}
   .vis {{ position: absolute; inset: 0; }}
   .vis svg {{ position: absolute; inset: 0; }}
@@ -301,6 +420,8 @@ TEMPLATE = """<!doctype html>
   .topo {{ position: absolute; left: 0; right: 0; top: 232px; height: 214px; text-align: center; }}
   .numwrap {{ display: block; transform-origin: 50% 60%; }}
   .num {{ font-family: {P[titulo]}; font-size: 200px; line-height: 170px; color: var(--hi); letter-spacing: -.01em; }}
+  .num.alta {{ color: #22C55E; }}
+  .num.baixa {{ color: #EF4444; }}
   .num .suf {{ font-size: 120px; margin-left: 8px; font-style: italic; }}
   .rot {{ margin-top: 10px; font-family: {P[rotulo]}; font-weight: 300; font-size: 28px; letter-spacing: .32em; color: var(--sec); }}
   .cap {{ position: absolute; left: 70px; right: 70px; top: 1100px; height: 140px; display: flex; align-items: center; justify-content: center; }}
@@ -314,11 +435,31 @@ TEMPLATE = """<!doctype html>
   #rec {{ position: absolute; left: 64px; top: 184px; height: 38px; display: flex; align-items: center; gap: 12px;
          font-weight: 400; font-size: 26px; letter-spacing: .28em; color: var(--tx); }}
   #recdot {{ width: 18px; height: 18px; border-radius: 50%; background: var(--tx); }}
-  #dial {{ position: absolute; left: 866px; top: 176px; width: 140px; height: 140px; }}
   .dialbox {{ position: absolute; left: 866px; top: 176px; width: 140px; height: 140px; display: flex; align-items: center; justify-content: center; }}
   .dialtxt {{ display: flex; flex-direction: column; align-items: center; line-height: 1; }}
   .dl {{ font-size: 16px; letter-spacing: .3em; color: var(--sec); font-weight: 400; }}
   .dn {{ margin-top: 4px; font-family: {P[titulo]}; font-size: 42px; color: var(--tx); }}
+  .meio {{ position: absolute; left: 0; right: 0; top: 470px; height: 610px; display: flex; align-items: center; justify-content: center; }}
+  .tela {{ position: relative; background: #0B0C10; box-shadow: 0 30px 80px rgba(0,0,0,.55); overflow: hidden; }}
+  .tela.nenhuma {{ background: transparent; box-shadow: none; }}
+  .tela.celular {{ width: 330px; height: 600px; border-radius: 48px; border: 12px solid #1C1D22; }}
+  .tela.celular::before {{ content: ""; position: absolute; top: 10px; left: 50%; width: 90px; height: 22px; margin-left: -45px; border-radius: 12px; background: #1C1D22; z-index: 2; }}
+  .tela.tv {{ width: 900px; height: 520px; border-radius: 10px; border: 16px solid #15161A; }}
+  .tela.computador {{ width: 860px; height: 500px; border-radius: 14px; border: 14px solid #202127; border-bottom-width: 40px; }}
+  .pe {{ position: absolute; left: 50%; width: 180px; height: 60px; margin-left: -90px; background: #202127; clip-path: polygon(30% 0, 70% 0, 100% 100%, 0 100%); }}
+  .tela .gt {{ position: absolute; left: 26px; top: 22px; right: 26px; font-family: 'Barlow'; font-weight: 400; font-size: 24px; letter-spacing: .18em; color: #C9CBD3; }}
+  .tela.celular .gt {{ top: 46px; font-size: 18px; }}
+  .tela svg {{ position: absolute; left: 0; top: 0; }}
+  .papel {{ background: #F3EFE6; color: #16130F; font-family: 'Courier New', monospace; box-shadow: 0 30px 80px rgba(0,0,0,.5); }}
+  .recibo {{ width: 520px; padding: 36px 40px 30px; overflow: hidden; }}
+  .recibo .li {{ display: flex; justify-content: space-between; font-size: 30px; line-height: 46px; }}
+  .recibo .tot {{ margin-top: 18px; padding-top: 14px; border-top: 3px dashed #16130F; font-family: {P[titulo]}; font-size: 92px; line-height: 96px; text-align: center; }}
+  .recibo .ty {{ font-size: 22px; letter-spacing: .3em; text-align: center; margin-top: 6px; }}
+  .flap {{ display: flex; gap: 10px; padding: 22px; background: #121317; border-radius: 18px; box-shadow: 0 30px 80px rgba(0,0,0,.55); }}
+  .flap .fc {{ width: 104px; height: 150px; border-radius: 10px; background: linear-gradient(#26272D 49%, #0D0E11 50%, #1E1F24 51%);
+              color: #F3EFE6; font-family: 'League Gothic', 'Oswald', sans-serif; font-size: 128px; line-height: 150px; text-align: center; }}
+  .carimbo {{ position: absolute; left: 50%; top: 50%; padding: 10px 34px; border: 8px solid #D7261E; border-radius: 12px; color: #D7261E;
+             font-family: 'Barlow'; font-weight: 400; font-size: 76px; letter-spacing: .12em; white-space: nowrap; mix-blend-mode: multiply; }}
   .final {{ position: absolute; left: 70px; right: 70px; top: 300px; height: 940px; text-align: center; }}
   .finq {{ font-family: {P[titulo]}; font-size: 96px; line-height: 100px; color: var(--tx); letter-spacing: -.01em; }}
   .finq .k {{ color: var(--hi); font-style: italic; }}
@@ -335,19 +476,9 @@ TEMPLATE = """<!doctype html>
 </head>
 <body>
   <div id="root" data-composition-id="main" data-start="0" data-duration="{total}" data-width="{W}" data-height="{H}">
-    <div id="glow"></div>
-    <div id="bk0" class="bokeh" style="left:-120px;top:240px;width:420px;height:420px"></div>
-    <div id="bk1" class="bokeh" style="left:780px;top:520px;width:360px;height:360px"></div>
-    <div id="bk2" class="bokeh" style="left:640px;top:1380px;width:520px;height:520px"></div>
-    <div id="bk3" class="bokeh" style="left:-60px;top:1460px;width:300px;height:300px"></div>
-    <div id="shadow"></div>
     <canvas id="gl" width="{W}" height="{H}" data-layout-ignore></canvas>
+    <div id="veu"></div>
     <div id="rec"><div id="recdot"></div>REC</div>
-    <svg id="dial" viewBox="0 0 140 140" data-layout-ignore>
-      <circle cx="70" cy="70" r="58" fill="none" stroke="{P[cor]}" stroke-opacity=".25" stroke-width="6"/>
-      <circle id="dialarc" cx="70" cy="70" r="58" fill="none" stroke="{P[cor]}" stroke-width="6" stroke-linecap="round"
-              stroke-dasharray="364.4" stroke-dashoffset="364.4" transform="rotate(-90 70 70)"/>
-    </svg>
     <div id="marca">WORLDFRAME</div>
       {clips}
   </div>
@@ -361,14 +492,12 @@ TEMPLATE = """<!doctype html>
       tl.fromTo(o, {{ v: a }}, {{ v: b, duration: d, ease: "power2.out", onUpdate: () => {{
         el.textContent = casas ? o.v.toFixed(casas) : Math.round(o.v).toLocaleString("en-US"); }} }}, at);
     }}
+    function flap(sel, ch, at, d) {{   // letreiro split-flap: troca letras até parar na certa
+      const el = document.querySelector(sel), L = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$%"; const o = {{ v: 0 }};
+      tl.fromTo(o, {{ v: 0 }}, {{ v: 1, duration: d, ease: "none", onUpdate: () => {{
+        el.textContent = o.v >= 1 ? ch : L[Math.floor(o.v * 37 + ch.charCodeAt(0)) % L.length]; }} }}, at);
+    }}
     tl.fromTo("#recdot", {{ opacity: 1 }}, {{ opacity: .15, duration: .5, ease: "steps(1)", repeat: {reps}, yoyo: true }}, 0);
-    // fundo desfocado vai e volta: termina onde começou (o último frame emenda com o primeiro)
-    tl.fromTo("#bk0", {{ x: 0, y: 0 }}, {{ x: 80, y: 60, duration: {total} / 2, ease: "sine.inOut", repeat: 1, yoyo: true }}, 0);
-    tl.fromTo("#bk1", {{ x: 0, y: 0 }}, {{ x: -70, y: 90, duration: {total} / 2, ease: "sine.inOut", repeat: 1, yoyo: true }}, 0);
-    tl.fromTo("#bk2", {{ x: 0, y: 0 }}, {{ x: -90, y: -50, duration: {total} / 2, ease: "sine.inOut", repeat: 1, yoyo: true }}, 0);
-    tl.fromTo("#bk3", {{ x: 0, y: 0 }}, {{ x: 60, y: -70, duration: {total} / 2, ease: "sine.inOut", repeat: 1, yoyo: true }}, 0);
-    {dial_steps}
-    tl.to("#dialarc", {{ attr: {{ "stroke-dashoffset": 364.4 }}, duration: .3 }}, {total} - {loop});
       {tweens}
     window.__timelines["main"] = tl;
   </script>
