@@ -54,7 +54,7 @@ export interface Approval { task_id: string; decision: 'approved' | 'changes'; f
 export interface ScheduleItem {
   id: string
   data: string // YYYY-MM-DD
-  pagina: 'Worldframe' | 'Funny Pets'
+  pagina: 'Worldframe'
   horario: string // HH:MM
   task_id: string | null
   titulo: string

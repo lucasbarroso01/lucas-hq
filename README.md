@@ -19,7 +19,7 @@ Abra `http://localhost:5173/?demo=1` para o modo demo (eventos simulados). Sem S
 3. Agentes: exporte `SUPABASE_URL` e `SUPABASE_SERVICE_KEY` no terminal do Claude Code.
 
 ## Agentes
-`pip install -r tools/requirements.txt` (precisa de `ffmpeg`). Comandos: `/rodar-worldframe [teste]`, `/rodar-pets`, `/briefing-cliente <texto>`, `/status`.
+`pip install -r tools/requirements.txt` (precisa de `ffmpeg`). Comandos: `/rodar-worldframe [teste]`, `/alimentar-acervo`, `/briefing-cliente <texto>`, `/status`.
 
 ## Deploy
 - **Vercel**: importe o repo; o `vercel.json` já define build e saída. Configure as duas variáveis `VITE_*`.

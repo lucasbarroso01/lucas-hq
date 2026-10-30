@@ -1,3 +1,4 @@
+import { ROOM_POS } from './layout'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { useHQ } from '../store'
 import type { Agent, HQEvent, ScheduleItem, SkillRuntime, Task } from '../data/types'
@@ -36,7 +37,8 @@ async function load() {
   if (agents.error) { console.warn('[supabase]', agents.error.message); return false }
   hq.set({
     live: 'supabase',
-    agents: agents.data?.length ? (agents.data as Agent[]) : hq.agents,
+    // só agentes de salas que existem (o Funny Pets saiu do escritório em 30/10)
+    agents: agents.data?.length ? (agents.data as Agent[]).filter((g) => g.team_id in ROOM_POS) : hq.agents,
     tasks: (tasks.data as Task[]) ?? [],
     events: (events.data as HQEvent[]) ?? [],
     schedule: schedule.data?.length ? (schedule.data as ScheduleItem[]) : hq.schedule,

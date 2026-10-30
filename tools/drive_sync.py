@@ -17,7 +17,7 @@ from _common import ROOT, emit
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--data", default=dt.date.today().isoformat())
-ap.add_argument("--pagina", default="Worldframe", choices=["Worldframe", "Funny Pets"])
+ap.add_argument("--pagina", default="Worldframe", choices=["Worldframe"])
 a = ap.parse_args()
 
 enviados, falhas = [], []

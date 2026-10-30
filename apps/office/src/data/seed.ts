@@ -3,14 +3,14 @@ import { EXP, PAGINAS, nowBR, toMin } from '../lib/expediente'
 
 export const TEAMS: Team[] = [
   { id: 'radar', nome: 'Radar', cor: '#3B6FE0', operacao: 'maquina-viral', icon: '📡',
-    skills: ['trend-scan', 'drive-modelagem'], tools: ['Google Drive', 'Cérebro'] },
+    skills: ['temas.yaml', 'ig-viral'], tools: ['WebSearch', 'Cérebro', 'Acervo'] },
   { id: 'roteiros', nome: 'Roteiros', cor: '#E9B23A', operacao: 'maquina-viral', icon: '✍️',
-    skills: ['faceless-video-direction', 'ig-reel-scripts'], tools: ['Cérebro', 'Google Drive'] },
+    skills: ['ig-reel', 'faceless-video-direction', 'hypit-video', 'conector'], tools: ['Cérebro', 'Acervo'] },
   { id: 'producao-wf', nome: 'Produção Worldframe', cor: '#7B5CE0', operacao: 'maquina-viral', icon: '🎬',
-    skills: ['faceless-video-direction', 'hypit-video', 'lemo-opuscar', 'moneyprinterturbo-video', 'hyperframes-video'],
-    tools: ['Google Drive', 'tools/ (ffmpeg)', 'Cérebro'] },
-  { id: 'producao-pets', nome: 'Produção Funny Pets', cor: '#E5893B', operacao: 'maquina-viral', icon: '🐶',
-    skills: ['higgsfield', 'faceless-video-direction'], tools: ['Higgsfield', 'Google Drive'] },
+    skills: ['hyperframes-video', 'hypit-video'],
+    tools: ['produzir.py', 'Kokoro', 'Google Drive'] },
+  { id: 'acervo', nome: 'Acervo de Virais', cor: '#E5893B', operacao: 'maquina-viral', icon: '🗂️',
+    skills: ['hypit-video', 'ig-viral'], tools: ['tools/acervo.py', 'Cérebro'] },
   { id: 'qualidade', nome: 'Qualidade', cor: '#2BB673', operacao: 'maquina-viral', icon: '✅',
     skills: ['contact-sheet-qa'], tools: ['tools/frames.py', 'Cérebro'] },
   { id: 'social', nome: 'Social & Agenda', cor: '#D94BC8', operacao: 'maquina-viral', icon: '📅',
@@ -28,12 +28,11 @@ const a = (id: string, team_id: string, papel: string, is_lead = false, doing_no
 
 export const AGENTS: Agent[] = [
   a('radar-worldframe', 'radar', 'Pesquisa temas virais (Worldframe)', true),
-  a('radar-pets', 'radar', 'Pesquisa virais de pets (pasta de modelagem)'),
   a('roteirista-lead', 'roteiros', 'Líder de roteiros', true),
   a('roteirista', 'roteiros', 'Sub-agente de ganchos'),
   a('editor-lead', 'producao-wf', 'Divide os 5 vídeos em sub-agentes', true),
   a('video-editor', 'producao-wf', 'Editor (corte, legenda, capa)'),
-  a('pets-producer', 'producao-pets', 'Gera cenas no Higgsfield após aprovação', true),
+  a('curador-acervo', 'acervo', 'Ficha os virais que o Lucas manda (copy, tema, edição)', true),
   a('brand-checker', 'qualidade', 'QA pela folha de contato (nota ≥ 8)', true),
   a('social-scheduler', 'social', 'Sobe no Drive e define horários', true),
   a('analista', 'analytics', 'Registra views e lições', true),
@@ -47,13 +46,8 @@ const iso = (minAgo: number) => new Date(now - minAgo * 60000).toISOString()
 export const TASKS: Task[] = [
   { id: 't1', team_id: 'roteiros', agent_id: 'roteirista-lead', operacao: 'maquina-viral', titulo: '5 ganchos Worldframe · quinta',
     etapa: 'GANCHOS', status: 'running', progress: 62, created_at: iso(40), updated_at: iso(2) },
-  { id: 't2', team_id: 'producao-pets', agent_id: 'pets-producer', operacao: 'maquina-viral', titulo: 'Funny Pets · gato vs pepino',
-    etapa: 'CENAS', status: 'waiting', progress: 30, created_at: iso(90), updated_at: iso(20),
-    payload: { scenes: [
-      'Cena 1 · celular na vertical, cozinha à noite, gato distraído comendo',
-      'Cena 2 · pepino aparece atrás dele (câmera tremida, zoom digital)',
-      'Cena 3 · gato pula 1 metro, ração voa, risada abafada fora de quadro',
-    ] } },
+  { id: 't2', team_id: 'acervo', agent_id: 'curador-acervo', operacao: 'maquina-viral', titulo: 'Acervo · 5 virais da semana',
+    etapa: 'FICHAS', status: 'running', progress: 40, created_at: iso(90), updated_at: iso(20) },
   { id: 't3', team_id: 'social', agent_id: 'social-scheduler', operacao: 'maquina-viral', titulo: 'Worldframe · 5 vídeos de hoje no Drive',
     etapa: 'APROVAÇÃO', status: 'waiting', progress: 95, drive_url: 'https://drive.google.com', created_at: iso(200), updated_at: iso(30) },
   { id: 't4', team_id: 'qualidade', agent_id: 'brand-checker', operacao: 'maquina-viral', titulo: 'QA wf_03.mp4',
@@ -78,7 +72,7 @@ export const SCHEDULE: ScheduleItem[] = weekDays().flatMap((data) =>
     const past = toMin(horario) <= br.min
     const status: ScheduleItem['status'] = data < br.date ? 'postado' : data > br.date ? 'planejado'
       : past ? (i === 1 ? 'atrasado' : 'postado') : i % 2 ? 'aprovado' : i < 4 ? 'pronto' : 'planejado'
-    const titulo = pagina === 'Worldframe' ? `wf_0${i + 1}.mp4` : 'pets_01.mp4'
+    const titulo = `wf_0${i + 1}.mp4`
     return { id: `${pagina}-${data}-${horario}`, data, pagina, horario, task_id: null, titulo, status,
       drive_url: status === 'planejado' ? null : 'https://drive.google.com' }
   })),

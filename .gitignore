@@ -16,3 +16,7 @@ video/package-lock.json
 assets/lib/
 assets/fonts/*.ttf
 .hyperframes/
+
+# Acervo: vídeos de referência ficam só no notebook
+acervo/referencias/*
+!acervo/referencias/.gitkeep

@@ -32,7 +32,7 @@ TOKEN = CONF / "drive-token.json"
 ap = argparse.ArgumentParser()
 ap.add_argument("video", nargs="?")
 ap.add_argument("--login", action="store_true", help="authorize your Google account once (opens the browser)")
-ap.add_argument("--page", choices=["Worldframe", "Funny Pets"])
+ap.add_argument("--page", choices=["Worldframe"])
 ap.add_argument("--caption")
 ap.add_argument("--hashtags", default="")
 ap.add_argument("--time", default="a definir", help="HH:MM (pode ficar \"a definir\": o Social define depois)")

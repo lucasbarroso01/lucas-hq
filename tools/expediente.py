@@ -4,7 +4,7 @@
 python3 tools/expediente.py turnos                                  # tabela de turnos (markdown)
 python3 tools/expediente.py pode-rodar --turno producao-worldframe  # ok=true/false + motivo; não faz nada
 python3 tools/expediente.py pode-rodar --turno producao-worldframe --esperar   # espera a etapa anterior (máx. 15 min)
-python3 tools/expediente.py task-id --turno qa-pets                 # id da tarefa do turno (ex.: qa-pets-2026-10-29)
+python3 tools/expediente.py task-id --turno qa-worldframe           # id da tarefa do turno (ex.: qa-worldframe-2026-10-29)
 python3 tools/expediente.py vagas                                   # sub-agentes livres no escritório (máx. 5)
 python3 tools/expediente.py proximo-horario --pagina Worldframe     # próximo horário livre (respeita 2h entre posts)
 python3 tools/expediente.py agendamentos                            # gera config/agendamentos.md

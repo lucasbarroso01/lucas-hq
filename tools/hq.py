@@ -53,7 +53,7 @@ s.add_argument("--state", choices=["running", "idle"], default="running")
 c = sub.add_parser("schedule", help="cria/atualiza um post na Agenda (crie assim que o horário for definido)")
 for k in ["date", "time", "title", "task", "drive-url"]:
     c.add_argument(f"--{k}")
-c.add_argument("--page", choices=["Worldframe", "Funny Pets"])
+c.add_argument("--page", choices=["Worldframe"])
 c.add_argument("--status", choices=["planejado", "pronto", "aprovado", "postado", "atrasado"])
 z = sub.add_parser("pausa", help="liga/desliga o botão Pausar operação (sem opções: mostra o estado)")
 z.add_argument("--on", action="store_true")

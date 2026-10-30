@@ -21,14 +21,34 @@ FINAL_TAIL = 2.6     # cartão final depois da última fala
 LOOP = 0.6           # últimos segundos voltam ao frame 0 (loop)
 BAND = (168, 1330)   # faixa onde todo texto precisa caber
 
+# Paletas inspiradas no acervo de virais (acervo/fichas). Nunca azul com verde-limão (pedido do Lucas, 30/10).
+# Cada vídeo do dia usa uma diferente (produzir.py escolhe se o roteiro não disser).
 PALETAS = {
-    "principal": dict(bg="#07080C", glow="#121A3A", cor="#1F4BFF", funda="#0B1F7A", destaque="#C6FF1A",
-                      texto="#F2F4F8", sec="#8A90A6", fonte_leg="'Instrument Serif'", peso_leg=400, caixa="none",
-                      titulo="'Instrument Serif'", rotulo="'Barlow'"),
+    "dossie": dict(bg="#ECE5D3", glow="#DCD2BA", cor="#8C7B5E", funda="#3A3128", destaque="#D7261E",
+                   texto="#1B1814", sec="#6B6153", fonte_leg="'Instrument Serif'", peso_leg=400, caixa="none",
+                   titulo="'Instrument Serif'", rotulo="'Barlow'"),
+    "noite": dict(bg="#0D0D10", glow="#22161A", cor="#9A9AA6", funda="#2A2A33", destaque="#E5322D",
+                  texto="#F4F1EC", sec="#9C968C", fonte_leg="'Instrument Serif'", peso_leg=400, caixa="none",
+                  titulo="'Instrument Serif'", rotulo="'Barlow'"),
+    "ouro": dict(bg="#111014", glow="#2A2216", cor="#B8A98A", funda="#3B3328", destaque="#F2B233",
+                 texto="#F6F0E4", sec="#A39A88", fonte_leg="'Instrument Serif'", peso_leg=400, caixa="none",
+                 titulo="'Instrument Serif'", rotulo="'Barlow'"),
+    "entardecer": dict(bg="#241A33", glow="#3D2440", cor="#C98A8F", funda="#4A3352", destaque="#FF6B5A",
+                       texto="#FBF1EA", sec="#B9A4B4", fonte_leg="'Instrument Serif'", peso_leg=400, caixa="none",
+                       titulo="'Instrument Serif'", rotulo="'Barlow'"),
     "alternativa": dict(bg="#EFE6D2", glow="#E2D6BC", cor="#8E9A8B", funda="#6E7A6B", destaque="#6B1F2A",
                         texto="#2A2522", sec="#6B6359", fonte_leg="'Playfair Display'", peso_leg=500, caixa="none",
                         titulo="'Cinzel'", rotulo="'Barlow'"),
 }
+PALETAS_DIA = ["noite", "dossie", "ouro", "entardecer", "alternativa"]
+
+
+def paleta_de(r: dict, slug: str) -> str:
+    """Paleta do roteiro se válida; senão uma fixa por slug (estável entre refações)."""
+    if r.get("paleta") in PALETAS:
+        return r["paleta"]
+    return PALETAS_DIA[sum(map(ord, slug)) % len(PALETAS_DIA)]
+
 
 # Rotas ilustrativas por corredores reais de cabos (lat, lon)
 ROTAS = [
@@ -76,7 +96,7 @@ def build(proj: Path):
     dur = json.loads((proj / "voz" / "duracoes.json").read_text())["cenas"]
     if len(dur) != len(r["cenas"]):
         raise ValueError("duracoes.json não bate com o número de cenas")
-    P = PALETAS[r.get("paleta", "principal")]
+    P = PALETAS[paleta_de(r, proj.name)]
     t, cenas = 0.0, []
     for d in dur:
         cenas.append({"inicio": round(t, 3), "dur": d})
@@ -265,7 +285,7 @@ TEMPLATE = """<!doctype html>
   #root {{ position: relative; width: {W}px; height: {H}px; overflow: hidden; background: var(--bg); font-family: {P[rotulo]}; font-weight: 300; color: var(--tx); }}
   #glow {{ position: absolute; left: 90px; top: 340px; width: 900px; height: 900px; border-radius: 50%;
           background: radial-gradient(circle, var(--glow) 0%, rgba(0,0,0,0) 68%); }}
-  .bokeh {{ position: absolute; border-radius: 50%; filter: blur(38px); opacity: .32; background: var(--funda); }}
+  .bokeh {{ position: absolute; border-radius: 50%; filter: blur(38px); opacity: .32; background: var(--glow); }}
   #shadow {{ position: absolute; left: 330px; top: 1140px; width: 500px; height: 60px; border-radius: 50%;
             background: radial-gradient(ellipse, rgba(0,0,0,.75), rgba(0,0,0,0) 70%); }}
   #gl {{ position: absolute; inset: 0; width: {W}px; height: {H}px; }}

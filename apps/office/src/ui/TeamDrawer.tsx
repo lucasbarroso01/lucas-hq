@@ -164,8 +164,8 @@ export function TeamDrawer({ teamId }: { teamId: string }) {
           <div className="space-y-3 pt-2 font-mono text-[11px] text-white/70">
             <p>Arquivo dos agentes: <span className="text-white">.claude/agents/{agents.map((a) => a.nome).join('.md, ')}.md</span></p>
             <p>Operação: <span className="text-white">{team.operacao}</span></p>
-            <p>Regras no cérebro: <span className="text-white">{team.id.includes('pets') ? 'regras-funnypets' : team.operacao === 'agencia-lucas' ? 'cliente-*' : 'regras-worldframe'}</span></p>
-            <p>Aprovação humana: <span className="text-amber-200">{['producao-pets', 'social'].includes(team.id) ? 'obrigatória' : 'não'}</span></p>
+            <p>Regras no cérebro: <span className="text-white">{team.id === 'acervo' ? 'acervo-virais' : team.operacao === 'agencia-lucas' ? 'cliente-*' : 'regras-worldframe'}</span></p>
+            <p>Aprovação humana: <span className="text-amber-200">{team.id === 'social' ? 'obrigatória' : 'não'}</span></p>
           </div>
         )}
       </div>

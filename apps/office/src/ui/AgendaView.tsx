@@ -15,7 +15,7 @@ export const ST: Record<ScheduleStatus, { icon: string; label: string; cls: stri
   atrasado: { icon: '⏰', label: 'atrasado', cls: 'text-rose-200' },
 }
 
-// Timeline from 04:00 to 24:00 (the silence window has no work, but the pets approval band crosses it).
+// Timeline from 04:00 to 24:00 (the silence window has no work).
 const T0 = 4 * 60, T1 = 24 * 60
 const pct = (m: number) => ((Math.min(Math.max(m, T0), T1) - T0) / (T1 - T0)) * 100
 
@@ -92,7 +92,7 @@ function Hours({ h }: { h: number }) {
 function DayColumn({ date, items, wide, nowMin, label, onPick }: { date: string; items: ScheduleItem[]; wide: boolean; nowMin: number | null; label: string; onPick?: () => void }) {
   const dow = DIAS_YAML[(new Date(`${date}T12:00:00`).getDay() + 6) % 7]
   const bands = faixas().filter((f) => !f.turno.dias || f.turno.dias.includes(dow))
-  // lay bands in 2 lanes so overlapping ones (pets approval vs. worldframe) stay readable
+  // lay bands in 2 lanes so overlapping ones  stay readable
   return (
     <div className={`relative flex-1 border-l border-white/5 ${wide ? 'min-w-[420px]' : 'min-w-[110px]'}`}>
       <button onClick={onPick} disabled={!onPick} className="sticky top-0 z-10 h-6 w-full text-center text-xs font-semibold text-white/80 enabled:hover:text-white">{label}</button>

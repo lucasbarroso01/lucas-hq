@@ -15,19 +15,19 @@ const PIPELINE: [string, string, string][] = [
   ['qualidade', 'social', 'Qualidade · wf_02 aprovado (nota 9)'],
   ['qualidade', 'producao-wf', 'Qualidade · devolvido: legenda saindo da borda'],
   ['social', 'analytics', 'Social · relatório do dia com horários'],
-  ['radar', 'producao-pets', 'Radar · viral de pets na pasta de modelagem'],
+  ['acervo', 'roteiros', 'Acervo · 3 ganchos e 4 animações novas para modelar'],
   ['inbox-b2b', 'criacao-b2b', 'Inbox B2B · briefing Clínica Sorriso pronto'],
   ['analytics', 'roteiros', 'Analytics · ganchos com pergunta tiveram 2x views'],
 ]
 const NOTES = [
   "tema 'cidades submersas' já usado", 'legenda: máx. 3 palavras por linha', 'gancho de 2s com número performa melhor',
-  'Funny Pets: sem fala, câmera tremida', 'cliente prefere tom leve', 'wf_04 teve 48k views',
+  'acervo: contagem regressiva prende até o fim', 'cliente prefere tom leve', 'wf_04 teve 48k views',
 ]
 const DOING: Record<string, string[]> = {
   radar: ['escaneando tendências', 'lendo pasta de modelagem'],
   roteiros: ['escrevendo ganchos', 'revisando beat sheet'],
   'producao-wf': ['dividindo 5 vídeos', 'conferindo sub-agentes'],
-  'producao-pets': ['montando cenas', 'aguardando aprovação'],
+  acervo: ['tirando prints dos frames', 'fichando copy e animações'],
   qualidade: ['lendo frames.jpg', 'dando nota'],
   social: ['subindo no Drive', 'definindo horários'],
   analytics: ['registrando views', 'escrevendo lições'],

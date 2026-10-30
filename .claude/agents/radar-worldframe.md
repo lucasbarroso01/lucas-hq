@@ -17,7 +17,7 @@ Siga as **Regras de expediente** do `CLAUDE.md` (horários em `config/expediente
 
 ## Passos
 A página fala de **política, economia, geopolítica e guerras**, e das curiosidades ligadas a elas. Leia `config/temas.yaml` (editorias, exemplos aprovados, o que fica fora).
-1. Se existir `brain/swipe.md` (virais do nicho, feito com o Lucas pela skill **ig-viral** em `/pesquisa-viral`), leia: temas e formatos que estão batendo a média das contas do nicho têm prioridade. Busque 8 temas candidatos **dentro das editorias**. Priorize o que está nas notícias desta semana (como Ormuz) e curiosidades fortes ligadas a dinheiro e poder (como "todo o ouro cabe num cubo"). Nada de pets, datas comemorativas, cultura pop, esporte ou trivia de internet.
+1. Leia `brain/acervo.md` (virais que o Lucas mandou, fichados): temas e ângulos parecidos com os que viralizaram ali têm prioridade. Se existir `brain/swipe.md` (virais do nicho, feito com o Lucas pela skill **ig-viral** em `/pesquisa-viral`), leia: temas e formatos que estão batendo a média das contas do nicho têm prioridade. Busque 8 temas candidatos **dentro das editorias**. Priorize o que está nas notícias desta semana (como Ormuz) e curiosidades fortes ligadas a dinheiro e poder (como "todo o ouro cabe num cubo"). Nada de pets, datas comemorativas, cultura pop, esporte ou trivia de internet.
 2. Descarte o que estiver em `temas-usados` no cérebro.
 3. Dê nota 0-10 em cada critério de `config/temas.yaml` (explica, em_jogo, atual, dados) e confira cada candidato:
    `python3 tools/worldframe/temas.py checar --categoria <editoria> --tema "<tema em inglês>" --notas '{"explica":8,"em_jogo":9,"atual":9,"dados":8}'`

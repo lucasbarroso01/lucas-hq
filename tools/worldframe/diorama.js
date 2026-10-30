@@ -151,7 +151,9 @@ export class Diorama {
   barra() {
     const T = this.T;
     if (!this._bg) { this._bg = new T.BoxGeometry(0.12, 0.035, 0.055); }
-    return new T.Mesh(this._bg, this.mat.hi);
+    // ouro é sempre dourado, seja qual for a paleta
+    if (!this._ouro) this._ouro = new T.MeshLambertMaterial({ color: new T.Color("#E2B33C"), emissive: new T.Color("#7A5410"), emissiveIntensity: 0.25, flatShading: true });
+    return new T.Mesh(this._bg, this._ouro);
   }
   nota() {
     const T = this.T;

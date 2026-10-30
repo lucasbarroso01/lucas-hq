@@ -9,11 +9,7 @@ Fuso: **America/Sao_Paulo**. Um turno por tarefa agendada. Cada disparo roda `/t
 | Lucas HQ · producao-worldframe | `CRON_TZ=America/Sao_Paulo 45 5 * * *` | `/turno producao-worldframe` |
 | Lucas HQ · qa-worldframe | `CRON_TZ=America/Sao_Paulo 45 8 * * *` | `/turno qa-worldframe` |
 | Lucas HQ · social-worldframe | `CRON_TZ=America/Sao_Paulo 15 9 * * *` | `/turno social-worldframe` |
-| Lucas HQ · radar-pets | `CRON_TZ=America/Sao_Paulo 0 19 * * *` | `/turno radar-pets` |
-| Lucas HQ · cenas-pets | `CRON_TZ=America/Sao_Paulo 20 19 * * *` | `/turno cenas-pets` |
-| Lucas HQ · producao-pets | `CRON_TZ=America/Sao_Paulo 0 9 * * *` | `/turno producao-pets` |
-| Lucas HQ · qa-pets | `CRON_TZ=America/Sao_Paulo 0 10 * * *` | `/turno qa-pets` |
-| Lucas HQ · social-pets | `CRON_TZ=America/Sao_Paulo 20 10 * * *` | `/turno social-pets` |
+| Lucas HQ · acervo-semanal | `CRON_TZ=America/Sao_Paulo 0 10 * * 0` | `/turno acervo-semanal` |
 | Lucas HQ · analytics-diario | `CRON_TZ=America/Sao_Paulo 30 22 * * *` | `/turno analytics-diario` |
 | Lucas HQ · manutencao-cerebro | `CRON_TZ=America/Sao_Paulo 0 23 * * 0` | `/turno manutencao-cerebro` |
 
@@ -31,11 +27,7 @@ O cron do Debian não entende `CRON_TZ`, então o relógio do Linux precisa esta
 45 5 * * * $HOME/lucas-hq/iniciar.sh --turno producao-worldframe >> $HOME/lucas-hq/out/_turnos.log 2>&1
 45 8 * * * $HOME/lucas-hq/iniciar.sh --turno qa-worldframe >> $HOME/lucas-hq/out/_turnos.log 2>&1
 15 9 * * * $HOME/lucas-hq/iniciar.sh --turno social-worldframe >> $HOME/lucas-hq/out/_turnos.log 2>&1
-0 19 * * * $HOME/lucas-hq/iniciar.sh --turno radar-pets >> $HOME/lucas-hq/out/_turnos.log 2>&1
-20 19 * * * $HOME/lucas-hq/iniciar.sh --turno cenas-pets >> $HOME/lucas-hq/out/_turnos.log 2>&1
-0 9 * * * $HOME/lucas-hq/iniciar.sh --turno producao-pets >> $HOME/lucas-hq/out/_turnos.log 2>&1
-0 10 * * * $HOME/lucas-hq/iniciar.sh --turno qa-pets >> $HOME/lucas-hq/out/_turnos.log 2>&1
-20 10 * * * $HOME/lucas-hq/iniciar.sh --turno social-pets >> $HOME/lucas-hq/out/_turnos.log 2>&1
+0 10 * * 0 $HOME/lucas-hq/iniciar.sh --turno acervo-semanal >> $HOME/lucas-hq/out/_turnos.log 2>&1
 30 22 * * * $HOME/lucas-hq/iniciar.sh --turno analytics-diario >> $HOME/lucas-hq/out/_turnos.log 2>&1
 0 23 * * 0 $HOME/lucas-hq/iniciar.sh --turno manutencao-cerebro >> $HOME/lucas-hq/out/_turnos.log 2>&1
 */5 * * * * $HOME/lucas-hq/iniciar.sh --recuperar >> $HOME/lucas-hq/out/_turnos.log 2>&1

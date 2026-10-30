@@ -5,7 +5,7 @@ export interface Turno {
   id: string
   agente: string
   time?: string
-  pagina?: 'Worldframe' | 'Funny Pets'
+  pagina?: 'Worldframe'
   inicio: string
   prazo: string
   faz: string
@@ -16,13 +16,13 @@ export interface Expediente {
   fuso: string
   silencio: { inicio: string; fim: string }
   limites: Record<string, number>
-  paginas: Record<'Worldframe' | 'Funny Pets', { cor: string; posts: string[] }>
+  paginas: Record<'Worldframe', { cor: string; posts: string[] }>
   turnos: Turno[]
 }
 
 /** Horários, prazos e limites: lidos de config/expediente.yaml no build. */
 export const EXP = parse(raw) as Expediente
-export const PAGINAS = Object.keys(EXP.paginas) as ('Worldframe' | 'Funny Pets')[]
+export const PAGINAS = Object.keys(EXP.paginas) as ('Worldframe')[]
 
 export const toMin = (hm: string) => { const [h, m] = hm.split(':').map(Number); return h * 60 + m }
 

@@ -31,9 +31,6 @@ paginas:
     gancho_min: 75           # nota mínima do gancho (hookscore da skill ig-reel)
     cenas_com_atores_min: 0.5  # fração mínima de cenas no diorama com pessoas/veículos animados
     drive_ao_terminar: true  # cada vídeo vai para o Drive assim que o render termina
-  Funny Pets:
-    cor: "#E5893B"
-    posts: ["20:00"]
 
 turnos:
   # Worldframe
@@ -84,58 +81,15 @@ turnos:
     prazo: "11:30"
     faz: Lucas aprova os vídeos no Drive
     humano: true
-  # Funny Pets (radar e roteiro na véspera, produção no dia)
-  - id: radar-pets
-    prepara_dia_seguinte: true   # roda à noite para o post de amanhã
-    agente: radar-pets
-    time: radar
-    pagina: Funny Pets
-    inicio: "19:00"
-    prazo: "19:20"
-    faz: Tema do dia seguinte (pasta de modelagem + virais)
-    depende_de: null
-  - id: cenas-pets
-    prepara_dia_seguinte: true   # roda à noite para o post de amanhã
-    agente: roteirista-lead
-    time: roteiros
-    pagina: Funny Pets
-    inicio: "19:20"
-    prazo: "19:45"
-    faz: 4 a 6 cenas → status "aguardando você"
-    depende_de: radar-pets
-  - id: aprovacao-pets
-    agente: lucas
-    pagina: Funny Pets
-    inicio: "19:45"
-    prazo: "08:30"
-    faz: Lucas aprova ou ajusta as cenas na interface
-    humano: true
-  - id: producao-pets
-    agente: pets-producer
-    time: producao-pets
-    pagina: Funny Pets
-    inicio: "09:00"
-    prazo: "10:00"
-    faz: Gera no Higgsfield só se aprovado
-    depende_de: cenas-pets
-    exige_aprovacao: true
-  - id: qa-pets
-    agente: brand-checker
-    time: qualidade
-    pagina: Funny Pets
+  # Acervo de virais: o Lucas solta vídeos em acervo/referencias/ durante a semana; o curador ficha no domingo
+  - id: acervo-semanal
+    agente: curador-acervo
+    time: acervo
+    dias: [dom]
     inicio: "10:00"
-    prazo: "10:20"
-    faz: QA do vídeo
-    depende_de: producao-pets
-  - id: social-pets
-    agente: social-scheduler
-    time: social
-    pagina: Funny Pets
-    inicio: "10:20"
-    prazo: "10:30"
-    faz: Drive + post das 20:00 na Agenda
-    depende_de: qa-pets
-  # Outros
+    prazo: "12:00"
+    faz: Ficha os virais novos de acervo/referencias (prints dos frames, tema, copy, edição e animações) e atualiza brain/acervo.md
+    depende_de: null
   - id: analytics-diario
     agente: analista
     time: analytics

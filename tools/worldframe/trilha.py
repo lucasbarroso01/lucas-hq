@@ -103,7 +103,7 @@ try:
     r = json.loads((proj / "roteiro.json").read_text())
     tl = json.loads((proj / "timeline.json").read_text())
     total = tl["total"]
-    mood = "tenso" if r.get("paleta") == "alternativa" else "tech"
+    mood = "tenso" if r.get("paleta") in ("alternativa", "dossie", "noite") else "tech"
     root = 55.0 if mood == "tenso" else 65.41  # A1 / C2
 
     # narração na timeline

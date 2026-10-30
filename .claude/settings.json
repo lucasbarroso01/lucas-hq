@@ -36,7 +36,9 @@
       "WebSearch",
       "Edit(./out/**)",
       "Edit(./inbox/**)",
-      "Edit(./brain/**)"
+      "Edit(./brain/**)",
+      "Bash(python3 tools/acervo.py:*)",
+      "Edit(./acervo/**)"
     ],
     "ask": [
       "Bash(mv:*)",
