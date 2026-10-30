@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Acervo de virais: prepara as referências que o Lucas manda para o curador fichar.
 
+python3 tools/acervo.py baixar                       # traz os vídeos enviados pela interface (bucket "acervo" do Supabase)
 python3 tools/acervo.py pendentes                    # vídeos em acervo/referencias/ ainda sem ficha
 python3 tools/acervo.py fichar acervo/referencias/x.mp4
     -> out/acervo/<slug>/: cortes.jpg (1 frame por corte de cena), legendas_NN.jpg (1 frame a cada 1,5 s,
@@ -14,7 +15,12 @@ import json
 import re
 import subprocess
 import sys
+import urllib.parse
+import urllib.request
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _common import KEY, URL  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 REFS = ROOT / "acervo" / "referencias"
@@ -60,6 +66,28 @@ def fichar(p: Path) -> dict:
             "frames": sorted(x.name for x in o.glob("*.jpg")), "ficha": str((FICHAS / f"{slug(p)}.md").relative_to(ROOT))}
 
 
+def baixar() -> dict:
+    """Baixa de referencias/ no Storage o que ainda não está em acervo/referencias/ (não apaga nada lá)."""
+    if not (URL and KEY):
+        return {"baixados": [], "aviso": "sem SUPABASE_URL/SUPABASE_SERVICE_KEY: nada a baixar"}
+    h = {"apikey": KEY, "Authorization": f"Bearer {KEY}"}
+    req = urllib.request.Request(f"{URL}/storage/v1/object/list/acervo", method="POST", headers={**h, "Content-Type": "application/json"},
+                                 data=json.dumps({"prefix": "referencias/", "limit": 1000}).encode())
+    itens = json.load(urllib.request.urlopen(req, timeout=60))
+    REFS.mkdir(parents=True, exist_ok=True)
+    novos = []
+    for it in itens:
+        nome = it.get("name") or ""
+        if not nome or Path(nome).suffix.lower() not in EXT or (REFS / nome).exists():
+            continue
+        r = urllib.request.Request(f"{URL}/storage/v1/object/acervo/referencias/{urllib.parse.quote(nome)}", headers=h)
+        with urllib.request.urlopen(r, timeout=300) as src, open(REFS / f".{nome}.part", "wb") as dst:
+            dst.write(src.read())
+        (REFS / f".{nome}.part").rename(REFS / nome)
+        novos.append(nome)
+    return {"baixados": novos, "no_storage": len(itens)}
+
+
 def resumo() -> dict:
     fichas = sorted(FICHAS.glob("*.md"))
     partes = ["# Acervo de virais (gerado por `tools/acervo.py resumo`; não edite à mão)", "",
@@ -73,13 +101,16 @@ def resumo() -> dict:
 
 ap = argparse.ArgumentParser()
 sp = ap.add_subparsers(dest="cmd", required=True)
+sp.add_parser("baixar")
 sp.add_parser("pendentes")
 f = sp.add_parser("fichar")
 f.add_argument("video")
 sp.add_parser("resumo")
 a = ap.parse_args()
 try:
-    if a.cmd == "pendentes":
+    if a.cmd == "baixar":
+        res = baixar()
+    elif a.cmd == "pendentes":
         res = {"pendentes": [str(p.relative_to(ROOT)) for p in pendentes()]}
     elif a.cmd == "fichar":
         res = fichar(Path(a.video).resolve())

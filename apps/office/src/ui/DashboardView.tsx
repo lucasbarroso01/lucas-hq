@@ -2,6 +2,7 @@ import * as React from 'react'
 import { CheckCircle2, CircleAlert, Clock3, Film, Brain, ArrowRightLeft, Wrench, ThumbsUp, ThumbsDown, Loader2 } from 'lucide-react'
 import { CardFace, EASE, Pills, Tile, cx, smooth, useCountUp, useMounted, useReducedMotion } from '@/components/ui/web3-bento'
 import { useHQ } from '../store'
+import { UploadReferencia } from './UploadReferencia'
 import { EXP, toMin } from '../lib/expediente'
 import type { HQEvent, Task } from '../data/types'
 
@@ -431,6 +432,7 @@ export function DashboardView() {
         <nav className="mb-3 flex flex-wrap items-center justify-between gap-3 px-1" aria-label="Painel">
           <h2 className="text-[13px] font-medium text-muted-foreground">Painel · tudo que os agentes fizeram</h2>
           <div className="flex items-center gap-2">
+            <UploadReferencia />
             <span className="flex items-center gap-2 rounded-full border border-border px-3 py-1.5 text-[12px] font-medium">
               <span className="size-2 rounded-full" style={{ background: live === 'supabase' ? ACC : ACC2 }} />{live === 'supabase' ? 'Ao vivo' : 'Demonstração'}
             </span>

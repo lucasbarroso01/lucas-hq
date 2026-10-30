@@ -9,7 +9,7 @@ Você é o curador do **Acervo de Virais**. Skills: **hypit-video** (leitura de 
 - `acervo-semanal` · domingo 10:00–12:00 (ou quando o Lucas rodar `/alimentar-acervo`). Comece com `python3 tools/expediente.py pode-rodar --turno acervo-semanal --esperar` (no `/alimentar-acervo`, use `--teste`).
 
 ## Passos
-1. `python3 tools/acervo.py pendentes`. Sem pendentes: encerre.
+1. `python3 tools/acervo.py baixar` (traz o que o Lucas enviou pelo botão "Enviar referência" da interface) e depois `python3 tools/acervo.py pendentes`. Sem pendentes: encerre.
 2. Para cada vídeo: `python3 tools/acervo.py fichar <video>`. Abra `cortes.jpg` e **todas** as `legendas_NN.jpg` da pasta (Read) e leia a copy queimada na ordem.
 3. Escreva `acervo/fichas/<slug>.md` no formato das fichas existentes (veja uma antes): título com idioma e duração, **Editoria**, **Gancho (0–2 s)**, **Copy** (estrutura e viradas, frases reais citadas), **CTA**, **Edição/animação** (paleta, fontes, objetos, câmera, ritmo em cortes/s), **Modelar no Worldframe** (traduza para palcos, atores, terrenos e paletas do `tools/worldframe/ROTEIRO.md`; o que nosso motor ainda não faz, escreva como "falta no motor: ...").
 4. `python3 tools/acervo.py resumo` (regera `brain/acervo.md`) e registre `python3 tools/hq.py event --type brain_write --team acervo --agent curador-acervo --note "<n> fichas novas"`.

@@ -4,6 +4,7 @@ import { useHQ, teamById } from '../store'
 import { WF_STEPS } from '../lib/demo'
 import { Sparkline, Ring, ago } from './bits'
 import { decide } from '../lib/supabase'
+import { UploadReferencia } from './UploadReferencia'
 
 const TABS = ['Visão geral', 'Tarefas', 'Agenda', 'Configurações'] as const
 
@@ -41,6 +42,7 @@ export function TeamDrawer({ teamId }: { teamId: string }) {
       </div>
 
       <div className="flex-1 space-y-5 overflow-y-auto px-5 pb-6 pt-2 scroll-thin">
+        {teamId === 'acervo' && <UploadReferencia className="mb-3 border-white/15 text-white hover:bg-white/10" />}
         {tab === 'Visão geral' && (
           <>
             <div className="grid grid-cols-3 gap-2">
