@@ -72,7 +72,7 @@ SKIP = {"done": "já está done (não refaça)", "waiting": "já entregou e espe
         "error": "terminou com erro (veja o motivo na tarefa)", "atrasado": "já foi entregue com atraso"}
 
 
-def check(t: dict, now: dt.datetime, teste: bool, ocorrencia: dt.datetime | None = None) -> tuple[bool, str, str | None]:
+def check(t: dict, now: dt.datetime, teste: bool, ocorrencia: dt.datetime | None = None, refazer: bool = False) -> tuple[bool, str, str | None]:
     """(ok, motivo, status_a_registrar). Com `ocorrencia` (recuperação), datas e ids vêm do horário perdido
     e só o silêncio é checado no relógio real."""
     clock = now.time()
@@ -98,7 +98,7 @@ def check(t: dict, now: dt.datetime, teste: bool, ocorrencia: dt.datetime | None
         return True, "offline (sem Supabase): dependências não verificadas", None
     own = task_id(t, now)
     mine = get_task(own)
-    if mine and mine["status"] in SKIP:
+    if mine and mine["status"] in SKIP and not refazer:
         return False, f"{own} {SKIP[mine['status']]}", None
     busy = running_in_team(t["time"], own)
     if busy:
@@ -159,18 +159,18 @@ def cmd_pode_rodar(a, now):
         emit("expediente", ok=False, error=f"turno desconhecido: {a.turno}. Válidos: {', '.join(TURNOS)}")
     occ = dt.datetime.strptime(a.ocorrencia, "%Y-%m-%d %H:%M").replace(tzinfo=TZ) if a.ocorrencia else None
     if occ is not None:  # recuperação: não espera nem registra nada, só responde
-        ok, why, _ = check(t, now, a.teste, occ)
+        ok, why, _ = check(t, now, a.teste, occ, a.refazer)
         nxt = next_turno(t)
         print(json.dumps({"tool": "expediente", "ok": ok, "turno": t["id"], "agente": t["agente"], "task_id": task_id(t, occ),
                           "proximo_task_id": f"{nxt}-{post_date(t, occ).isoformat()}" if nxt else None,
                           "atrasado": True, "ocorrencia": a.ocorrencia, "prazo_original": t["prazo"], "motivo": why}, ensure_ascii=False))
         return
-    ok, why, st = check(t, now, a.teste)
+    ok, why, st = check(t, now, a.teste, refazer=a.refazer)
     if not ok and st == "waiting_upstream" and a.esperar:
         deadline = time.time() + LIM["espera_upstream_min"] * 60
         while not ok and time.time() < deadline:
             time.sleep(60)
-            ok, why, st = check(t, dt.datetime.now(TZ), a.teste)
+            ok, why, st = check(t, dt.datetime.now(TZ), a.teste, refazer=a.refazer)
     if not ok and st == "waiting_upstream" and ONLINE:
         rest("POST", "tasks", {"id": task_id(t, now), "team_id": t["time"], "agent_id": t["agente"], "operacao": "maquina-viral",
                                "titulo": f"{t['faz']} · {post_date(t, now).isoformat()}", "etapa": "ESPERANDO", "status": "waiting_upstream",
@@ -262,6 +262,7 @@ p = sub.add_parser("pode-rodar")
 p.add_argument("--turno", required=True)
 p.add_argument("--esperar", action="store_true", help="espera a etapa anterior por até limites.espera_upstream_min")
 p.add_argument("--teste", action="store_true", help="ignora horário/silêncio (nunca as aprovações)")
+p.add_argument("--refazer", action="store_true", help="refaz a tarefa do dia em qualquer status (/rodar-worldframe agora); aprovações seguem valendo")
 p.add_argument("--ocorrencia", help='recuperação: horário perdido "AAAA-MM-DD HH:MM" (dado por proximo-pendente)')
 sub.add_parser("pendentes", help="turnos perdidos (notebook fechado no horário)")
 sub.add_parser("proximo-pendente", help="o turno perdido mais antigo que já pode rodar")
