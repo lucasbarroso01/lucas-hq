@@ -38,7 +38,12 @@
       "Edit(./inbox/**)",
       "Edit(./brain/**)",
       "Bash(python3 tools/acervo.py:*)",
-      "Edit(./acervo/**)"
+      "Edit(./acervo/**)",
+      "Bash(bash tools/social/servico.sh:*)",
+      "mcp__social__list_scheduled_posts",
+      "mcp__social__list_facebook_native_scheduled",
+      "mcp__social__check_token_validity",
+      "mcp__social__list_pending_videos"
     ],
     "ask": [
       "Bash(mv:*)",
@@ -58,7 +63,9 @@
       "mcp__claude_ai_higgsfield__publish_website",
       "mcp__claude_ai_Google_Drive__update_file",
       "mcp__claude_ai_Google_Drive__create_file",
-      "mcp__claude_ai_Google_Drive__copy_file"
+      "mcp__claude_ai_Google_Drive__copy_file",
+      "Read(./tools/social-mcp/.env)",
+      "Bash(cat tools/social-mcp/.env:*)"
     ]
   }
 }

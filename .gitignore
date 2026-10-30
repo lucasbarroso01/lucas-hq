@@ -20,3 +20,6 @@ assets/fonts/*.ttf
 # Acervo: vídeos de referência ficam só no notebook
 acervo/referencias/*
 !acervo/referencias/.gitkeep
+
+# social-mcp (clonada pelo tools/social/setup.sh; .env com token fica só no Chromebook)
+tools/social-mcp/

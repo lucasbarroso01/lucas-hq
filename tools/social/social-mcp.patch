@@ -1,0 +1,306 @@
+diff --git a/local_files.py b/local_files.py
+index 82f0fd2..59a6705 100644
+--- a/local_files.py
++++ b/local_files.py
+@@ -108,10 +108,64 @@ def list_media(data_dir: pathlib.Path) -> list[dict[str, object]]:
+     return _list_by_exts(data_dir, MEDIA_EXTENSIONS)
+ 
+ 
++# --- Lucas HQ: staging via Supabase Storage ---------------------------------
++# With SUPABASE_STAGING_BUCKET set, the file is uploaded to that PRIVATE bucket at
++# publish time and Meta gets a signed URL valid for SUPABASE_SIGNED_URL_SECONDS
++# (default 3600). unstage() deletes the object once the publish call returns.
++# Keys come only from the environment (.env) and are never logged.
++_SB_PREFIX = "sb:"
++
++
++def _sb() -> tuple[str, str, str, int]:
++    """(bucket, url, key, ttl) read at call time (server.py loads .env after importing us)."""
++    return (os.getenv("SUPABASE_STAGING_BUCKET", "").strip(), os.getenv("SUPABASE_URL", "").strip().rstrip("/"),
++            os.getenv("SUPABASE_SERVICE_KEY", "").strip(), int(os.getenv("SUPABASE_SIGNED_URL_SECONDS", "3600")))
++
++
++def _sb_request(method: str, path: str, data: bytes | None = None, ctype: str | None = None) -> bytes:
++    import urllib.request  # noqa: PLC0415
++    _b, url, key, _t = _sb()
++    headers = {"apikey": key, "Authorization": f"Bearer {key}"}
++    if ctype:
++        headers["Content-Type"] = ctype
++    req = urllib.request.Request(f"{url}/storage/v1/{path}", data=data, method=method, headers=headers)
++    with urllib.request.urlopen(req, timeout=600) as r:
++        return r.read()
++
++
++def _stage_supabase(src: pathlib.Path) -> tuple[str, pathlib.Path, str]:
++    import json  # noqa: PLC0415
++    bucket, url, _k, ttl = _sb()
++    # Supabase free plan caps each object at 50 MB: re-encode a temporary copy to fit
++    limit = int(os.getenv("SUPABASE_MAX_BYTES", str(48 * 1024 * 1024)))
++    tmp = None
++    if src.stat().st_size > limit and src.suffix.lower() in VIDEO_EXTENSIONS:
++        import subprocess, tempfile  # noqa: E401, PLC0415
++        dur = float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(src)],
++                                   capture_output=True, text=True, check=True).stdout.strip())
++        kbps = int(limit * 8 * 0.92 / dur / 1000) - 160
++        tmp = pathlib.Path(tempfile.mkstemp(suffix=".mp4")[1])
++        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(src), "-c:v", "libx264", "-preset", "medium", "-b:v", f"{kbps}k",
++                        "-maxrate", f"{int(kbps * 1.3)}k", "-bufsize", f"{kbps * 2}k", "-pix_fmt", "yuv420p",
++                        "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", str(tmp)], check=True)
++    obj = f"{secrets.token_urlsafe(18)}/{quote(src.name, safe='')}"
++    ctype = "video/mp4" if src.suffix.lower() in {".mp4", ".m4v"} else "video/quicktime" if src.suffix.lower() == ".mov" else "application/octet-stream"
++    try:
++        _sb_request("POST", f"object/{bucket}/{obj}", (tmp or src).read_bytes(), ctype)
++    finally:
++        if tmp:
++            tmp.unlink(missing_ok=True)
++    signed = json.loads(_sb_request("POST", f"object/sign/{bucket}/{obj}",
++                                    json.dumps({"expiresIn": ttl}).encode(), "application/json"))
++    return _SB_PREFIX + obj, src, f"{url}/storage/v1{signed['signedURL']}"
++
++
+ def stage_for_serving(
+     data_dir: pathlib.Path, src: pathlib.Path, base_url: str
+ ) -> tuple[str, pathlib.Path, str]:
+     """Hardlink src into public/<token>/<src.name>. Return (token, link, url)."""
++    if all(_sb()[:3]):
++        return _stage_supabase(src)
+     token = secrets.token_urlsafe(24)
+     token_dir = public_dir(data_dir) / token
+     token_dir.mkdir(parents=True, exist_ok=False)
+@@ -126,6 +180,13 @@ def stage_for_serving(
+ 
+ 
+ def unstage(data_dir: pathlib.Path, token: str) -> None:
++    if token.startswith(_SB_PREFIX):
++        try:
++            _sb_request("DELETE", f"object/{_sb()[0]}/{token[len(_SB_PREFIX):]}")
++        except Exception as e:  # noqa: BLE001
++            import logging  # noqa: PLC0415
++            logging.getLogger(__name__).warning("supabase staging delete failed: %s", type(e).__name__)
++        return
+     token_dir = public_dir(data_dir) / token
+     if token_dir.is_dir():
+         shutil.rmtree(token_dir, ignore_errors=True)
+diff --git a/meta_client.py b/meta_client.py
+index 5bce940..26ae02e 100644
+--- a/meta_client.py
++++ b/meta_client.py
+@@ -519,6 +519,7 @@ class MetaClient:
+         self,
+         file_path: pathlib.Path,
+         description: str | None = None,
++        scheduled_publish_time: int | None = None,
+     ) -> dict[str, Any]:
+         """Publish a Facebook Page Reel via the resumable upload protocol.
+ 
+@@ -570,6 +571,9 @@ class MetaClient:
+             "video_id": str(video_id),
+             "video_state": "PUBLISHED",
+         }
++        if scheduled_publish_time:  # Lucas HQ: agendamento nativo da Meta
++            finish_data["video_state"] = "SCHEDULED"
++            finish_data["scheduled_publish_time"] = str(int(scheduled_publish_time))
+         if description:
+             finish_data["description"] = description
+         finish = await self._request(
+diff --git a/scheduler.py b/scheduler.py
+index 4b95c67..64813c7 100644
+--- a/scheduler.py
++++ b/scheduler.py
+@@ -11,6 +11,7 @@ from __future__ import annotations
+ import asyncio
+ import datetime as dt
+ import logging
++import os
+ import pathlib
+ import re
+ from typing import Any
+@@ -33,7 +34,10 @@ def init(db_path: pathlib.Path) -> BackgroundScheduler:
+         return _scheduler
+     db_path.parent.mkdir(parents=True, exist_ok=True)
+     jobstores = {"default": SQLAlchemyJobStore(url=f"sqlite:///{db_path}")}
+-    _scheduler = BackgroundScheduler(jobstores=jobstores, timezone=TZ)
++    _scheduler = BackgroundScheduler(
++        jobstores=jobstores, timezone=TZ,
++        job_defaults={"misfire_grace_time": int(os.getenv("SCHEDULER_MISFIRE_GRACE_SECONDS", "7200")), "coalesce": True},
++    )
+     _scheduler.start()
+     log.info("scheduler started, jobstore=%s pending_jobs=%d",
+              db_path, len(_scheduler.get_jobs()))
+diff --git a/server.py b/server.py
+index 37f8c86..4f676ea 100644
+--- a/server.py
++++ b/server.py
+@@ -42,6 +42,9 @@ from meta_client import MetaAPIError, MetaClient
+ 
+ 
+ load_dotenv()
++# Lucas HQ: httpx logs full request URLs at INFO, and Graph calls carry access_token in the query
++logging.getLogger("httpx").setLevel(logging.WARNING)
++logging.getLogger("httpcore").setLevel(logging.WARNING)
+ 
+ logging.basicConfig(
+     level=os.getenv("LOG_LEVEL", "INFO"),
+@@ -70,6 +73,11 @@ def _parse_id_list(raw: str | None) -> list[str]:
+ META_ACCESS_TOKEN = _require_env("META_ACCESS_TOKEN")
+ IG_USER_ID = _require_env("IG_USER_ID")
+ FB_PAGE_ID = _require_env("FB_PAGE_ID")
++def _safe(url: str) -> str:
++    """Drop the query string (signed-URL tokens) before logging or returning a URL."""
++    return (url or "").split("?", 1)[0]
++
++
+ GRAPH_VERSION = os.getenv("GRAPH_API_VERSION", "v25.0")
+ META_APP_ID = os.getenv("META_APP_ID")
+ META_APP_SECRET = os.getenv("META_APP_SECRET")
+@@ -122,7 +130,7 @@ async def post_instagram_photo(
+     reachable HTTPS image URL. Returns the published media id, or a structured
+     Meta API error.
+     """
+-    log.info("post_instagram_photo url=%s caption_len=%d", image_url, len(caption))
++    log.info("post_instagram_photo url=%s caption_len=%d", _safe(image_url), len(caption))
+     async with _new_client() as client:
+         try:
+             url_info = await client.validate_image_url(image_url)
+@@ -181,7 +189,7 @@ async def post_facebook_photo(
+     published: bool = True,
+ ) -> dict[str, Any]:
+     """Post a single photo to the configured Facebook Page via a public URL."""
+-    log.info("post_facebook_photo url=%s published=%s", image_url, published)
++    log.info("post_facebook_photo url=%s published=%s", _safe(image_url), published)
+     async with _new_client() as client:
+         try:
+             await client.validate_image_url(image_url)
+@@ -442,7 +450,7 @@ async def post_instagram_local_photo(
+     except Exception as e:
+         return _err("staging file for serving failed", e)
+ 
+-    log.info("post_instagram_local_photo file=%s url=%s story=%s", filename, public_url, also_story)
++    log.info("post_instagram_local_photo file=%s url=%s story=%s", filename, _safe(public_url), also_story)
+     feed_result: dict[str, Any]
+     story_result: dict[str, Any] | None = None
+     try:
+@@ -461,7 +469,7 @@ async def post_instagram_local_photo(
+             log.warning("archive failed for %s: %s", filename, e)
+             feed_result["archive_warning"] = str(e)
+         feed_result["source_filename"] = filename
+-        feed_result["served_url"] = public_url
++        feed_result["served_url"] = _safe(public_url)
+         if story_result is not None:
+             feed_result["story"] = story_result
+     return feed_result
+@@ -543,7 +551,7 @@ async def post_instagram_reel(
+     video server-side. `share_to_feed=True` (default) also shows the Reel in
+     the main IG feed grid.
+     """
+-    log.info("post_instagram_reel url=%s share_to_feed=%s", video_url, share_to_feed)
++    log.info("post_instagram_reel url=%s share_to_feed=%s", _safe(video_url), share_to_feed)
+     async with _new_client() as client:
+         try:
+             url_info = await client.validate_video_url(video_url)
+@@ -621,7 +629,7 @@ async def post_instagram_local_reel(
+     except Exception as e:
+         return _err("staging file for serving failed", e)
+ 
+-    log.info("post_instagram_local_reel file=%s url=%s", filename, public_url)
++    log.info("post_instagram_local_reel file=%s", filename)
+     try:
+         result = await post_instagram_reel(
+             public_url, caption=caption, share_to_feed=share_to_feed,
+@@ -637,7 +645,7 @@ async def post_instagram_local_reel(
+             log.warning("archive failed for %s: %s", filename, e)
+             result["archive_warning"] = str(e)
+         result["source_filename"] = filename
+-        result["served_url"] = public_url
++        result["served_url"] = _safe(public_url)
+     return result
+ 
+ 
+@@ -652,7 +660,7 @@ async def post_facebook_video(
+     Meta downloads and transcodes the video, then publishes it as a regular
+     Page video post (not a Reel — see `post_facebook_local_reel` for Reels).
+     """
+-    log.info("post_facebook_video url=%s published=%s", video_url, published)
++    log.info("post_facebook_video url=%s published=%s", _safe(video_url), published)
+     async with _new_client() as client:
+         try:
+             await client.validate_video_url(video_url)
+@@ -942,7 +950,7 @@ async def post_local_photo_dual(
+         "post_local_photo_dual file=%s ig_story=%s fb_story=%s",
+         filename, also_story_ig, also_story_fb,
+     )
+-    out: dict[str, Any] = {"source_filename": filename, "served_url": public_url}
++    out: dict[str, Any] = {"source_filename": filename, "served_url": _safe(public_url)}
+     try:
+         ig_feed = await post_instagram_photo(public_url, caption=caption, alt_text=alt_text)
+         out["instagram"] = ig_feed
+@@ -1104,7 +1112,7 @@ async def post_local_reel_dual(
+         return _err("staging file for serving failed", e)
+ 
+     log.info("post_local_reel_dual file=%s share_to_feed=%s", filename, share_to_feed)
+-    out: dict[str, Any] = {"source_filename": filename, "served_url": public_url}
++    out: dict[str, Any] = {"source_filename": filename, "served_url": _safe(public_url)}
+     try:
+         out["instagram"] = await post_instagram_reel(
+             public_url, caption=caption, share_to_feed=share_to_feed,
+@@ -1551,6 +1559,60 @@ async def schedule_facebook_local_reel(
+     )
+ 
+ 
++_FB_NATIVE = SCHEDULER_DB.parent / "fb_native.json"
++
++
++@mcp.tool()
++async def schedule_facebook_reel_native(
++    filename: str,
++    when: str,
++    description: str = "",
++) -> dict[str, Any]:
++    """Schedule a Facebook Page Reel with Meta's NATIVE scheduling (scheduled_publish_time).
++
++    The video is uploaded now and Meta publishes it at `when` — the computer does not
++    need to be on. The source file is NOT archived (an IG job may still need it).
++    `when`: ISO 8601 with offset/Z (e.g. 2026-10-31T11:00:00Z); 10 min to 30 days ahead.
++    """
++    try:
++        src = local_files.resolve_video(DATA_DIR, filename)
++        run_at = scheduler.parse_when(when)
++    except (LocalFileError, ValueError) as e:
++        return {"ok": False, "error": str(e)}
++    ts = int(run_at.timestamp())
++    log.info("schedule_facebook_reel_native file=%s at=%s", filename, run_at.isoformat())
++    async with _new_client() as client:
++        try:
++            raw = await client.publish_fb_reel_file(file_path=src, description=description or None, scheduled_publish_time=ts)
++        except Exception as e:
++            return _err("facebook native schedule failed", e)
++    rec = {"video_id": raw.get("video_id"), "filename": filename, "scheduled_for": run_at.isoformat(), "scheduled_publish_time": ts}
++    try:
++        items = json.loads(_FB_NATIVE.read_text()) if _FB_NATIVE.exists() else []
++        items.append(rec)
++        _FB_NATIVE.parent.mkdir(parents=True, exist_ok=True)
++        _FB_NATIVE.write_text(json.dumps(items, indent=1))
++    except Exception as e:  # noqa: BLE001
++        log.warning("could not record fb native schedule: %s", e)
++    return {"ok": True, **rec, "finish": raw.get("finish")}
++
++
++@mcp.tool()
++async def list_facebook_native_scheduled() -> dict[str, Any]:
++    """List FB Reels scheduled natively at Meta (from fb_native.json), with Meta's current status."""
++    items = json.loads(_FB_NATIVE.read_text()) if _FB_NATIVE.exists() else []
++    out = []
++    async with _new_client() as client:
++        page_token = await client.get_page_access_token()
++        for it in items:
++            try:
++                st = await client._request("GET", str(it["video_id"]), params={"fields": "status,scheduled_publish_time,published"}, token=page_token)
++            except Exception as e:  # noqa: BLE001
++                st = {"error": str(e)}
++            out.append({**it, "meta": st})
++    return {"ok": True, "count": len(out), "items": out}
++
++
+ @mcp.tool()
+ async def list_scheduled_posts() -> dict[str, Any]:
+     """Return all jobs currently in the scheduler queue."""

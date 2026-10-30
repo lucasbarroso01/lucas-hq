@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase'
 /* Botão "Enviar referência": o Lucas arrasta vídeos virais; eles vão para o bucket "acervo" (referencias/)
    e o Chromebook baixa com `tools/acervo.py baixar` antes do curador fichar (domingo ou /alimentar-acervo). */
 
-const MAX = 100 * 1024 * 1024
+const MAX = 50 * 1024 * 1024
 const TIPOS = ['video/mp4', 'video/quicktime', 'video/webm', 'video/x-m4v']
 type Item = { nome: string; tam: number; st: 'enviando' | 'ok' | 'erro'; msg?: string }
 type Remoto = { name: string; created_at?: string; metadata?: { size?: number } }
@@ -51,7 +51,7 @@ function Modal({ onClose }: { onClose: () => void }) {
   async function enviar(files: FileList | File[]) {
     for (const f of Array.from(files)) {
       const nome = f.name
-      const erro = !TIPOS.includes(f.type) ? 'só vídeo (.mp4, .mov, .webm)' : f.size > MAX ? 'maior que 100 MB' : !supabase ? 'sem conexão com o Supabase' : ''
+      const erro = !TIPOS.includes(f.type) ? 'só vídeo (.mp4, .mov, .webm)' : f.size > MAX ? 'maior que 50 MB' : !supabase ? 'sem conexão com o Supabase' : ''
       if (erro) { setItens((x) => [{ nome, tam: f.size, st: 'erro', msg: erro }, ...x]); continue }
       setItens((x) => [{ nome, tam: f.size, st: 'enviando' }, ...x])
       const { error } = await supabase!.storage.from('acervo').upload(`referencias/${nomeSeguro(f)}`, f, { contentType: f.type, upsert: false })
@@ -80,7 +80,7 @@ function Modal({ onClose }: { onClose: () => void }) {
           className={`flex w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-4 py-10 text-center transition-colors ${arrastando ? 'border-foreground bg-muted' : 'border-border hover:bg-muted/50'}`}>
           <UploadCloud size={28} className="text-muted-foreground" />
           <span className="text-[14px] font-medium">Arraste os vídeos aqui ou toque para escolher</span>
-          <span className="font-mono text-[11px] text-muted-foreground">.mp4 · .mov · .webm · até 100 MB cada</span>
+          <span className="font-mono text-[11px] text-muted-foreground">.mp4 · .mov · .webm · até 50 MB cada</span>
         </button>
         <input ref={input} type="file" accept="video/*" multiple hidden onChange={(e) => e.target.files && enviar(e.target.files)} />
 
