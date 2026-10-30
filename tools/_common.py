@@ -63,6 +63,13 @@ BOLD_FONT = next(
 
 
 # --- Supabase (service key, REST). Offline without keys: appends to out/_hq.log ---
+# Sessions started outside iniciar.sh (e.g. `claude` typed by hand) don't source the env file: load it here.
+_ENV_FILE = Path.home() / ".config/lucas-hq/env"
+if "SUPABASE_URL" not in os.environ and _ENV_FILE.exists():
+    for _line in _ENV_FILE.read_text().splitlines():
+        _k, _, _v = _line.removeprefix("export ").partition("=")
+        if _k.strip() and _v:
+            os.environ.setdefault(_k.strip(), _v.strip().strip("'\""))
 def _env(*names: str) -> str:
     """First non-empty var; tolerates values pasted as NAME=value."""
     for n in names:
