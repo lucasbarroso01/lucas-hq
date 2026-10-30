@@ -94,6 +94,7 @@ def build(proj: Path):
     (hf / "assets" / "fonts").mkdir(parents=True, exist_ok=True)
     for f in ["gsap.min.js", "three.module.js", "terra.js"]:
         shutil.copy(ROOT / "assets/lib" / f, hf / "assets/lib" / f)
+    shutil.copy(Path(__file__).with_name("diorama.js"), hf / "assets/lib" / "diorama.js")
     for f in (ROOT / "assets/fonts").glob("*.ttf"):
         shutil.copy(f, hf / "assets/fonts" / f.name)
 
@@ -222,7 +223,8 @@ def build(proj: Path):
             k["dist"] = max(3.4, k.get("dist", 3.2))   # globo não sobe por baixo do número
         k["dist"] = max(2.45, k.get("dist", 3.2))      # nem desce sobre a fonte e a marca d'água (base < 1190 px)
         return k
-    scene_data = [{"s": tm["inicio"], "d": tm["dur"], "cam": cam(c), "g": c.get("globo", {})}
+    scene_data = [{"s": tm["inicio"], "d": tm["dur"], "cam": cam(c), "g": c.get("globo", {}),
+                   "palco": c.get("palco", "globo"), "atores": c.get("atores", []), "terreno": c.get("terreno")}
                   for c, tm in zip(r["cenas"], cenas)]
     reps = max(0, int(total / 1.0) - 1)
     dial_steps = "".join(f'tl.to("#dialarc",{{attr:{{"stroke-dashoffset":{364.4 * (1 - (k + 1) / N):.1f}}},duration:.4,ease:"power2.out"}},{cenas[k]["inicio"]:.3f});' for k in range(N))
@@ -353,6 +355,7 @@ TEMPLATE = """<!doctype html>
   <script type="module">
     import * as THREE from "./assets/lib/three.module.js";
     import {{ TERRA }} from "./assets/lib/terra.js";
+    import {{ Diorama }} from "./assets/lib/diorama.js";
     const SCENES = {scenes}, ROTAS = {rotas}, TOTAL = {total}, LOOP = {loop};
     const COR = new THREE.Color("{P[cor]}"), FUNDA = new THREE.Color("{P[funda]}"), HI = new THREE.Color("{P[destaque]}"), TX = new THREE.Color("{P[texto]}");
     const canvas = document.getElementById("gl");
@@ -425,10 +428,18 @@ TEMPLATE = """<!doctype html>
       lon += lt * 4 + mid * 16; lat += mid * 5; d *= 1 - lt * 0.012 - mid * 0.06;
       return {{ lat, lon, d, i, lt }};
     }}
+    const dio = new Diorama(THREE, scene, SCENES, {{ cor: "{P[cor]}", funda: "{P[funda]}", hi: "{P[destaque]}", tx: "{P[texto]}", sec: "{P[sec]}", bg: "{P[bg]}" }});
     function renderAt(t) {{
       let p = pose(t);
       const z = pose(0);
       const back = ease((t - (TOTAL - LOOP)) / (LOOP * 0.8));   // loop: volta à pose do frame 0
+      if (SCENES[p.i].palco === "diorama") {{   // mundo em miniatura com atores
+        globe.visible = false; anel.visible = false; anelHead.visible = false;
+        dio.render(t, p.i, p.lt, camera, SCENES[0].palco === "diorama" ? back : 0, dio.pose0());
+        renderer.render(scene, camera);
+        return;
+      }}
+      dio.esconder(); globe.visible = true; anel.visible = true; anelHead.visible = true;
       const lat = lerp(p.lat, z.lat, back), lon = lerpLon(p.lon, z.lon, back), d = lerp(p.d, z.d, back);
       camera.position.copy(v3(lat, lon, d * 2.6)); camera.lookAt(0, 0, 0);
       camera.up.set(0, 1, 0);

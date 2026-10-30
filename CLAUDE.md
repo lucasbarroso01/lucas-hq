@@ -29,6 +29,8 @@ Fonte única: `config/expediente.yaml` (fuso America/Sao_Paulo). Nunca escreva h
 9. **Relatório curto:** no máximo 3 linhas (o que fez, onde está, o que ficou pendente).
 10. **Recuperação (notebook fechado no horário):** o turno perdido roda assim que o Linux voltar (`iniciar.sh --recuperar`, a cada 5 min e ao ligar), um por vez, do post mais urgente ao menos urgente, respeitando o silêncio e as dependências; perdido há mais de 16h, fica para o próximo ciclo. Rodando com `atrasado: true`, entregue normalmente e aplique a regra 5 (posts que já passaram vão para `proximo-horario`).
 
+Pesquisa de virais do nicho: `/pesquisa-viral`, uma vez por mês, **com o Lucas presente** no navegador (skill ig-viral; nada de coleta automática). Gera `brain/swipe.md`, que o Radar e o Roteiro leem.
+
 Turnos: `python3 tools/expediente.py turnos`. Disparo: `/turno <id>` (um turno por tarefa agendada, ver `config/agendamentos.md`).
 
 ## Ambiente

@@ -27,6 +27,11 @@ import yaml  # noqa: E402
 EXP = yaml.safe_load((ROOT / "config" / "expediente.yaml").read_text())
 PAG = EXP["paginas"]["Worldframe"]
 DUR_MIN = float(PAG.get("duracao_min_s", 0))
+DUR_MAX = float(PAG.get("duracao_max_s", 0))
+GANCHO_MIN = float(PAG.get("gancho_min", 0))
+ATORES_MIN = float(PAG.get("cenas_com_atores_min", 0))
+HOOKSCORE = ROOT / ".claude" / "skills" / "ig-reel" / "hookscore.py"
+TIPOS_ATOR = {"pessoas", "navios", "avioes", "drones", "tanques", "misseis", "barras", "dinheiro", "predios", "fabrica", "barris"}
 WPS = 2.9  # palavras por segundo do Kokoro na velocidade 1.1 (medido)
 sys.path.insert(0, str(ROOT / "tools" / "worldframe"))
 from temas import checar as checar_tema  # noqa: E402
@@ -80,8 +85,29 @@ def checar_roteiro(r: dict) -> list[str]:
     if DUR_MIN and estimado < DUR_MIN:
         falta = int((DUR_MIN - estimado) * WPS) + 1
         probs.append(f"curto demais: ~{estimado:.0f} s; o Worldframe precisa de mais de {DUR_MIN - 1:.0f} s (acrescente ~{falta} palavras em cenas novas)")
-    if palavras > 240:
-        probs.append(f"{palavras} palavras: passa de 90 s (máx. ~240)")
+    if DUR_MAX and estimado > DUR_MAX:
+        probs.append(f"longo demais: ~{estimado:.0f} s; o máximo é {DUR_MAX:.0f} s")
+    # gancho: nota do hookscore (skill ig-reel)
+    if GANCHO_MIN and HOOKSCORE.exists():
+        hs = subprocess.run([PY, str(HOOKSCORE), "--json", "--hook", r["cenas"][0].get("legenda") or r["cenas"][0]["fala"]],
+                            capture_output=True, text=True)
+        try:
+            d = json.loads(hs.stdout); d = d[0] if isinstance(d, list) else d
+            if float(d["score"]) < GANCHO_MIN:
+                fraco = min(d["checks"].items(), key=lambda kv: kv[1]["score"])
+                probs.append(f"gancho fraco: {d['score']:.0f}/100 (mínimo {GANCHO_MIN:.0f}); pior ponto {fraco[0]}: {fraco[1]['detail']}")
+        except (ValueError, KeyError):
+            pass
+    # animação: pessoas, veículos e objetos em movimento (diorama), não só números e mapas
+    corpo = [c for c in r["cenas"] if c.get("visual") not in ("pergunta", "cta")]
+    com_atores = [c for c in corpo if c.get("palco") == "diorama" and any(a.get("tipo") in TIPOS_ATOR for a in c.get("atores", []))]
+    if ATORES_MIN and len(com_atores) < ATORES_MIN * len(corpo):
+        probs.append(f"só {len(com_atores)} de {len(corpo)} cenas com atores animados no diorama (mínimo {ATORES_MIN:.0%}): "
+                     f"use palco \"diorama\" com pessoas, navios, aviões, drones, tanques, mísseis, barras, dinheiro...")
+    for i, c in enumerate(r["cenas"]):
+        for a in c.get("atores", []):
+            if a.get("tipo") not in TIPOS_ATOR:
+                probs.append(f"cena {i + 1}: ator desconhecido '{a.get('tipo')}' (use: {', '.join(sorted(TIPOS_ATOR))})")
     for i, c in enumerate(r["cenas"]):
         if len(c["fala"].split()) > 19:
             probs.append(f"cena {i + 1} tem {len(c['fala'].split())} palavras (máx. 19)")
@@ -156,7 +182,9 @@ try:
     if probs:
         raise RuntimeError("roteiro reprovado: " + "; ".join(probs))
     proj.mkdir(parents=True, exist_ok=True)
-    cta = dict(CTA, camera=r["cenas"][0].get("camera"), globo=r["cenas"][0].get("globo", {}))   # emenda com o frame 0
+    c0 = r["cenas"][0]   # o CTA repete o palco da cena 1: o último quadro emenda com o primeiro
+    cta = dict(CTA, camera=c0.get("camera"), globo=c0.get("globo", {}), palco=c0.get("palco", "globo"),
+               atores=c0.get("atores", []), terreno=c0.get("terreno"))
     r["cenas"].append(cta)   # pergunta → like → follow
     (proj / "roteiro.json").write_text(json.dumps(r, ensure_ascii=False, indent=1))
     hq(a.task, "ROTEIRO", 5, f"roteiro ok: {nome}")

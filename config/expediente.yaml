@@ -27,6 +27,9 @@ paginas:
     cor: "#7B5CE0"
     posts: ["11:30", "14:00", "16:00", "18:00", "21:00"]   # 1º post às 11:30 para caber a produção em código
     duracao_min_s: 61        # monetização no Facebook: vídeos com mais de 60 s
+    duracao_max_s: 120       # entre 60 e 120 s
+    gancho_min: 75           # nota mínima do gancho (hookscore da skill ig-reel)
+    cenas_com_atores_min: 0.5  # fração mínima de cenas no diorama com pessoas/veículos animados
     drive_ao_terminar: true  # cada vídeo vai para o Drive assim que o render termina
   Funny Pets:
     cor: "#E5893B"

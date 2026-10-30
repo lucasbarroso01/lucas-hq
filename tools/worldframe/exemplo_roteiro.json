@@ -1,121 +1,184 @@
 {
   "slug": "all-gold-one-cube",
-  "titulo": "All the world's gold fits in one cube",
-  "categoria": "curiosidades",
+  "titulo": "Why central banks are hoarding gold",
+  "categoria": "economia",
   "notas_tema": {
     "explica": 9,
-    "em_jogo": 8,
-    "atual": 8,
+    "em_jogo": 9,
+    "atual": 9,
     "dados": 9
   },
   "paleta": "principal",
   "voz": "am_michael",
   "velocidade": 1.1,
   "dial": "FACT",
-  "fontes_checadas_em": "2026-10-29",
+  "fontes_checadas_em": "2026-10-30",
   "cenas": [
     {
-      "fala": "All the gold ever mined fits in one cube. And that cube is smaller than you think.",
-      "legenda": "All the gold ever mined fits in one cube. And that cube is smaller than you think.",
+      "fala": "One decision froze three hundred billion dollars of Russia's money. You cannot freeze gold.",
+      "legenda": "One decision froze $300 billion of Russia's money. You can't freeze gold.",
       "destaques": [
-        "one cube"
+        "freeze gold"
       ],
-      "fonte": "WGC GoldHub, end-2025 (219,891 t)",
-      "visual": "globo",
+      "fonte": "G7 and EU statements, 2022",
+      "visual": "contador",
+      "palco": "diorama",
       "camera": {
         "lat": 20,
-        "lon": -30,
-        "dist": 3.2
+        "lon": 35,
+        "dist": 3.3
       },
       "globo": {
         "cabos": 0
+      },
+      "atores": [
+        {
+          "tipo": "dinheiro",
+          "qtd": 40
+        },
+        {
+          "tipo": "predios",
+          "qtd": 6
+        }
+      ],
+      "terreno": "cidade",
+      "numero": {
+        "de": 300,
+        "ate": 300,
+        "casas": 0,
+        "sufixo": "B",
+        "rotulo": "DOLLARS FROZEN IN 2022"
       }
     },
     {
-      "fala": "Each side is about twenty two meters. Here is who actually owns what is inside.",
-      "legenda": "Each side is about 22 meters. Here is who actually owns what is inside.",
+      "fala": "So central banks started buying gold at the fastest pace in decades.",
+      "legenda": "So central banks started buying gold at the fastest pace in decades.",
       "destaques": [
-        "22 meters"
+        "fastest pace"
       ],
-      "numero": {
-        "de": 0,
-        "ate": 22,
-        "casas": 0,
-        "sufixo": "M",
-        "rotulo": "PER SIDE OF THE CUBE"
-      },
-      "fonte": "WGC end-2025 (219,891 t) ÷ 19.3 t per m³",
+      "fonte": "WGC Gold Demand Trends, 2022 to 2024",
       "visual": "numero",
+      "palco": "diorama",
       "camera": {
-        "lat": 35,
-        "lon": 0,
-        "dist": 3.4
+        "lat": 20,
+        "lon": 60,
+        "dist": 3.0
       },
       "globo": {
         "cabos": 0
-      }
+      },
+      "atores": [
+        {
+          "tipo": "barras",
+          "qtd": 48
+        }
+      ],
+      "terreno": "cofre"
     },
     {
-      "fala": "Almost half of it is jewelry, around necks and wrists. The next slice is far stranger.",
-      "legenda": "Almost half of it is jewelry, around necks and wrists. The next slice is far stranger.",
+      "fala": "Today seventeen percent of all the gold ever mined sits in their vaults. And they want it closer.",
+      "legenda": "Today 17% of all the gold ever mined sits in their vaults. And they want it closer.",
       "destaques": [
-        "jewelry"
+        "vaults"
       ],
-      "numero": {
-        "de": 0,
-        "ate": 44,
-        "casas": 0,
-        "sufixo": "%",
-        "rotulo": "OF ALL GOLD IS JEWELRY"
-      },
-      "fonte": "WGC GoldHub, end-2025 (219,891 t)",
+      "fonte": "WGC (2024: highest official share in 29 years)",
       "visual": "anel",
-      "anel": 44,
+      "palco": "globo",
       "camera": {
-        "lat": 25,
-        "lon": 75,
+        "lat": 45,
+        "lon": -20,
         "dist": 3.4
       },
       "globo": {
         "cabos": 0
-      }
-    },
-    {
-      "fala": "Seventeen percent sits inside central banks, their biggest share in decades. And they keep buying.",
-      "legenda": "17% sits inside central banks, their biggest share in decades. And they keep buying.",
-      "destaques": [
-        "central banks"
-      ],
+      },
       "numero": {
         "de": 0,
         "ate": 17,
         "casas": 0,
         "sufixo": "%",
-        "rotulo": "HELD BY CENTRAL BANKS"
+        "rotulo": "OF ALL GOLD: CENTRAL BANKS"
       },
-      "fonte": "WGC (2024: highest official share in 29 years)",
-      "visual": "anel",
-      "anel": 17,
+      "anel": 17
+    },
+    {
+      "fala": "In twenty twenty four, India flew about one hundred tonnes of its gold home from London.",
+      "legenda": "In 2024 India flew about 100 tonnes of its gold home from London.",
+      "destaques": [
+        "home"
+      ],
+      "fonte": "Reserve Bank of India via Business Standard, May 2024",
+      "visual": "contador",
+      "palco": "diorama",
       "camera": {
-        "lat": 45,
-        "lon": -40,
-        "dist": 3.4
+        "lat": 20,
+        "lon": 120,
+        "dist": 3.3
       },
       "globo": {
         "cabos": 0
+      },
+      "atores": [
+        {
+          "tipo": "avioes",
+          "qtd": 3
+        },
+        {
+          "tipo": "barras",
+          "qtd": 24
+        }
+      ],
+      "terreno": "campo",
+      "numero": {
+        "de": 0,
+        "ate": 100,
+        "casas": 0,
+        "sufixo": "T",
+        "rotulo": "TONNES BROUGHT HOME (INDIA)"
       }
     },
     {
-      "fala": "Why would banks that print money hoard a yellow metal? The answer came in twenty twenty two.",
-      "legenda": "Why would banks that print money hoard a yellow metal? The answer came in 2022.",
+      "fala": "India said it was about storage space. Analysts pointed at the frozen Russian money.",
+      "legenda": "India said it was about storage space. Analysts pointed at the frozen Russian money.",
       "destaques": [
-        "yellow metal"
+        "Analysts"
       ],
-      "fonte": "WGC Gold Demand Trends",
+      "fonte": "RBI Governor Shaktikanta Das; Business Today, 2024",
       "visual": "globo",
+      "palco": "diorama",
       "camera": {
-        "lat": 50,
-        "lon": 10,
+        "lat": 20,
+        "lon": 200,
+        "dist": 3.0
+      },
+      "globo": {
+        "cabos": 0
+      },
+      "atores": [
+        {
+          "tipo": "pessoas",
+          "qtd": 30,
+          "acao": "andar"
+        },
+        {
+          "tipo": "predios",
+          "qtd": 5
+        }
+      ],
+      "terreno": "cidade"
+    },
+    {
+      "fala": "Either way, gold in your own vault answers to no one. So how much is there?",
+      "legenda": "Either way, gold in your own vault answers to no one. So how much is there?",
+      "destaques": [
+        "no one"
+      ],
+      "fonte": "",
+      "visual": "globo",
+      "palco": "globo",
+      "camera": {
+        "lat": 10,
+        "lon": 80,
         "dist": 2.8
       },
       "globo": {
@@ -123,64 +186,70 @@
       }
     },
     {
-      "fala": "After Russia invaded Ukraine, Western governments froze about three hundred billion dollars of its reserves.",
-      "legenda": "After Russia invaded Ukraine, Western governments froze about $300 billion of its reserves.",
+      "fala": "All of it would fit in one cube, about twenty two meters on each side.",
+      "legenda": "All of it would fit in one cube, about 22 meters on each side.",
       "destaques": [
-        "froze"
+        "one cube"
       ],
-      "numero": {
-        "de": 0,
-        "ate": 300,
-        "casas": 0,
-        "sufixo": "B",
-        "rotulo": "DOLLARS OF RESERVES FROZEN (2022)"
-      },
-      "fonte": "G7 and EU statements, 2022",
-      "visual": "contador",
+      "fonte": "WGC end-2025 (219,891 t) ÷ 19.3 t per m³",
+      "visual": "numero",
+      "palco": "diorama",
       "camera": {
-        "lat": 55,
-        "lon": 40,
+        "lat": 20,
+        "lon": -40,
         "dist": 3.4
       },
       "globo": {
-        "cabos": 0,
-        "quebras": 2
+        "cabos": 0
+      },
+      "atores": [
+        {
+          "tipo": "barras",
+          "qtd": 64
+        }
+      ],
+      "terreno": "cofre",
+      "numero": {
+        "de": 0,
+        "ate": 22,
+        "casas": 0,
+        "sufixo": "M",
+        "rotulo": "PER SIDE OF THE CUBE"
       }
     },
     {
-      "fala": "Dollars held abroad can be frozen with one signature. Gold in your own vault cannot.",
-      "legenda": "Dollars held abroad can be frozen with one signature. Gold in your own vault cannot.",
+      "fala": "And almost half of that cube is jewelry, worn by ordinary people around the world.",
+      "legenda": "And almost half of that cube is jewelry, worn by ordinary people around the world.",
       "destaques": [
-        "cannot"
+        "jewelry"
       ],
-      "fonte": "",
-      "visual": "globo",
+      "fonte": "WGC GoldHub, end-2025 (219,891 t)",
+      "visual": "anel",
+      "palco": "diorama",
       "camera": {
-        "lat": 40,
-        "lon": -75,
-        "dist": 2.6
+        "lat": 20,
+        "lon": 150,
+        "dist": 3.4
       },
       "globo": {
         "cabos": 0
-      }
-    },
-    {
-      "fala": "So countries started bringing gold home and buying at the fastest pace in decades.",
-      "legenda": "So countries started bringing gold home and buying at the fastest pace in decades.",
-      "destaques": [
-        "home"
-      ],
-      "fonte": "WGC Gold Demand Trends, 2022 to 2024",
-      "visual": "globo",
-      "camera": {
-        "lat": 20,
-        "lon": 100,
-        "dist": 2.9
       },
-      "globo": {
-        "cabos": 0,
-        "quebras": 3
-      }
+      "atores": [
+        {
+          "tipo": "pessoas",
+          "qtd": 60,
+          "acao": "multidao"
+        }
+      ],
+      "terreno": "cidade",
+      "numero": {
+        "de": 0,
+        "ate": 44,
+        "casas": 0,
+        "sufixo": "%",
+        "rotulo": "OF ALL GOLD IS JEWELRY"
+      },
+      "anel": 44
     },
     {
       "fala": "The most modern money system on Earth still trusts a metal nobody can print.",
@@ -190,6 +259,7 @@
       ],
       "fonte": "",
       "visual": "globo",
+      "palco": "globo",
       "camera": {
         "lat": -10,
         "lon": -20,
@@ -205,22 +275,30 @@
       "destaques": [
         "emergency fund"
       ],
+      "fonte": "WGC GoldHub, end-2025 (219,891 t)",
+      "visual": "printar",
+      "palco": "diorama",
+      "camera": {
+        "lat": 15,
+        "lon": 200,
+        "dist": 3.6
+      },
+      "globo": {
+        "cabos": 0
+      },
+      "atores": [
+        {
+          "tipo": "barras",
+          "qtd": 64
+        }
+      ],
+      "terreno": "cofre",
       "numero": {
         "de": 22,
         "ate": 22,
         "casas": 0,
         "sufixo": "M",
         "rotulo": "THE WORLD'S EMERGENCY FUND"
-      },
-      "fonte": "WGC GoldHub, end-2025 (219,891 t)",
-      "visual": "printar",
-      "camera": {
-        "lat": 15,
-        "lon": -50,
-        "dist": 3.6
-      },
-      "globo": {
-        "cabos": 0
       }
     },
     {
@@ -232,6 +310,7 @@
       ],
       "fonte": "",
       "visual": "pergunta",
+      "palco": "globo",
       "camera": {
         "lat": 20,
         "lon": -30,
@@ -246,35 +325,35 @@
     {
       "cena": 1,
       "variacoes": [
-        "And that cube is smaller than you think.",
-        "And it is surprisingly small.",
-        "Picture its size.",
-        "Now guess how big it is.",
-        "It would not even fill a stadium."
+        "You cannot freeze gold.",
+        "Gold was untouchable.",
+        "But one thing survived.",
+        "Except gold.",
+        "And central banks took notes."
       ],
       "notas": [
-        9,
-        6,
-        4,
+        10,
         7,
-        7
+        6,
+        7,
+        8
       ],
       "escolhida": 0
     },
     {
       "cena": 2,
       "variacoes": [
-        "Here is who actually owns what is inside.",
-        "But who owns it?",
-        "And it is split in strange ways.",
-        "Now look at who holds it.",
-        "The owners will surprise you."
+        "at the fastest pace in decades.",
+        "in huge amounts.",
+        "more than ever.",
+        "quietly, every month.",
+        "faster than at any time since the cold war."
       ],
       "notas": [
         9,
+        5,
+        4,
         7,
-        7,
-        6,
         8
       ],
       "escolhida": 0
@@ -282,51 +361,33 @@
     {
       "cena": 3,
       "variacoes": [
-        "The next slice is far stranger.",
-        "The rest is split up.",
-        "Then come the investors.",
-        "But the second biggest owner is not a person.",
-        "And then there are the banks."
+        "And they want it closer.",
+        "And it keeps growing.",
+        "More than ever.",
+        "Some want it back home.",
+        "But where is it kept?"
       ],
       "notas": [
         9,
+        6,
         4,
-        5,
         8,
-        5
+        7
       ],
       "escolhida": 0
     },
     {
       "cena": 4,
       "variacoes": [
-        "And they keep buying.",
-        "That share keeps growing.",
-        "And nobody talks about it.",
-        "And they are buying faster every year.",
-        "Why so much?"
+        "home from London.",
+        "back to Mumbai.",
+        "out of the Bank of England.",
+        "home, quietly, by plane.",
+        "home. Officially, for a boring reason."
       ],
       "notas": [
-        9,
-        7,
-        6,
         8,
-        6
-      ],
-      "escolhida": 0
-    },
-    {
-      "cena": 5,
-      "variacoes": [
-        "The answer came in twenty twenty two.",
-        "There is a reason.",
-        "It all changed recently.",
-        "One event explains it.",
-        "The answer is a war."
-      ],
-      "notas": [
-        9,
-        4,
+        5,
         6,
         7,
         8
@@ -334,55 +395,73 @@
       "escolhida": 0
     },
     {
-      "cena": 6,
+      "cena": 5,
       "variacoes": [
-        "of its reserves.",
-        "of its reserves overnight.",
-        "of Russian money.",
-        "of its savings in a day.",
-        "and every central bank noticed."
+        "Analysts pointed at the frozen Russian money.",
+        "The real reason may be different.",
+        "Not everyone believed it.",
+        "Others saw a warning.",
+        "Markets read it differently."
       ],
       "notas": [
-        8,
-        7,
-        5,
+        9,
         6,
-        7
+        7,
+        7,
+        5
+      ],
+      "escolhida": 0
+    },
+    {
+      "cena": 6,
+      "variacoes": [
+        "So how much is there?",
+        "But how much gold exists?",
+        "And there is less than you think.",
+        "Which raises one question.",
+        "Now, the size of it all."
+      ],
+      "notas": [
+        9,
+        7,
+        8,
+        5,
+        6
       ],
       "escolhida": 0
     },
     {
       "cena": 7,
       "variacoes": [
-        "Gold in your own vault cannot.",
-        "Gold cannot be frozen.",
-        "But metal is different.",
-        "Physical gold is safer.",
-        "Unless it is gold at home."
+        "about twenty two meters on each side.",
+        "and it is tiny.",
+        "smaller than a stadium.",
+        "barely bigger than a house.",
+        "the size of a small building."
       ],
       "notas": [
         9,
         6,
-        5,
-        4,
-        7
+        7,
+        7,
+        6
       ],
       "escolhida": 0
     },
     {
       "cena": 8,
       "variacoes": [
-        "at the fastest pace in decades.",
-        "in huge amounts.",
-        "more than before.",
-        "quietly, at a record pace.",
-        "faster than at any time since the cold war."
+        "worn by ordinary people around the world.",
+        "sitting in drawers.",
+        "not in any vault.",
+        "on necks and wrists.",
+        "owned by families, not banks."
       ],
       "notas": [
         9,
         5,
-        4,
-        8,
+        7,
+        6,
         8
       ],
       "escolhida": 0
@@ -432,5 +511,5 @@
       "ABROAD"
     ]
   },
-  "legenda_post": "All the gold ever mined fits in one cube about 22 meters wide. Since 2022 central banks are buying it faster than in decades and taking it home. Should your country keep its gold at home or abroad?"
+  "legenda_post": "One decision froze $300 billion of Russia's reserves in 2022. Since then central banks are buying gold faster than in decades and flying it home. Should your country keep its gold at home or abroad?"
 }
