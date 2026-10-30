@@ -117,5 +117,9 @@ cp video/node_modules/gsap/dist/gsap.min.js assets/lib/ 2>/dev/null && cp video/
   && log "ok: assets/lib/gsap.min.js e three.module.js" || bad "copiar gsap/three para assets/lib"
 python3 tools/worldframe/terra.py >>"$LOG" 2>&1 && log "ok: assets/lib/terra.js (pontos do globo)" || bad "gerar pontos do globo"
 
+# 8. Direção de cena do Hypit (só leitura: o roteirista usa as referências; nada pago)
+if [ -s "$HOME/ext/hypit/skills/hypit/SKILL.md" ]; then log "ok: hypit (direção)"
+else mkdir -p "$HOME/ext" && git clone -q --depth 1 https://github.com/hypit-ai/hypit "$HOME/ext/hypit" >>"$LOG" 2>&1 && log "baixado: hypit (direção)" || bad "git clone hypit"; fi
+
 if [ "$FAIL" = 0 ]; then log "PASSO 0 completo: produção pronta"; else log "PASSO 0 incompleto: corrija os itens FALHOU acima"; fi
 exit "$FAIL"
