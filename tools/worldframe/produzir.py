@@ -219,14 +219,16 @@ try:
     # 5. revisão antes do render: lint, 12 snapshots, contact sheet
     hf = proj / "hf"
     npx = shutil.which("npx") or "npx"
-    lint = subprocess.run([npx, "hyperframes", "lint"], cwd=hf, capture_output=True, text=True)
+    lint = subprocess.run([npx, "-y", "hyperframes", "lint"], cwd=hf, capture_output=True, text=True,
+                          stdin=subprocess.DEVNULL, timeout=600)
     m = re.search(r"(\d+) error", lint.stdout + lint.stderr)
     if not m or int(m.group(1)) > 0:
         raise RuntimeError("lint com erros:\n" + (lint.stdout + lint.stderr)[-800:])
     log("lint: 0 erros")
     tl = json.loads((proj / "timeline.json").read_text())
     ts = [0.0] + [round(c["inicio"] + c["dur"] * 0.55, 2) for c in tl["cenas"]][:10] + [round(tl["final"]["inicio"] + 1.6, 2)]
-    snap = subprocess.run([npx, "hyperframes", "snapshot", "--at", ",".join(map(str, ts[:12]))], cwd=hf, capture_output=True, text=True)
+    snap = subprocess.run([npx, "-y", "hyperframes", "snapshot", "--at", ",".join(map(str, ts[:12]))], cwd=hf, capture_output=True, text=True,
+                          stdin=subprocess.DEVNULL, timeout=900)
     sheets = re.findall(r"(\S+contact-sheet[^\s]*\.jpg)", snap.stdout)
     if not sheets:
         raise RuntimeError("snapshot falhou: " + snap.stdout[-400:])
@@ -261,8 +263,8 @@ try:
         fcntl.flock(lk, fcntl.LOCK_EX)
         hq(a.task, "RENDER", 50, "renderizando")
         t_r = dt.datetime.now()
-        rend = subprocess.run([npx, "hyperframes", "render", "-q", "draft" if a.rascunho else "delivery", "-o", str(silent)],
-                              cwd=hf, capture_output=True, text=True, env=env)
+        rend = subprocess.run([npx, "-y", "hyperframes", "render", "-q", "draft" if a.rascunho else "delivery", "-o", str(silent)],
+                              cwd=hf, capture_output=True, text=True, env=env, stdin=subprocess.DEVNULL, timeout=2400)
     log(f"render levou {(dt.datetime.now() - t_r).seconds // 60} min {(dt.datetime.now() - t_r).seconds % 60} s")
     if rend.returncode != 0 or not silent.exists():
         raise RuntimeError("render falhou: " + (rend.stdout + rend.stderr)[-600:])
