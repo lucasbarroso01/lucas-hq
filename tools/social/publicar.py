@@ -132,6 +132,13 @@ def encerrar_dia(estado: dict, simular: bool) -> dict | None:
     if not t or t[0]["status"] not in ("done", "error"):
         return None
     de_hoje = [p.name for p in OUT.glob(f"{hoje}_*.mp4") if "teste" not in p.name]
+    if not de_hoje:   # produção falhou sem nenhum vídeo: NÃO desliga (o dia ainda precisa de vídeo); só avisa uma vez
+        aviso = OUT / f"_publicacao_sem_videos_{hoje}"
+        if not aviso.exists() and not simular:
+            aviso.write_text("produção terminou sem vídeos\n")
+            log("produção de hoje terminou sem nenhum vídeo: escritório continua ligado para tentar de novo")
+            hq("event", "--type", "toast", "--team", "producao-wf", "--note", "Produção de hoje terminou sem vídeos: confira out/_turnos.log")
+        return None
     if any(n not in estado for n in de_hoje):
         return None
     amanha = dt.datetime.combine(hoje + dt.timedelta(days=1), dt.time(4, 29), tzinfo=TZ)
