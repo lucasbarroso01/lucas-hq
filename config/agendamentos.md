@@ -7,8 +7,6 @@ Fuso: **America/Sao_Paulo**. Um turno por tarefa agendada. Cada disparo roda `/t
 | Lucas HQ · radar-worldframe | `CRON_TZ=America/Sao_Paulo 30 4 * * *` | `/turno radar-worldframe` |
 | Lucas HQ · roteiros-worldframe | `CRON_TZ=America/Sao_Paulo 0 5 * * *` | `/turno roteiros-worldframe` |
 | Lucas HQ · producao-worldframe | `CRON_TZ=America/Sao_Paulo 45 5 * * *` | `/turno producao-worldframe` |
-| Lucas HQ · qa-worldframe | `CRON_TZ=America/Sao_Paulo 45 8 * * *` | `/turno qa-worldframe` |
-| Lucas HQ · social-worldframe | `CRON_TZ=America/Sao_Paulo 15 9 * * *` | `/turno social-worldframe` |
 | Lucas HQ · acervo-semanal | `CRON_TZ=America/Sao_Paulo 0 10 * * 0` | `/turno acervo-semanal` |
 | Lucas HQ · manutencao-cerebro | `CRON_TZ=America/Sao_Paulo 0 23 * * 0` | `/turno manutencao-cerebro` |
 
@@ -24,8 +22,6 @@ O cron do Debian não entende `CRON_TZ`, então o relógio do Linux precisa esta
 30 4 * * * $HOME/lucas-hq/iniciar.sh --turno radar-worldframe >> $HOME/lucas-hq/out/_turnos.log 2>&1
 0 5 * * * $HOME/lucas-hq/iniciar.sh --turno roteiros-worldframe >> $HOME/lucas-hq/out/_turnos.log 2>&1
 45 5 * * * $HOME/lucas-hq/iniciar.sh --turno producao-worldframe >> $HOME/lucas-hq/out/_turnos.log 2>&1
-45 8 * * * $HOME/lucas-hq/iniciar.sh --turno qa-worldframe >> $HOME/lucas-hq/out/_turnos.log 2>&1
-15 9 * * * $HOME/lucas-hq/iniciar.sh --turno social-worldframe >> $HOME/lucas-hq/out/_turnos.log 2>&1
 0 10 * * 0 $HOME/lucas-hq/iniciar.sh --turno acervo-semanal >> $HOME/lucas-hq/out/_turnos.log 2>&1
 0 23 * * 0 $HOME/lucas-hq/iniciar.sh --turno manutencao-cerebro >> $HOME/lucas-hq/out/_turnos.log 2>&1
 */5 * * * * $HOME/lucas-hq/iniciar.sh --recuperar >> $HOME/lucas-hq/out/_turnos.log 2>&1

@@ -48,6 +48,8 @@ if [ "$1" = "--turno" ]; then
   # disparo agendado: sem perguntas; espera um turno em andamento terminar
   source .venv/bin/activate
   source "$ENV_FILE"
+  # Produção é só script (sem agente, sem cota)
+  [ "$2" = "producao-worldframe" ] && exec flock -w 7200 "$LOCK" python3 tools/worldframe/produzir_dia.py
   exec flock -w 7200 "$LOCK" claude -p --model "${LUCAS_HQ_MODELO:-sonnet}" "/turno $2"
 fi
 if [ "$1" = "--recuperar" ]; then
@@ -74,6 +76,9 @@ if [ "$1" = "--recuperar" ]; then
     fi
     echo "$N" > "$TRIES/$ID"
     echo "$(date '+%F %T') recuperando $T (perdido em $O, tentativa $N/$MAX)"
+    if [ "$T" = "producao-worldframe" ]; then   # só script, sem agente
+      python3 tools/worldframe/produzir_dia.py --data "${O%% *}"; LAST="$ID"; continue
+    fi
     SAIDA=$(claude -p --model "${LUCAS_HQ_MODELO:-sonnet}" "/turno $T recuperar $O" 2>&1); echo "$SAIDA"
     if echo "$SAIDA" | grep -qiE "hit your .*limit|usage limit|limite de uso"; then
       # cota do plano esgotada: não conta como tentativa; volta quando o limite zerar
