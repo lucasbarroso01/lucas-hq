@@ -10,8 +10,8 @@ Times e agentes ficam em `.claude/agents/`; comandos em `.claude/commands/` (`/r
 - Cérebro: MCP `memory` (`brain/memory.jsonl`). Leia antes (`search_nodes`), escreva depois (`add_observations`). Toda leitura/escrita vira evento com `tools/hq.py event --type brain_read|brain_write`.
 - Estado ao vivo: `tools/hq.py task|agent|event|skill|schedule` a cada mudança de etapa. A interface (`apps/office`) mostra tudo.
 - Humano no loop: tudo que é público ou custa dinheiro espera o OK do Lucas (`tools/hq.py approval --task <id>`).
-  - Worldframe: os 5 vídeos aprovados no Drive antes de mover para `done/`.
-- Nunca publique em redes por conta própria, nunca apague arquivos, nunca use `rm`. Agendar posts só pela MCP `social` (social-mcp em 127.0.0.1, `tools/social/`) e só com o OK do Lucas: a etapa automática "Publicação" fica **desligada** até ele confirmar o teste. Token da Meta e chaves só no `tools/social-mcp/.env`: nunca leia, imprima ou registre esse arquivo. Se a API responder token expirado (código 190), pare e avise o Lucas.
+  - Worldframe: a Publicação agenda os vídeos novos sozinha (o Lucas apaga na página o que não quiser); `done/` continua só após aprovação.
+- Nunca publique em redes por conta própria, nunca apague arquivos, nunca use `rm`. Agendar posts só pela MCP `social` (social-mcp em 127.0.0.1, `tools/social/`). A etapa "Publicação" (`tools/social/publicar.py`, cron a cada 15 min, ligada com `tools/social/ativar_publicacao.sh`) agenda **todo vídeo novo** de `out/` no próximo horário livre da grade (decisão do Lucas, 31/10): os agentes não agendam nada por fora dela. Token da Meta e chaves só no `tools/social-mcp/.env`: nunca leia, imprima ou registre esse arquivo. Se a API responder token expirado (código 190), pare e avise o Lucas.
 - Drive **só pelos scripts** (`tools/drive_upload.py`, `tools/drive_sync.py`): eles sobem o vídeo junto com a legenda. Nunca crie, copie ou renomeie arquivos no Drive pelo conector.
 - Líderes dividem trabalho com a Task tool em sub-agentes **paralelos**, sem chat compartilhado, e conferem cada entrega.
 

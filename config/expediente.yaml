@@ -25,7 +25,8 @@ recuperacao:          # notebook fechado no horário: o turno roda assim que o L
 paginas:
   Worldframe:
     cor: "#7B5CE0"
-    posts: ["11:30", "14:00", "16:00", "18:00", "21:00"]   # 1º post às 11:30 para caber a produção em código
+    posts: ["09:30", "14:00", "17:00", "20:00", "22:30"]   # grade da Publicação (social-mcp)
+    publicacao: ["09:30", "14:00", "17:00", "20:00", "22:30"]  # tools/social/publicar.py agenda cada vídeo novo no próximo livre
     duracao_min_s: 61        # monetização no Facebook: vídeos com mais de 60 s
     duracao_max_s: 120       # entre 60 e 120 s
     gancho_min: 75           # nota mínima do gancho (hookscore da skill ig-reel)
