@@ -64,7 +64,9 @@ def pausado() -> bool:
         return False
 
 
-def proximo_horario(ocupados: set[str], agora: dt.datetime) -> dt.datetime:
+def proximo_horario(ocupados: set[str], agora: dt.datetime, mesmo_dia: bool = False) -> dt.datetime:
+    """Próximo horário livre da grade. Com `mesmo_dia` (vídeo do dia de hoje) e a grade de hoje cheia,
+    encaixa um horário extra hoje: de 30 em 30 min, a pelo menos 90 min dos outros posts, até 23:00."""
     g = grade()
     dia = agora.date()
     for _ in range(30):
@@ -73,6 +75,14 @@ def proximo_horario(ocupados: set[str], agora: dt.datetime) -> dt.datetime:
             t = dt.datetime(dia.year, dia.month, dia.day, h, m, tzinfo=TZ)
             if t >= agora + ANTECEDENCIA and t.isoformat() not in ocupados:
                 return t
+        if mesmo_dia and dia == agora.date():
+            hoje = [dt.datetime.fromisoformat(o) for o in ocupados if o.startswith(dia.isoformat())]
+            t = (agora + ANTECEDENCIA).replace(second=0, microsecond=0)
+            t += dt.timedelta(minutes=(30 - t.minute % 30) % 30)
+            while t.hour < 23 or (t.hour == 23 and t.minute == 0):
+                if all(abs((t - o).total_seconds()) >= 90 * 60 for o in hoje):
+                    return t
+                t += dt.timedelta(minutes=30)
         dia += dt.timedelta(days=1)
     raise RuntimeError("grade cheia nos próximos 30 dias")
 
@@ -124,7 +134,8 @@ async def rodar(simular: bool) -> dict:
     async with streamablehttp_client(MCP_URL) as (r, w, _), ClientSession(r, w) as s:
         await s.initialize()
         for video in fila:
-            quando = proximo_horario(ocupados, dt.datetime.now(TZ))
+            agora = dt.datetime.now(TZ)
+            quando = proximo_horario(ocupados, agora, mesmo_dia=video.name.startswith(agora.date().isoformat()))
             iso = quando.astimezone(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
             legenda = video.with_suffix(".txt").read_text().strip()
             if simular:
