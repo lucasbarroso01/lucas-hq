@@ -11,6 +11,8 @@ Roda pelo cron a cada 15 min (tools/social/ativar_publicacao.sh), com o Python d
   (fila local; o vídeo sobe para o Supabase só na hora).
 - Token expirado (código 190): grava out/_publicacao_parada, avisa no escritório e não agenda mais nada
   até o Lucas renovar (bash tools/social/setup.sh --novo-token) e apagar o aviso com --retomar.
+- Antes de agendar, a revisão rápida (tools/worldframe/qa_rapido.py, sem cota) confere formato, duração, áudio,
+  tela preta/congelada e legenda; reprovado não vai ao ar e aparece no escritório.
 - Respeita o botão "Pausar operação". Tudo vai para out/_turnos.log; nenhum token é lido ou impresso aqui.
 """
 import argparse
@@ -158,11 +160,25 @@ async def rodar(simular: bool) -> dict:
     if not fila:
         fim = encerrar_dia(estado, simular)
         return {"ok": True, "agendados": [], **({"dia": fim} if fim else {})}
-    ocupados = {v["horario"] for v in estado.values()}
+    ocupados = {v["horario"] for v in estado.values() if v.get("horario")}
     feitos = []
     async with streamablehttp_client(MCP_URL) as (r, w, _), ClientSession(r, w) as s:
         await s.initialize()
         for video in fila:
+            # revisão rápida e sem cota antes de agendar (tools/worldframe/qa_rapido.py)
+            qa = subprocess.run([sys.executable, str(ROOT / "tools/worldframe/qa_rapido.py"), str(video)], capture_output=True, text=True)
+            try:
+                qr = json.loads(qa.stdout.strip().splitlines()[-1])
+            except (ValueError, IndexError):
+                qr = {"ok": False, "problemas": ["revisão não respondeu"]}
+            if not qr.get("ok"):
+                if not simular:
+                    estado[video.name] = {"qa_reprovado": qr.get("problemas")}
+                    ESTADO.write_text(json.dumps(estado, indent=1, ensure_ascii=False))
+                    log(f"{video.name} REPROVADO na revisão rápida: {'; '.join(qr.get('problemas', []))} (não agendado)")
+                    hq("event", "--type", "toast", "--team", "qualidade", "--note", f"{video.name} reprovado: {'; '.join(qr.get('problemas', []))}")
+                feitos.append({"video": video.name, "reprovado": qr.get("problemas")})
+                continue
             agora = dt.datetime.now(TZ)
             quando = proximo_horario(ocupados, agora, mesmo_dia=video.name.startswith(agora.date().isoformat()))
             iso = quando.astimezone(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
