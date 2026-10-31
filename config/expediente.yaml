@@ -91,13 +91,7 @@ turnos:
     prazo: "12:00"
     faz: Ficha os virais novos de acervo/referencias (prints dos frames, tema, copy, edição e animações) e atualiza brain/acervo.md
     depende_de: null
-  - id: analytics-diario
-    agente: analista
-    time: analytics
-    inicio: "22:30"
-    prazo: "22:45"
-    faz: Registra as views informadas e escreve lições no cérebro
-    depende_de: null
+  # analytics-diario saiu da agenda (31/10, economia de cota): rode o agente analista só quando mandar as views
   - id: manutencao-cerebro
     agente: analista
     time: analytics
