@@ -30,6 +30,7 @@ IMAGES = ROOT / "tools/social-mcp/data/images"
 ESTADO = OUT / "_publicacao.json"
 PARADA = OUT / "_publicacao_parada"
 ATIVADO = Path.home() / ".config/lucas-hq/publicacao_ativada_em"
+FOLGA = Path.home() / ".config/lucas-hq/folga_ate"   # iniciar.sh não roda turno nenhum até este horário
 LOG = OUT / "_turnos.log"
 MCP_URL = "http://127.0.0.1:3224/mcp"
 TZ = ZoneInfo("America/Sao_Paulo")
@@ -114,6 +115,33 @@ async def chamar(sessao, tool: str, args: dict) -> dict:
         return {"ok": False, "error": txt[:500]}
 
 
+def encerrar_dia(estado: dict, simular: bool) -> dict | None:
+    """Quando a produção de hoje terminou e todo vídeo de hoje está agendado, desliga a operação até 04:29 de amanhã
+    (pedido do Lucas, 31/10: economizar a cota do Claude). Encerra turnos em andamento (QA, Social...)."""
+    hoje = dt.datetime.now(TZ).date()
+    if FOLGA.exists() and float(FOLGA.read_text().strip() or 0) > dt.datetime.now(TZ).timestamp():
+        return None
+    sys.path.insert(0, str(ROOT / "tools"))
+    try:
+        from _common import rest  # noqa: PLC0415
+        t = rest("GET", "tasks", None, f"?select=status&id=eq.producao-worldframe-{hoje}") or []
+    except Exception:  # noqa: BLE001
+        return None
+    if not t or t[0]["status"] not in ("done", "error"):
+        return None
+    de_hoje = [p.name for p in OUT.glob(f"{hoje}_*.mp4") if "teste" not in p.name]
+    if any(n not in estado for n in de_hoje):
+        return None
+    amanha = dt.datetime.combine(hoje + dt.timedelta(days=1), dt.time(4, 29), tzinfo=TZ)
+    if simular:
+        return {"encerraria": amanha.isoformat(), "videos": len(de_hoje)}
+    FOLGA.write_text(str(amanha.timestamp()))
+    subprocess.run(["pkill", "-f", "claude -p"], check=False)
+    log(f"dia encerrado: {len(de_hoje)} vídeos de hoje agendados; operação desligada até {amanha:%d/%m %H:%M} (sem gastar cota)")
+    hq("event", "--type", "toast", "--team", "social", "--note", f"{len(de_hoje)} vídeos agendados. Escritório desligado até {amanha:%d/%m %H:%M}")
+    return {"encerrado_ate": amanha.isoformat(), "videos": len(de_hoje)}
+
+
 async def rodar(simular: bool) -> dict:
     from mcp import ClientSession  # noqa: PLC0415
     from mcp.client.streamable_http import streamablehttp_client  # noqa: PLC0415
@@ -128,7 +156,8 @@ async def rodar(simular: bool) -> dict:
     estado = json.loads(ESTADO.read_text()) if ESTADO.exists() else {}
     fila = novos(estado, desde)
     if not fila:
-        return {"ok": True, "agendados": []}
+        fim = encerrar_dia(estado, simular)
+        return {"ok": True, "agendados": [], **({"dia": fim} if fim else {})}
     ocupados = {v["horario"] for v in estado.values()}
     feitos = []
     async with streamablehttp_client(MCP_URL) as (r, w, _), ClientSession(r, w) as s:
@@ -166,7 +195,8 @@ async def rodar(simular: bool) -> dict:
                 f" | IG {'ok ' + str(item['ig_job_id']) if item['ig_ok'] else 'ERRO ' + item['ig_erro']}")
             hq("event", "--type", "tool_run", "--team", "social", "--note", f"Publicação: {video.name} agendado para {quando:%d/%m %H:%M} (FB e IG)")
             feitos.append({"video": video.name, **item})
-    return {"ok": True, "agendados": feitos}
+    fim = encerrar_dia(estado, simular)
+    return {"ok": True, "agendados": feitos, **({"dia": fim} if fim else {})}
 
 
 def main() -> None:

@@ -40,6 +40,10 @@ fi
 
 cd "$DIR"
 LOCK="$HOME/.config/lucas-hq/turno.lock"   # um turno por vez no notebook (agendado ou recuperado)
+FOLGA="$HOME/.config/lucas-hq/folga_ate"    # dia encerrado pela Publicação: nenhum turno até este horário (economiza a cota)
+if { [ "$1" = "--turno" ] || [ "$1" = "--recuperar" ]; } && [ -f "$FOLGA" ] && [ "$(date +%s)" -lt "$(cut -d. -f1 "$FOLGA")" ]; then
+  exit 0
+fi
 if [ "$1" = "--turno" ]; then
   # disparo agendado: sem perguntas; espera um turno em andamento terminar
   source .venv/bin/activate
@@ -56,6 +60,7 @@ if [ "$1" = "--recuperar" ]; then
   MAX=$(python3 -c 'import yaml; print(yaml.safe_load(open("config/expediente.yaml"))["limites"]["tentativas_por_item"])')
   LAST=""
   for _ in 1 2 3 4 5 6 7 8 9 10 11 12; do
+    [ -f "$FOLGA" ] && [ "$(date +%s)" -lt "$(cut -d. -f1 "$FOLGA")" ] && exit 0   # a Publicação encerrou o dia
     NEXT=$(python3 tools/expediente.py proximo-pendente)
     echo "$NEXT" | grep -q '"ok": true' || exit 0
     read -r T O ID < <(echo "$NEXT" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["turno"], d["ocorrencia"].replace(" ", "T"), d["task_id"])')
