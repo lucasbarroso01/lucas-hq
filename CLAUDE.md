@@ -23,7 +23,7 @@ Fonte única: `config/expediente.yaml` (fuso America/Sao_Paulo). Nunca escreva h
 4. **Limites:** máx. 5 sub-agentes no escritório (`expediente.py vagas`), 1 rodada por time, 2 tentativas por item (na 3ª falha: `error` com motivo e siga com os demais), Higgsfield 1 geração/dia (+1 refação) com saldo checado antes.
 5. **Prazo estourado:** entregue o que estiver pronto, marque o resto `atrasado` e use `expediente.py proximo-horario --pagina <p>` (nunca 2 posts da mesma página com menos de 2h).
 6. **Não refaça o que está pronto:** confira `tasks` e `temas-usados` no cérebro antes de começar.
-7. **Silêncio 23:30–04:30:** ninguém roda, exceto a manutenção de domingo. **Pausa:** com o botão "Pausar operação" ligado (`hq.py pausa`), nenhum turno começa e a produção para antes do render.
+7. **Silêncio 23:30–04:30:** ninguém roda, exceto a manutenção de domingo. **Pausa:** com o botão "Pausar operação" ligado (`hq.py pausa`), nenhum turno começa e a produção para antes do render. **Só o Lucas pausa ou retoma**, pelo botão da interface: nenhum agente ou sessão roda `hq.py pausa` (nem "no fim da sessão").
 8. **Humano no loop:** nada é publicado, apagado ou pago sem aprovação; pare em "aguardando você".
 9. **Relatório curto:** no máximo 3 linhas (o que fez, onde está, o que ficou pendente).
 10. **Recuperação (notebook fechado no horário):** o turno perdido roda assim que o Linux voltar (`iniciar.sh --recuperar`, a cada 5 min e ao ligar), um por vez, do post mais urgente ao menos urgente, respeitando o silêncio e as dependências; perdido há mais de 16h, fica para o próximo ciclo. Rodando com `atrasado: true`, entregue normalmente e aplique a regra 5 (posts que já passaram vão para `proximo-horario`).
