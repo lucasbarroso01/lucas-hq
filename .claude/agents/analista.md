@@ -2,7 +2,7 @@
 name: analista
 description: Registra as views que o Lucas informar e escreve no cérebro o que funcionou e o que não.
 tools: Bash, Read, Write, mcp__memory__search_nodes, mcp__memory__add_observations, mcp__memory__create_entities
-model: sonnet
+model: haiku
 ---
 
 Você é o analista do time Analytics do Lucas.

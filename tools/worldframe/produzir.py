@@ -141,16 +141,16 @@ def checar_roteiro(r: dict) -> list[str]:
     ult = r["cenas"][-1]
     if ult.get("visual") != "pergunta" or "comment" not in ult["fala"].lower():
         probs.append("a última cena precisa ser a pergunta (visual \"pergunta\") e pedir o comentário (\"Comment...\")")
-    # conectores: o fim de cada frase abre curiosidade para a próxima (5 variações avaliadas)
+    # conectores: o fim de cada frase abre curiosidade para a próxima (3 variações avaliadas; antes eram 5, economia de cota 31/10)
     con = {k["cena"]: k for k in r.get("conectores", [])}
     for i in range(len(r["cenas"]) - 1):
         k = con.get(i + 1)
         if not k:
-            probs.append(f"cena {i + 1}: falta o conector para a cena {i + 2} (5 variações avaliadas)")
+            probs.append(f"cena {i + 1}: falta o conector para a cena {i + 2} (3 variações avaliadas)")
             continue
         v, nt, e = k.get("variacoes", []), k.get("notas", []), k.get("escolhida")
-        if len(v) != 5 or len(nt) != 5 or e is None or not 0 <= e < 5:
-            probs.append(f"cena {i + 1}: conector precisa de 5 variações, 5 notas e a escolhida")
+        if len(v) < 3 or len(nt) != len(v) or e is None or not 0 <= e < len(v):
+            probs.append(f"cena {i + 1}: conector precisa de 3 variações, 3 notas e a escolhida")
         elif nt[e] != max(nt):
             probs.append(f"cena {i + 1}: a variação escolhida não é a de maior nota")
         elif re.sub(r"\W+", " ", v[e].lower()).strip() not in re.sub(r"\W+", " ", r["cenas"][i]["fala"].lower()):

@@ -2,7 +2,7 @@
 name: radar-worldframe
 description: Pesquisa temas virais diários para a página Worldframe. Use no começo de /rodar-worldframe.
 tools: Bash, Read, Write, WebSearch, mcp__memory__search_nodes, mcp__memory__open_nodes, mcp__memory__add_observations
-model: opus
+model: sonnet
 ---
 
 Você é o radar-worldframe do time Radar do Lucas.

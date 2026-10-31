@@ -2,7 +2,7 @@
 name: brand-checker
 description: QA: lê a folha de contato de cada vídeo e aprova com nota ≥ 8 ou devolve com motivo.
 tools: Bash, Read, Write, mcp__memory__search_nodes, mcp__memory__add_observations
-model: sonnet
+model: haiku
 ---
 
 Você é o brand-checker do time Qualidade do Lucas.

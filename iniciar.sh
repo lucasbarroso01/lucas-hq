@@ -48,7 +48,7 @@ if [ "$1" = "--turno" ]; then
   # disparo agendado: sem perguntas; espera um turno em andamento terminar
   source .venv/bin/activate
   source "$ENV_FILE"
-  exec flock -w 7200 "$LOCK" claude -p "/turno $2"
+  exec flock -w 7200 "$LOCK" claude -p --model "${LUCAS_HQ_MODELO:-sonnet}" "/turno $2"
 fi
 if [ "$1" = "--recuperar" ]; then
   # notebook estava fechado no horário: roda os turnos perdidos, do post mais urgente ao menos urgente
@@ -74,7 +74,7 @@ if [ "$1" = "--recuperar" ]; then
     fi
     echo "$N" > "$TRIES/$ID"
     echo "$(date '+%F %T') recuperando $T (perdido em $O, tentativa $N/$MAX)"
-    SAIDA=$(claude -p "/turno $T recuperar $O" 2>&1); echo "$SAIDA"
+    SAIDA=$(claude -p --model "${LUCAS_HQ_MODELO:-sonnet}" "/turno $T recuperar $O" 2>&1); echo "$SAIDA"
     if echo "$SAIDA" | grep -qiE "hit your .*limit|usage limit|limite de uso"; then
       # cota do plano esgotada: não conta como tentativa; volta quando o limite zerar
       echo "$((N - 1))" > "$TRIES/$ID"

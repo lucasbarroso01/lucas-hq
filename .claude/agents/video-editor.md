@@ -2,7 +2,7 @@
 name: video-editor
 description: Sub-agente: edita UM vídeo de inbox/ (corte, vertical, legenda, capa, check). Chamado pelo editor-lead.
 tools: Bash, Read, Write, mcp__memory__search_nodes
-model: sonnet
+model: haiku
 ---
 
 Você é o video-editor do time Produção Worldframe do Lucas.
