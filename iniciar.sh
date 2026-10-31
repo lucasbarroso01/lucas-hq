@@ -74,7 +74,13 @@ if [ "$1" = "--recuperar" ]; then
     fi
     echo "$N" > "$TRIES/$ID"
     echo "$(date '+%F %T') recuperando $T (perdido em $O, tentativa $N/$MAX)"
-    claude -p "/turno $T recuperar $O" || true
+    SAIDA=$(claude -p "/turno $T recuperar $O" 2>&1); echo "$SAIDA"
+    if echo "$SAIDA" | grep -qiE "hit your .*limit|usage limit|limite de uso"; then
+      # cota do plano esgotada: não conta como tentativa; volta quando o limite zerar
+      echo "$((N - 1))" > "$TRIES/$ID"
+      echo "$(date '+%F %T') $T: limite de uso do Claude atingido; tenta de novo quando a cota voltar (não contou tentativa)"
+      exit 0
+    fi
     LAST="$ID"
   done
   exit 0
