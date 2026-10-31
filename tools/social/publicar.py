@@ -48,9 +48,11 @@ def hq(*args: str) -> None:
 
 
 def grade() -> list[str]:
-    import yaml  # noqa: PLC0415
-    cfg = yaml.safe_load((ROOT / "config/expediente.yaml").read_text())
-    return cfg["paginas"]["Worldframe"]["publicacao"]
+    # sem pyyaml (o venv da social-mcp não tem): lê a linha `publicacao: ["09:30", ...]` do expediente.yaml
+    m = re.search(r"^\s*publicacao:\s*\[([^\]]*)\]", (ROOT / "config/expediente.yaml").read_text(), re.M)
+    if not m:
+        raise RuntimeError("config/expediente.yaml sem paginas.Worldframe.publicacao")
+    return re.findall(r"\d{2}:\d{2}", m.group(1))
 
 
 def pausado() -> bool:
