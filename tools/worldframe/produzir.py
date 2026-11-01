@@ -86,12 +86,12 @@ def hq(task: str | None, etapa: str, progress: int, text: str):
                         "--log", text], cwd=ROOT, capture_output=True)
 
 
-def checar_roteiro(r: dict) -> list[str]:
+def checar_roteiro(r: dict, slug: str = "") -> list[str]:
     """Regras do roteiro: duração, cena ≤ 19 palavras, fonte em todo número, gancho, final, legenda do post."""
     probs = []
     # tema: editoria da página + notas do Radar
     probs += checar_tema(r.get("categoria", ""), f"{r.get('slug', '')} {r.get('titulo', '')}", r.get("notas_tema"),
-                         excluir=r.get("slug", ""))
+                         excluir=slug or r.get("slug", ""))
     falas = [c["fala"] for c in r["cenas"]]
     palavras = sum(len(f.split()) for f in falas)
     pausas = 0.3 * (len(falas) + 1) + 2.6 + len(CTA["fala"].split()) / WPS  # respiros + CTA + cartão final
@@ -197,7 +197,7 @@ try:
             raise RuntimeError("PASSO 0 falhou: veja as linhas [setup] no log")
 
     # 1. roteiro
-    probs = checar_roteiro(r)
+    probs = checar_roteiro(r, nome.split("_", 1)[1])
     if a.checar:
         emit("produzir", ok=not probs, roteiro=str(src), problemas=probs or ["roteiro ok"])
         raise SystemExit
