@@ -27,6 +27,7 @@ paginas:
     cor: "#7B5CE0"
     posts: ["09:30", "14:00", "17:00", "20:00", "22:30"]   # grade da Publicação (social-mcp)
     publicacao: ["09:30", "14:00", "17:00", "20:00", "22:30"]  # tools/social/publicar.py agenda cada vídeo novo no próximo livre
+    facebook_modo: na_hora   # na_hora = postado no horário pelo computador (Reel comum); nativo = agendado na Meta (ficou com 0 views em 01/11)
     duracao_min_s: 61        # monetização no Facebook: vídeos com mais de 60 s
     duracao_max_s: 120       # entre 60 e 120 s
     gancho_min: 75           # nota mínima do gancho (hookscore da skill ig-reel)

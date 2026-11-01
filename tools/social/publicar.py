@@ -7,7 +7,8 @@ Roda pelo cron a cada 15 min (tools/social/ativar_publicacao.sh), com o Python d
 - Grade (Brasília): config/expediente.yaml -> paginas.Worldframe.publicacao (09:30, 14:00, 17:00, 20:00, 22:30).
 - Vídeo novo = out/AAAA-MM-DD_<slug>.mp4 com o .txt da legenda, criado depois da ativação, parado há 3 min
   (render terminou), sem "teste" no nome e ainda não agendado (out/_publicacao.json).
-- Facebook: schedule_facebook_reel_native (a Meta publica sozinha). Instagram: schedule_instagram_local_reel
+- Facebook: postado na hora pela fila do computador (facebook_modo: na_hora, padrão desde 01/11: os agendados
+  nativos ficaram com 0 views) ou schedule_facebook_reel_native (nativo). Instagram: schedule_instagram_local_reel
   (fila local; o vídeo sobe para o Supabase só na hora).
 - Token expirado (código 190): grava out/_publicacao_parada, avisa no escritório e não agenda mais nada
   até o Lucas renovar (bash tools/social/setup.sh --novo-token) e apagar o aviso com --retomar.
@@ -48,6 +49,12 @@ def log(msg: str) -> None:
 def hq(*args: str) -> None:
     subprocess.run([str(ROOT / ".venv/bin/python") if (ROOT / ".venv").exists() else "python3", str(ROOT / "tools/hq.py"), *args],
                    cwd=ROOT, check=False, capture_output=True)
+
+
+def fb_modo() -> str:
+    """paginas.Worldframe.facebook_modo no expediente.yaml: "na_hora" (padrão, 01/11) ou "nativo"."""
+    m = re.search(r"^\s*facebook_modo:\s*\"?(\w+)", (ROOT / "config/expediente.yaml").read_text(), re.M)
+    return m.group(1) if m else "na_hora"
 
 
 def grade() -> list[str]:
@@ -222,9 +229,16 @@ async def rodar(simular: bool) -> dict:
                 ocupados.add(quando.isoformat())
                 continue
             IMAGES.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(video, IMAGES / video.name)   # copia: o original fica em out/
-            fb = await chamar(s, "schedule_facebook_reel_native", {"filename": video.name, "when": iso, "description": legenda})
-            ig = await chamar(s, "schedule_instagram_local_reel", {"filename": video.name, "when": iso, "caption": legenda})
+            # uma cópia por rede: cada job arquiva a sua depois de postar (o original fica em out/)
+            fb_nome, ig_nome = f"fb_{video.name}", f"ig_{video.name}"
+            shutil.copy2(video, IMAGES / fb_nome)
+            shutil.copy2(video, IMAGES / ig_nome)
+            if fb_modo() == "nativo":   # a Meta guarda e publica sozinha
+                fb = await chamar(s, "schedule_facebook_reel_native", {"filename": fb_nome, "when": iso, "description": legenda})
+            else:   # "na_hora": fila do computador, postado como Reel comum no horário (como o Instagram)
+                fb = await chamar(s, "schedule_facebook_local_reel", {"filename": fb_nome, "when": iso, "description": legenda})
+                fb.setdefault("video_id", fb.get("job_id"))
+            ig = await chamar(s, "schedule_instagram_local_reel", {"filename": ig_nome, "when": iso, "caption": legenda})
             if token_expirado(fb) or token_expirado(ig):
                 PARADA.write_text(f"{dt.datetime.now(TZ):%Y-%m-%d %H:%M} token da Meta expirado (código 190)\n")
                 log(f"PAROU: token da Meta expirado ao agendar {video.name}. Renove: bash tools/social/setup.sh --novo-token")
