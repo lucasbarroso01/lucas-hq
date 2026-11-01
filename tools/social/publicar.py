@@ -90,6 +90,33 @@ def proximo_horario(ocupados: set[str], agora: dt.datetime, mesmo_dia: bool = Fa
     raise RuntimeError("grade cheia nos próximos 30 dias")
 
 
+# hashtags por editoria (ig-caption: poucas e de busca). O roteiro pode trazer as suas em "hashtags".
+HASHTAGS = {
+    "geopolitica": "#geopolitics #worldnews #history #maps #facts",
+    "guerras": "#military #war #history #geopolitics #facts",
+    "economia": "#economy #money #finance #markets #facts",
+    "politica": "#politics #worldnews #elections #history #facts",
+    "curiosidades": "#didyouknow #facts #history #worldfacts #worldhistory",
+}
+
+
+def legenda_com_hashtags(video: Path) -> str:
+    leg = video.with_suffix(".txt").read_text().strip()
+    if "#" in leg:
+        return leg
+    r = {}
+    rot = ROOT / "inbox/roteiros" / f"{video.stem}.json"
+    if rot.exists():
+        try:
+            r = json.loads(rot.read_text())
+        except ValueError:
+            pass
+    tags = r.get("hashtags") or HASHTAGS.get(r.get("categoria", ""), HASHTAGS["geopolitica"])
+    if isinstance(tags, list):
+        tags = " ".join(t if t.startswith("#") else f"#{t}" for t in tags)
+    return f"{leg}\n\n{tags} #worldframe"
+
+
 def novos(estado: dict, desde: float) -> list[Path]:
     agora = dt.datetime.now().timestamp()
     out = []
@@ -189,7 +216,7 @@ async def rodar(simular: bool) -> dict:
             agora = dt.datetime.now(TZ)
             quando = proximo_horario(ocupados, agora, mesmo_dia=video.name.startswith(agora.date().isoformat()))
             iso = quando.astimezone(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-            legenda = video.with_suffix(".txt").read_text().strip()
+            legenda = legenda_com_hashtags(video)
             if simular:
                 feitos.append({"video": video.name, "horario": quando.isoformat()})
                 ocupados.add(quando.isoformat())
