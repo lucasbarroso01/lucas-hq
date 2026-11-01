@@ -90,7 +90,8 @@ def checar_roteiro(r: dict) -> list[str]:
     """Regras do roteiro: duração, cena ≤ 19 palavras, fonte em todo número, gancho, final, legenda do post."""
     probs = []
     # tema: editoria da página + notas do Radar
-    probs += checar_tema(r.get("categoria", ""), f"{r.get('slug', '')} {r.get('titulo', '')}", r.get("notas_tema"))
+    probs += checar_tema(r.get("categoria", ""), f"{r.get('slug', '')} {r.get('titulo', '')}", r.get("notas_tema"),
+                         excluir=r.get("slug", ""))
     falas = [c["fala"] for c in r["cenas"]]
     palavras = sum(len(f.split()) for f in falas)
     pausas = 0.3 * (len(falas) + 1) + 2.6 + len(CTA["fala"].split()) / WPS  # respiros + CTA + cartão final
