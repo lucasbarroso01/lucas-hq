@@ -8,6 +8,7 @@ import { TeamDrawer } from './ui/TeamDrawer'
 import { TasksView } from './ui/TasksView'
 import { AgendaView } from './ui/AgendaView'
 import { DashboardView } from './ui/DashboardView'
+import { PautasView } from './ui/PautasView'
 import { BrainView } from './brain/BrainView'
 import { ReviewModal } from './ui/ReviewModal'
 import { TaskDetail } from './ui/TaskDetail'
@@ -40,6 +41,7 @@ export function App() {
       <Toasts />
       <AnimatePresence>{view === 'office' && selected && <TeamDrawer key={selected} teamId={selected} />}</AnimatePresence>
       {view === 'dashboard' && <DashboardView />}
+      {view === 'pautas' && <PautasView />}
       {view === 'tasks' && <TasksView />}
       {view === 'agenda' && <AgendaView />}
       {view === 'brain' && <BrainView />}

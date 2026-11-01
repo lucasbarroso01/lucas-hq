@@ -47,6 +47,10 @@ def main() -> None:
             if ok:
                 break
         (feitos if ok else falhas).append(slug if ok else f"{slug}: {erro}")
+        pid = json.loads(r.read_text()).get("pauta_id")   # pauta pedida pelo Lucas na aba Pautas
+        if pid:
+            subprocess.run([PY, str(ROOT / "tools/pautas.py"), "marcar", "--id", pid, "--status", "feito" if ok else "fila",
+                            "--slug", f"{a.data}_{slug}"], cwd=ROOT, capture_output=True, check=False)
         hq("task", "--id", tid, "--progress", str(int((k + 1) / len(roteiros) * 100)), "--log", f"{slug}: {'ok' if ok else 'erro ' + erro}")
     st = "done" if feitos else "error"
     hq("task", "--id", tid, "--status", st, "--progress", "100", "--log", f"{len(feitos)} vídeos prontos, {len(falhas)} com erro")

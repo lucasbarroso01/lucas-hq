@@ -43,7 +43,8 @@
       "mcp__social__list_scheduled_posts",
       "mcp__social__list_facebook_native_scheduled",
       "mcp__social__check_token_validity",
-      "mcp__social__list_pending_videos"
+      "mcp__social__list_pending_videos",
+      "Bash(python3 tools/pautas.py:*)"
     ],
     "ask": [
       "Bash(mv:*)",

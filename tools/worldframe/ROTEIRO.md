@@ -56,6 +56,7 @@ Pelo menos **metade das cenas** usa `"palco": "diorama"`: um **cenário de verda
 | `dial` | rótulo do dial de progresso (ex.: `FACT`, `DAY`, `STEP`) |
 | `cenas[]` | ver abaixo |
 | `categoria`, `notas_tema` | editoria e notas do Radar (`config/temas.yaml`) |
+| `pauta_id` | id da pauta da aba Pautas, quando o tema veio de lá (o Radar passa; a Produção marca a pauta como feita) |
 | `conectores` | `[{"cena": N, "variacoes": [3], "notas": [3], "escolhida": i}]` para cada passagem |
 | `final` | `{"pergunta": "...", "destaque": "palavras em itálico", "opcoes": ["YES", "NO"]}` |
 | `legenda_post` | texto do post |
