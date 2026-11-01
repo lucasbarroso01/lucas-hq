@@ -16,11 +16,17 @@ import shutil
 import subprocess
 import sys
 
+
 # Aberto fora do .venv (ex.: `claude` digitado à mão): reexecuta com o Python do projeto, que tem kokoro e soundfile.
 _VENV_PY = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".venv", "bin", "python3")
 if sys.prefix == sys.base_prefix and os.path.exists(_VENV_PY):
     os.execv(_VENV_PY, [_VENV_PY, *sys.argv])
 from pathlib import Path
+
+# Node 22+ do nvm: o cron não carrega o ~/.bashrc, então o PATH dele tem o Node antigo do sistema
+_nvm = sorted((Path.home() / ".nvm/versions/node").glob("v2[2-9]*/bin"), key=lambda p: [int(x) for x in p.parent.name[1:].split(".")])
+if _nvm:
+    os.environ["PATH"] = f"{_nvm[-1]}{os.pathsep}{os.environ.get('PATH', '')}"
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tools"))
