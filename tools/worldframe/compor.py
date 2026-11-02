@@ -27,19 +27,19 @@ BAND = (168, 1330)   # faixa onde todo texto precisa caber
 PALETAS = {
     "dossie": dict(bg="#ECE5D3", glow="#DCD2BA", cor="#8C7B5E", funda="#3A3128", destaque="#D7261E",
                    texto="#1B1814", sec="#6B6153", fonte_leg="'Instrument Serif'", peso_leg=400, caixa="none",
-                   titulo="'Instrument Serif'", rotulo="'Barlow'"),
+                   titulo="'Instrument Serif'", rotulo="'Barlow'", ceu="#F7E9CB"),
     "noite": dict(bg="#0D0D10", glow="#22161A", cor="#9A9AA6", funda="#2A2A33", destaque="#E5322D",
                   texto="#F4F1EC", sec="#9C968C", fonte_leg="'Instrument Serif'", peso_leg=400, caixa="none",
-                  titulo="'Instrument Serif'", rotulo="'Barlow'"),
+                  titulo="'Instrument Serif'", rotulo="'Barlow'", ceu="#3A2230"),
     "ouro": dict(bg="#111014", glow="#2A2216", cor="#B8A98A", funda="#3B3328", destaque="#F2B233",
                  texto="#F6F0E4", sec="#A39A88", fonte_leg="'Instrument Serif'", peso_leg=400, caixa="none",
-                 titulo="'Instrument Serif'", rotulo="'Barlow'"),
+                 titulo="'Instrument Serif'", rotulo="'Barlow'", ceu="#4A3417"),
     "entardecer": dict(bg="#241A33", glow="#3D2440", cor="#C98A8F", funda="#4A3352", destaque="#FF6B5A",
                        texto="#FBF1EA", sec="#B9A4B4", fonte_leg="'Instrument Serif'", peso_leg=400, caixa="none",
-                       titulo="'Instrument Serif'", rotulo="'Barlow'"),
+                       titulo="'Instrument Serif'", rotulo="'Barlow'", ceu="#8A3F55"),
     "alternativa": dict(bg="#EFE6D2", glow="#E2D6BC", cor="#8E9A8B", funda="#6E7A6B", destaque="#6B1F2A",
                         texto="#2A2522", sec="#6B6359", fonte_leg="'Playfair Display'", peso_leg=500, caixa="none",
-                        titulo="'Cinzel'", rotulo="'Barlow'"),
+                        titulo="'Cinzel'", rotulo="'Barlow'", ceu="#F5E6C6"),
 }
 PALETAS_DIA = ["noite", "dossie", "ouro", "entardecer", "alternativa"]
 
@@ -162,6 +162,79 @@ def grafico_svg(g: dict, i: int, s0: float, w: int, h: int) -> tuple[str, list[s
             out.append(f'<text x="{x + bw / 2:.0f}" y="{top + ch + 34:.0f}" text-anchor="middle" font-family="Barlow" font-size="{18 if w < 400 else 24}" fill="#A7A9B2">{html.escape(rot[k])}</text>')
         tw.append(f'tl.fromTo("#br{i}_{k}",{{scaleY:0,transformOrigin:"50% 100%"}},{{scaleY:1,duration:.5,ease:"back.out(1.4)"}},{s0 + 0.25 + k * 0.14:.3f});')
     return "".join(out), tw
+
+
+TEMAS_CARTAO = {   # cores próprias de cada cartão: o vídeo troca de cor de bloco em bloco (como nas referências)
+    "escuro": ("#0E0E12", "#F4F1EC", "#E5322D", "#F2B233"),
+    "papel": ("#EDE6D6", "#16130F", "#D7261E", "#8C7B5E"),
+    "vermelho": ("#D7261E", "#FFFFFF", "#FFE08A", "#2B0B0B"),
+    "amarelo": ("#F2C230", "#141210", "#B3261E", "#3A2E10"),
+    "noturno": ("#121A2B", "#EAF0FA", "#FF6B5A", "#8FB4FF"),
+}
+TEMAS_ORDEM = ["escuro", "papel", "vermelho", "amarelo", "noturno"]
+
+
+def cartao(c: dict, i: int, s0: float, d: float) -> tuple[str, list[str]]:
+    """Cartão editorial em tela cheia, com fundo e cores próprios: manchete, comparar, linha_tempo, alerta, citacao, dossie."""
+    k = c["cartao"]
+    tipo = k.get("tipo", "manchete")
+    bg, tx, a1, a2 = TEMAS_CARTAO.get(k.get("tema") or TEMAS_ORDEM[i % len(TEMAS_ORDEM)])
+    e = html.escape
+    tw = [f'tl.fromTo("#ct{i}",{{opacity:0}},{{opacity:1,duration:.18}},{s0:.3f});']
+    corpo = ""
+    if tipo == "manchete":
+        linhas = k.get("linhas") or [c.get("legenda", "")]
+        dl = k.get("destaque", 0)
+        for n, l in enumerate(linhas):
+            cor = a1 if n == dl else tx
+            corpo += f'<div class="cm-l" id="cm{i}_{n}" style="color:{cor}">{e(str(l).upper())}</div>'
+            tw.append(f'tl.fromTo("#cm{i}_{n}",{{opacity:0,y:60,scale:1.25}},{{opacity:1,y:0,scale:1,duration:.32,ease:"power4.out"}},{s0 + 0.15 + n * 0.28:.3f});')
+        if k.get("sub"):
+            corpo += f'<div class="cm-s" style="color:{a2}">{e(k["sub"].upper())}</div>'
+        if k.get("numero"):
+            corpo += f'<div class="cm-n" id="cmn{i}" style="color:{tx}">{e(str(k["numero"]))}</div>'
+            tw.append(f'tl.fromTo("#cmn{i}",{{opacity:0,scale:.6}},{{opacity:1,scale:1,duration:.4,ease:"back.out(2)"}},{s0 + 0.2 + len(linhas) * 0.28:.3f});')
+    elif tipo == "comparar":
+        A, B = k.get("a", {}), k.get("b", {})
+        va, vb = float(A.get("v", 1) or 1), float(B.get("v", 1) or 1)
+        mx = max(va, vb) or 1
+        corpo += f'<div class="cc-t" style="color:{a2}">{e(k.get("titulo", "").upper())}</div><div class="cc">'
+        for lado, X, v, cor in (("a", A, va, a1), ("b", B, vb, tx)):
+            corpo += (f'<div class="cc-c"><div class="cc-v" style="color:{cor}">{e(str(X.get("valor", "")))}</div>'
+                      f'<div class="cc-bar"><div id="cb{i}{lado}" style="height:{v / mx * 100:.0f}%;background:{cor}"></div></div>'
+                      f'<div class="cc-r">{e(str(X.get("rotulo", "")).upper())}</div></div>')
+            tw.append(f'tl.fromTo("#cb{i}{lado}",{{scaleY:0,transformOrigin:"50% 100%"}},{{scaleY:1,duration:.7,ease:"power3.out"}},{s0 + (0.3 if lado == "a" else 0.6):.3f});')
+        corpo += '<div class="cc-vs" style="color:%s">VS</div></div>' % a2
+    elif tipo == "linha_tempo":
+        marcos = k.get("marcos", [])
+        corpo += f'<div class="lt-t" style="color:{a2}">{e(k.get("titulo", "").upper())}</div><div class="lt"><div class="lt-linha" style="background:{tx}33"></div>'
+        for n, (ano, rot) in enumerate(marcos):
+            x = 8 + n * 84 / max(1, len(marcos) - 1)
+            ativo = n == k.get("ativo", len(marcos) - 1)
+            cor = a1 if ativo else tx
+            corpo += (f'<div class="lt-m" id="lt{i}_{n}" style="left:{x:.1f}%"><div class="lt-a" style="color:{cor}">{e(str(ano))}</div>'
+                      f'<div class="lt-p" style="background:{cor};{"box-shadow:0 0 0 10px " + a1 + "55" if ativo else ""}"></div>'
+                      f'<div class="lt-r" style="color:{tx}">{e(str(rot))}</div></div>')
+            tw.append(f'tl.fromTo("#lt{i}_{n}",{{opacity:0,y:30}},{{opacity:1,y:0,duration:.3,ease:"power3.out"}},{s0 + 0.2 + n * 0.35:.3f});')
+        corpo += "</div>"
+    elif tipo == "alerta":
+        texto = e(k.get("texto", ""))
+        corpo += (f'<div class="al-tel"><div class="al-hora">06:42</div><div class="al-card" id="alc{i}" style="background:{a1}">'
+                  f'<div class="al-tit">⚠ {e(k.get("titulo", "EMERGENCY ALERT").upper())}</div><div class="al-tx" id="alt{i}">{texto}</div></div></div>')
+        tw.append(f'tl.fromTo("#alc{i}",{{opacity:0,y:-80}},{{opacity:1,y:0,duration:.35,ease:"back.out(1.6)"}},{s0 + 0.2:.3f});')
+        tw.append(f'tl.fromTo("#alt{i}",{{clipPath:"inset(0 100% 0 0)"}},{{clipPath:"inset(0 0% 0 0)",duration:{min(1.6, d * 0.5):.2f},ease:"steps(24)"}},{s0 + 0.5:.3f});')
+    elif tipo == "citacao":
+        corpo += (f'<div class="ci" id="ci{i}" style="background:{tx};color:{bg}"><div class="ci-q">“{e(k.get("texto", ""))}”</div>'
+                  f'<div class="ci-a" style="color:{bg}aa">{e(k.get("autor", "").upper())}</div></div>')
+        tw.append(f'tl.fromTo("#ci{i}",{{opacity:0,rotation:-4,scale:.85}},{{opacity:1,rotation:-1.5,scale:1,duration:.4,ease:"back.out(1.8)"}},{s0 + 0.15:.3f});')
+    elif tipo == "dossie":
+        corpo += (f'<div class="dz" id="dz{i}"><div class="dz-cab">{e(k.get("titulo", "CASE FILE").upper())}</div>'
+                  f'<div class="dz-n">{e(str(k.get("numero", "")))}</div><div class="dz-tx">{e(k.get("texto", ""))}</div></div>')
+        tw.append(f'tl.fromTo("#dz{i}",{{opacity:0,y:120,rotation:3}},{{opacity:1,y:0,rotation:-1,duration:.45,ease:"power3.out"}},{s0 + 0.1:.3f});')
+    if k.get("carimbo"):
+        corpo += f'<div class="carimbo" id="ctc{i}">{e(str(k["carimbo"]).upper())}</div>'
+        tw.append(f'tl.fromTo("#ctc{i}",{{opacity:0,scale:2.4,xPercent:-50,yPercent:-50,rotation:-14}},{{opacity:.92,scale:1,xPercent:-50,yPercent:-50,rotation:-12,duration:.18,ease:"power4.in"}},{s0 + min(1.3, d * 0.55):.3f});')
+    return f'<div id="ct{i}" class="cartao" style="background:{bg};color:{tx}"><div class="ct-in">{corpo}</div></div>', tw
 
 
 def camadas(c: dict, i: int, s0: float, d: float) -> tuple[str, list[str]]:
@@ -296,6 +369,11 @@ def build(proj: Path):
                 vis0 = re.sub(r'id="(\w+)"', r'id="l\1"', svg)
                 if vis in ("contador", "numero", "globo", "printar"):
                     vis0 = vis0.replace(f'<g id="lg0">', f'<g id="lg0" transform="rotate({-40 if vis == "contador" else 0} {cx} {cy})">')
+        # cartão editorial em tela cheia (cobre o cenário; a legenda continua por cima)
+        if c.get("cartao"):
+            ct, tw2 = cartao(c, i, s0, d)
+            clip(f"ct{i}w", s0, d, ct, cls="cartao-w", extra="data-layout-ignore")
+            tweens += tw2
         # camadas 2D no meio da tela (gráfico em aparelho, recibo, letreiro, carimbo)
         meio, tw = camadas(c, i, s0, d)
         if meio:
@@ -404,7 +482,7 @@ TEMPLATE = """<!doctype html>
   :root {{ --bg: {P[bg]}; --glow: {P[glow]}; --cor: {P[cor]}; --funda: {P[funda]}; --hi: {P[destaque]}; --tx: {P[texto]}; --sec: {P[sec]}; }}
   * {{ margin: 0; padding: 0; box-sizing: border-box; }}
   html, body {{ width: {W}px; height: {H}px; overflow: hidden; background: var(--bg); }}
-  #root {{ position: relative; width: {W}px; height: {H}px; overflow: hidden; background: var(--bg); font-family: {P[rotulo]}; font-weight: 300; color: var(--tx); }}
+  #root {{ position: relative; width: {W}px; height: {H}px; overflow: hidden; background: linear-gradient(to bottom, {P[ceu]} 0%, var(--bg) 58%); font-family: {P[rotulo]}; font-weight: 300; color: var(--tx); }}
   #veu {{ position: absolute; inset: 0; pointer-events: none;
          background: linear-gradient(to bottom, var(--bg) 0%, transparent 34%, transparent 56%, var(--bg) 92%); opacity: .82; }}
   #gl {{ position: absolute; inset: 0; width: {W}px; height: {H}px; }}
@@ -460,6 +538,38 @@ TEMPLATE = """<!doctype html>
               color: #F3EFE6; font-family: 'League Gothic', 'Oswald', sans-serif; font-size: 128px; line-height: 150px; text-align: center; }}
   .carimbo {{ position: absolute; left: 50%; top: 50%; padding: 10px 34px; border: 8px solid #D7261E; border-radius: 12px; color: #D7261E;
              font-family: 'Barlow'; font-weight: 400; font-size: 76px; letter-spacing: .12em; white-space: nowrap; mix-blend-mode: multiply; }}
+  .cartao-w {{ position: absolute; inset: 0; }}
+  .cartao {{ position: absolute; inset: 0; }}
+  .ct-in {{ position: absolute; left: 70px; right: 70px; top: 300px; height: 780px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }}
+  .cm-l {{ font-family: 'League Gothic', 'Oswald', sans-serif; font-size: 190px; line-height: 170px; letter-spacing: .01em; }}
+  .cm-s {{ margin-top: 30px; font-family: 'Barlow'; font-weight: 400; font-size: 34px; letter-spacing: .3em; }}
+  .cm-n {{ margin-top: 10px; font-family: 'League Gothic', 'Oswald', sans-serif; font-size: 240px; line-height: 220px; }}
+  .cc-t, .lt-t {{ font-family: 'Barlow'; font-weight: 400; font-size: 32px; letter-spacing: .3em; margin-bottom: 40px; }}
+  .cc {{ position: relative; display: flex; gap: 90px; align-items: flex-end; height: 560px; }}
+  .cc-c {{ width: 330px; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }}
+  .cc-v {{ font-family: 'League Gothic', 'Oswald', sans-serif; font-size: 110px; line-height: 110px; }}
+  .cc-bar {{ width: 200px; height: 330px; display: flex; align-items: flex-end; margin-top: 16px; }}
+  .cc-bar > div {{ width: 100%; border-radius: 10px 10px 0 0; }}
+  .cc-r {{ margin-top: 18px; font-family: 'Barlow'; font-weight: 400; font-size: 34px; letter-spacing: .12em; }}
+  .cc-vs {{ position: absolute; left: 50%; top: 40%; transform: translateX(-50%); font-family: 'League Gothic', sans-serif; font-size: 90px; }}
+  .lt {{ position: relative; width: 100%; height: 360px; }}
+  .lt-linha {{ position: absolute; left: 4%; right: 4%; top: 170px; height: 6px; border-radius: 3px; }}
+  .lt-m {{ position: absolute; top: 60px; width: 220px; margin-left: -110px; display: flex; flex-direction: column; align-items: center; }}
+  .lt-a {{ font-family: 'League Gothic', 'Oswald', sans-serif; font-size: 80px; line-height: 90px; }}
+  .lt-p {{ width: 34px; height: 34px; border-radius: 50%; margin-top: 4px; }}
+  .lt-r {{ margin-top: 18px; font-family: 'Barlow'; font-weight: 400; font-size: 30px; line-height: 36px; }}
+  .al-tel {{ width: 520px; height: 760px; border-radius: 64px; border: 16px solid #1C1D22; background: #0B0C10; position: relative; padding: 110px 28px 0; }}
+  .al-hora {{ position: absolute; top: 34px; left: 0; right: 0; text-align: center; font-family: 'Barlow'; font-size: 30px; color: #E8E9EE; }}
+  .al-card {{ border-radius: 26px; padding: 26px; text-align: left; color: #fff; }}
+  .al-tit {{ font-family: 'Barlow'; font-weight: 400; font-size: 30px; letter-spacing: .08em; }}
+  .al-tx {{ margin-top: 14px; font-family: 'Barlow'; font-weight: 400; font-size: 40px; line-height: 50px; }}
+  .ci {{ max-width: 860px; padding: 56px 60px; border-radius: 8px; box-shadow: 0 30px 80px rgba(0,0,0,.45); }}
+  .ci-q {{ font-family: 'League Gothic', 'Oswald', sans-serif; font-size: 96px; line-height: 100px; }}
+  .ci-a {{ margin-top: 26px; font-family: 'Barlow'; font-weight: 400; font-size: 30px; letter-spacing: .25em; }}
+  .dz {{ width: 820px; padding: 50px 56px 60px; background: #E9DFC7; color: #1B1814; border-radius: 6px; box-shadow: 0 30px 80px rgba(0,0,0,.5); text-align: left; }}
+  .dz-cab {{ font-family: 'Courier New', monospace; font-size: 30px; letter-spacing: .2em; color: #B3261E; border-bottom: 3px solid #B3261E; padding-bottom: 14px; }}
+  .dz-n {{ margin-top: 30px; font-family: {P[titulo]}; font-size: 200px; line-height: 190px; color: #B3261E; }}
+  .dz-tx {{ margin-top: 20px; font-family: {P[titulo]}; font-style: italic; font-size: 52px; line-height: 58px; }}
   .final {{ position: absolute; left: 70px; right: 70px; top: 300px; height: 940px; text-align: center; }}
   .finq {{ font-family: {P[titulo]}; font-size: 96px; line-height: 100px; color: var(--tx); letter-spacing: -.01em; }}
   .finq .k {{ color: var(--hi); font-style: italic; }}

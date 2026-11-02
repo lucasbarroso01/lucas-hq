@@ -41,6 +41,7 @@ DUR_MIN = float(PAG.get("duracao_min_s", 0))
 DUR_MAX = float(PAG.get("duracao_max_s", 0))
 GANCHO_MIN = float(PAG.get("gancho_min", 0))
 ATORES_MIN = float(PAG.get("cenas_com_atores_min", 0))
+CENAS_2D_MIN = float(PAG.get("cenas_2d_min", 0))
 HOOKSCORE = ROOT / ".claude" / "skills" / "ig-reel" / "hookscore.py"
 TIPOS_ATOR = {"pessoas", "navios", "avioes", "drones", "tanques", "misseis", "barras", "dinheiro", "predios", "fabrica", "barris",
               "carros", "bonecos"}
@@ -122,6 +123,33 @@ def checar_roteiro(r: dict, slug: str = "") -> list[str]:
         for a in c.get("atores", []):
             if a.get("tipo") not in TIPOS_ATOR:
                 probs.append(f"cena {i + 1}: ator desconhecido '{a.get('tipo')}' (use: {', '.join(sorted(TIPOS_ATOR))})")
+    # variedade (02/11): cada frase com um visual próprio, cores que mudam de bloco em bloco, nada repetido sem sentido
+    CARTOES = {"manchete", "comparar", "linha_tempo", "alerta", "citacao", "dossie"}
+    def assinatura(c):
+        if c.get("cartao"):
+            return "cartao:" + c["cartao"].get("tipo", "")
+        if c.get("grafico"):
+            return "grafico:" + c["grafico"].get("tipo", "")
+        for k in ("recibo", "letreiro"):
+            if c.get(k):
+                return k
+        return (c.get("palco") or "globo") + ":" + ",".join(sorted(a.get("tipo", "") for a in c.get("atores", [])))
+    for i, c in enumerate(corpo):
+        if c.get("cartao") and c["cartao"].get("tipo") not in CARTOES:
+            probs.append(f"cena {i + 1}: cartão desconhecido '{c['cartao'].get('tipo')}' (use: {', '.join(sorted(CARTOES))})")
+        if i and assinatura(c) == assinatura(corpo[i - 1]):
+            probs.append(f"cenas {i} e {i + 1} com o mesmo visual ({assinatura(c)}): troque um deles para o vídeo não ficar repetitivo")
+    dois_d = [c for c in corpo if c.get("cartao") or c.get("grafico") or c.get("recibo") or c.get("letreiro")]
+    if len(dois_d) < CENAS_2D_MIN * len(corpo):
+        probs.append(f"só {len(dois_d)} de {len(corpo)} cenas com cartão, gráfico, recibo ou letreiro (mínimo {CENAS_2D_MIN:.0%}): "
+                     "use manchete, comparar, linha_tempo, alerta, citacao ou dossie onde a frase pedir")
+    usos = {}
+    for c in corpo:
+        for t in {a.get("tipo") for a in c.get("atores", [])}:
+            usos[t] = usos.get(t, 0) + 1
+    for t, n in usos.items():
+        if n > 2:
+            probs.append(f"ator '{t}' aparece em {n} cenas (máximo 2): mostre outra coisa que ilustre a frase")
     # gráfico redondo (anel) no máximo 1 vez por vídeo; os outros gráficos variam e aparecem em aparelhos
     redondos = sum(1 for c in r["cenas"] if c.get("visual") == "anel" or (c.get("globo") or {}).get("anel"))
     if redondos > 1:

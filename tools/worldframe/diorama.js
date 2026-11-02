@@ -37,13 +37,15 @@ export class Diorama {
       hiGlow: new T.MeshBasicMaterial({ color: new T.Color(cores.hi), transparent: true, opacity: 0.7, blending: T.AdditiveBlending, depthWrite: false }),
       sombra: new T.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.35, depthWrite: false }),
       agua: new T.MeshLambertMaterial({ color: new T.Color(cores.funda).lerp(new T.Color(cores.cor), 0.25), transparent: true, opacity: 0.95 }),
-      fumaca: new T.MeshLambertMaterial({ color: new T.Color(cores.sec), transparent: true, opacity: 0.5, depthWrite: false }),
+      fumaca: new T.MeshLambertMaterial({ color: new T.Color("#CFCBC4"), transparent: true, opacity: 0.5, depthWrite: false }),
     };
-    // luz própria do diorama (o globo usa materiais sem luz)
-    const hemi = new T.HemisphereLight(0xdfe6ff, 0x0b1030, 1.1);
-    const sol = new T.DirectionalLight(0xffffff, 1.4);
-    sol.position.set(2, 4, 3);
-    this.root.add(hemi, sol);
+    // luz quente de fim de tarde + céu frio: dá volume e cor (antes tudo saía da mesma cor da paleta)
+    const hemi = new T.HemisphereLight(0xbcd2f0, 0x4a3b2a, 0.95);
+    const sol = new T.DirectionalLight(0xffdcb0, 1.9);
+    sol.position.set(3, 4.5, 2);
+    const contra = new T.DirectionalLight(0x8fb4ff, 0.6);
+    contra.position.set(-3, 2, -3);
+    this.root.add(hemi, sol, contra);
     this.base = this.chao();
     this.cenas = SCENES.map((s, i) => this.montar(s, i));
     this.root.visible = false;
@@ -84,10 +86,18 @@ export class Diorama {
     const T = this.T, c = new T.Group(), cores = ["#D7261E", "#E8B21A", "#EDE6D6", "#3B3B44", "#8C7B5E"];
     const mat = new T.MeshLambertMaterial({ color: new T.Color(cores[Math.floor(rand() * cores.length)]), flatShading: true });
     const base = new T.Mesh(new T.BoxGeometry(0.1, 0.03, 0.05), mat); base.position.y = 0.025;
-    const cab = new T.Mesh(new T.BoxGeometry(0.05, 0.025, 0.045), this.mat.funda); cab.position.set(-0.005, 0.05, 0);
+    const cab = new T.Mesh(new T.BoxGeometry(0.05, 0.025, 0.045), this.m("#1E2A33")); cab.position.set(-0.005, 0.05, 0);
     c.add(base, cab);
     return c;
   }
+
+  // cores reais por objeto (cache de materiais)
+  m(hex, extra = {}) {
+    this._m = this._m || {};
+    const k = hex + JSON.stringify(extra);
+    return this._m[k] || (this._m[k] = new this.T.MeshLambertMaterial({ color: new this.T.Color(hex), flatShading: true, ...extra }));
+  }
+  luz(hex) { return this.m(hex, { emissive: new this.T.Color(hex), emissiveIntensity: 0.9 }); }
 
   // ---------- peças ----------
   sombraDe(w, d) {
@@ -104,7 +114,8 @@ export class Diorama {
   pessoa(mat) {
     const T = this.T, G = this.pessoaGeo(), p = new T.Group();
     const corpo = new T.Mesh(G.corpo, mat); corpo.position.y = 0.075;
-    const cab = new T.Mesh(G.cabeca, this.mat.tx); cab.position.y = 0.155;
+    const peles = ["#F1C9A5", "#C68B59", "#8D5524", "#E0AC69"];
+    const cab = new T.Mesh(G.cabeca, this.m(peles[(this._np = (this._np || 0) + 1) % 4])); cab.position.y = 0.155;
     const be = new T.Mesh(G.braco, mat), bd = new T.Mesh(G.braco, mat);
     be.position.set(-0.03, 0.1, 0); bd.position.set(0.03, 0.1, 0);
     p.add(corpo, cab, be, bd, this.sombraDe(0.07, 0.07));
@@ -113,31 +124,31 @@ export class Diorama {
   }
   navio() {
     const T = this.T, n = new T.Group();
-    const casco = new T.Mesh(new T.BoxGeometry(0.42, 0.06, 0.1), this.mat.cor); casco.position.y = 0.03;
-    const proa = new T.Mesh(new T.ConeGeometry(0.05, 0.1, 4), this.mat.cor); proa.rotation.z = -Math.PI / 2; proa.rotation.x = Math.PI / 4; proa.position.set(0.26, 0.03, 0);
-    const deck = new T.Mesh(new T.BoxGeometry(0.3, 0.012, 0.08), this.mat.funda); deck.position.set(-0.02, 0.066, 0);
-    const ponte = new T.Mesh(new T.BoxGeometry(0.07, 0.07, 0.08), this.mat.tx); ponte.position.set(-0.15, 0.1, 0);
-    const chamine = new T.Mesh(new T.CylinderGeometry(0.012, 0.012, 0.05, 6), this.mat.hi); chamine.position.set(-0.17, 0.16, 0);
-    const esteira = new T.Mesh(new T.PlaneGeometry(0.5, 0.06), this.mat.glow); esteira.rotation.x = -Math.PI / 2; esteira.position.set(-0.45, 0.004, 0);
+    const casco = new T.Mesh(new T.BoxGeometry(0.42, 0.06, 0.1), this.m("#7E2420")); casco.position.y = 0.03;
+    const proa = new T.Mesh(new T.ConeGeometry(0.05, 0.1, 4), this.m("#7E2420")); proa.rotation.z = -Math.PI / 2; proa.rotation.x = Math.PI / 4; proa.position.set(0.26, 0.03, 0);
+    const deck = new T.Mesh(new T.BoxGeometry(0.3, 0.012, 0.08), this.m("#4B5A3C")); deck.position.set(-0.02, 0.066, 0);
+    const ponte = new T.Mesh(new T.BoxGeometry(0.07, 0.07, 0.08), this.m("#EDEAE3")); ponte.position.set(-0.15, 0.1, 0);
+    const chamine = new T.Mesh(new T.CylinderGeometry(0.012, 0.012, 0.05, 6), this.m("#E8B21A")); chamine.position.set(-0.17, 0.16, 0);
+    const esteira = new T.Mesh(new T.PlaneGeometry(0.5, 0.06), new T.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.35 })); esteira.rotation.x = -Math.PI / 2; esteira.position.set(-0.45, 0.004, 0);
     n.add(casco, proa, deck, ponte, chamine, esteira);
     return n;
   }
   aviao() {
     const T = this.T, a = new T.Group();
-    const fus = new T.Mesh(new T.CylinderGeometry(0.018, 0.012, 0.26, 8), this.mat.tx); fus.rotation.z = Math.PI / 2;
-    const asa = new T.Mesh(new T.BoxGeometry(0.06, 0.006, 0.26), this.mat.cor); asa.position.x = 0.01;
-    const cauda = new T.Mesh(new T.BoxGeometry(0.03, 0.05, 0.006), this.mat.cor); cauda.position.set(-0.12, 0.025, 0);
-    const lem = new T.Mesh(new T.BoxGeometry(0.03, 0.004, 0.09), this.mat.cor); lem.position.set(-0.12, 0, 0);
+    const fus = new T.Mesh(new T.CylinderGeometry(0.018, 0.012, 0.26, 8), this.m("#F2F2EE")); fus.rotation.z = Math.PI / 2;
+    const asa = new T.Mesh(new T.BoxGeometry(0.06, 0.006, 0.26), this.m("#B9BEC4")); asa.position.x = 0.01;
+    const cauda = new T.Mesh(new T.BoxGeometry(0.03, 0.05, 0.006), this.m("#C0392B")); cauda.position.set(-0.12, 0.025, 0);
+    const lem = new T.Mesh(new T.BoxGeometry(0.03, 0.004, 0.09), this.m("#B9BEC4")); lem.position.set(-0.12, 0, 0);
     a.add(fus, asa, cauda, lem);
     return a;
   }
   drone() {
     const T = this.T, d = new T.Group(), rot = [];
-    const corpo = new T.Mesh(new T.BoxGeometry(0.06, 0.02, 0.06), this.mat.funda);
+    const corpo = new T.Mesh(new T.BoxGeometry(0.06, 0.02, 0.06), this.m("#2B2F36"));
     d.add(corpo);
     for (const [x, z] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) {
-      const braco = new T.Mesh(new T.BoxGeometry(0.07, 0.006, 0.008), this.mat.sec); braco.position.set(x * 0.03, 0, z * 0.03); braco.rotation.y = Math.atan2(z, x);
-      const h = new T.Mesh(new T.BoxGeometry(0.07, 0.002, 0.01), this.mat.tx); h.position.set(x * 0.055, 0.012, z * 0.055);
+      const braco = new T.Mesh(new T.BoxGeometry(0.07, 0.006, 0.008), this.m("#4A4F57")); braco.position.set(x * 0.03, 0, z * 0.03); braco.rotation.y = Math.atan2(z, x);
+      const h = new T.Mesh(new T.BoxGeometry(0.07, 0.002, 0.01), this.m("#D9DDE2")); h.position.set(x * 0.055, 0.012, z * 0.055);
       d.add(braco, h); rot.push(h);
     }
     const luz = new T.Mesh(new T.SphereGeometry(0.008, 6, 4), this.mat.hiGlow); luz.position.y = -0.014; d.add(luz);
@@ -146,11 +157,11 @@ export class Diorama {
   }
   tanque() {
     const T = this.T, t = new T.Group();
-    const casco = new T.Mesh(new T.BoxGeometry(0.2, 0.05, 0.12), this.mat.funda); casco.position.y = 0.04;
-    const est = new T.Mesh(new T.BoxGeometry(0.22, 0.03, 0.14), this.mat.sec); est.position.y = 0.015;
+    const casco = new T.Mesh(new T.BoxGeometry(0.2, 0.05, 0.12), this.m("#5B6136")); casco.position.y = 0.04;
+    const est = new T.Mesh(new T.BoxGeometry(0.22, 0.03, 0.14), this.m("#2E2F28")); est.position.y = 0.015;
     const torre = new T.Group(); torre.position.y = 0.08;
-    const cupula = new T.Mesh(new T.CylinderGeometry(0.045, 0.05, 0.035, 8), this.mat.cor);
-    const cano = new T.Mesh(new T.CylinderGeometry(0.008, 0.008, 0.16, 6), this.mat.cor); cano.rotation.z = Math.PI / 2; cano.position.x = 0.09;
+    const cupula = new T.Mesh(new T.CylinderGeometry(0.045, 0.05, 0.035, 8), this.m("#6B7240"));
+    const cano = new T.Mesh(new T.CylinderGeometry(0.008, 0.008, 0.16, 6), this.m("#3E4326")); cano.rotation.z = Math.PI / 2; cano.position.x = 0.09;
     torre.add(cupula, cano);
     t.add(est, casco, torre, this.sombraDe(0.24, 0.16));
     t.userData.torre = torre;
@@ -158,18 +169,19 @@ export class Diorama {
   }
   missil() {
     const T = this.T, m = new T.Group();
-    const corpo = new T.Mesh(new T.CylinderGeometry(0.01, 0.01, 0.1, 6), this.mat.tx); corpo.rotation.z = -Math.PI / 2;
-    const ponta = new T.Mesh(new T.ConeGeometry(0.01, 0.03, 6), this.mat.hi); ponta.rotation.z = -Math.PI / 2; ponta.position.x = 0.065;
-    const fogo = new T.Mesh(new T.ConeGeometry(0.016, 0.07, 6), this.mat.hiGlow); fogo.rotation.z = Math.PI / 2; fogo.position.x = -0.085;
+    const corpo = new T.Mesh(new T.CylinderGeometry(0.01, 0.01, 0.1, 6), this.m("#EDEDEA")); corpo.rotation.z = -Math.PI / 2;
+    const ponta = new T.Mesh(new T.ConeGeometry(0.01, 0.03, 6), this.m("#C0392B")); ponta.rotation.z = -Math.PI / 2; ponta.position.x = 0.065;
+    const fogo = new T.Mesh(new T.ConeGeometry(0.016, 0.07, 6), this.luz("#FF8A2A")); fogo.rotation.z = Math.PI / 2; fogo.position.x = -0.085;
     m.add(corpo, ponta, fogo);
     return m;
   }
   predio(rand) {
     const T = this.T, h = 0.14 + rand() * 0.34, w = 0.12 + rand() * 0.08;
     const g = new T.Group();
-    const b = new T.Mesh(new T.BoxGeometry(w, h, w), rand() < 0.3 ? this.mat.cor : this.mat.funda); b.position.y = h / 2;
+    const fach = ["#9A948A", "#4F6B7A", "#8A4B3A", "#C2B59B", "#6E6A64", "#B7A27E"];
+    const b = new T.Mesh(new T.BoxGeometry(w, h, w), this.m(fach[Math.floor(rand() * fach.length)])); b.position.y = h / 2;
     g.add(b);
-    const jan = new T.Mesh(new T.PlaneGeometry(w * 0.7, h * 0.8), this.mat.glow); jan.position.set(0, h / 2, w / 2 + 0.001);
+    const jan = new T.Mesh(new T.PlaneGeometry(w * 0.7, h * 0.8), new T.MeshBasicMaterial({ color: new T.Color("#FFC86B"), transparent: true, opacity: 0.35 })); jan.position.set(0, h / 2, w / 2 + 0.001);
     g.add(jan, this.sombraDe(w * 1.3, w * 1.3));
     g.userData.jan = jan;
     return g;
@@ -184,35 +196,37 @@ export class Diorama {
   nota() {
     const T = this.T;
     if (!this._ng) { this._ng = new T.PlaneGeometry(0.1, 0.05); }
-    const m = new T.Mesh(this._ng, new T.MeshLambertMaterial({ color: new T.Color(this.c.tx), side: T.DoubleSide }));
-    const faixa = new T.Mesh(new T.PlaneGeometry(0.03, 0.05), this.mat.hi); faixa.position.z = 0.0005; m.add(faixa);
+    const m = new T.Mesh(this._ng, new T.MeshLambertMaterial({ color: new T.Color("#9DC48A"), side: T.DoubleSide }));
+    const faixa = new T.Mesh(new T.PlaneGeometry(0.03, 0.05), this.m("#4E7A3E", { side: T.DoubleSide })); faixa.position.z = 0.0005; m.add(faixa);
     return m;
   }
   barril() {
-    const T = this.T, b = new T.Mesh(new T.CylinderGeometry(0.03, 0.03, 0.08, 10), this.mat.cor);
-    const aro = new T.Mesh(new T.TorusGeometry(0.031, 0.004, 4, 16), this.mat.tx); aro.rotation.x = Math.PI / 2; b.add(aro);
+    const T = this.T, b = new T.Mesh(new T.CylinderGeometry(0.03, 0.03, 0.08, 10), this.m(["#A93226", "#1F4E79", "#2B2B2E"][(this._nb = (this._nb || 0) + 1) % 3]));
+    const aro = new T.Mesh(new T.TorusGeometry(0.031, 0.004, 4, 16), this.m("#D5D8DC")); aro.rotation.x = Math.PI / 2; b.add(aro);
     return b;
   }
 
   terreno(tipo, rand, g) {
     const T = this.T;
+    const piso = { mar: "#C9B98F", cidade: "#3A3D42", cofre: "#5E5A55", campo: "#6F8F3F" }[tipo] || "#6F8F3F";
+    const chao = new T.Mesh(new T.PlaneGeometry(80, 80), this.m(piso)); chao.rotation.x = -Math.PI / 2; chao.position.y = 0.001; g.add(chao);
     const preencher = (fn, x0, x1, z0, z1, passo, vazio) => { // espalha objetos em grade até o horizonte
       for (let x = x0; x <= x1; x += passo) for (let z = z0; z <= z1; z += passo) {
         if (vazio && vazio(x, z)) continue; fn(x + (rand() - 0.5) * passo * 0.3, z + (rand() - 0.5) * passo * 0.3); } };
     if (tipo === "mar") { // oceano/estreito até o horizonte, margens com cidades acesas
-      const agua = new T.Mesh(new T.PlaneGeometry(80, 80), this.mat.agua); agua.rotation.x = -Math.PI / 2; agua.position.y = 0.012; g.add(agua);
+      const agua = new T.Mesh(new T.PlaneGeometry(80, 80), this.m("#1D4F63", { transparent: true, opacity: 0.96 })); agua.rotation.x = -Math.PI / 2; agua.position.y = 0.012; g.add(agua);
       for (const sz of [-1, 1]) {
-        const m = new T.Mesh(new T.BoxGeometry(60, 0.1, 8), this.mat.funda); m.position.set(0, 0.05, sz * (1.15 + 4)); g.add(m);
+        const m = new T.Mesh(new T.BoxGeometry(60, 0.1, 8), this.m("#B9A77C")); m.position.set(0, 0.05, sz * (1.15 + 4)); g.add(m);
         preencher((x, z) => { const p = this.predio(rand); p.scale.setScalar(0.6); p.position.set(x, 0.1, z); g.add(p); }, -10, 10, sz > 0 ? 1.4 : -10, sz > 0 ? 9 : -1.4, 0.7, (x, z) => Math.hypot(x, z) < 4.2);
       }
       const ondas = [];
-      for (let k = 0; k < 60; k++) { const o = new T.Mesh(new T.PlaneGeometry(0.22, 0.008), this.mat.glow); o.rotation.x = -Math.PI / 2; o.position.set(-6 + rand() * 12, 0.02, -1 + rand() * 2); g.add(o); ondas.push(o); }
+      for (let k = 0; k < 60; k++) { const o = new T.Mesh(new T.PlaneGeometry(0.22, 0.008), new T.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.3 })); o.rotation.x = -Math.PI / 2; o.position.set(-6 + rand() * 12, 0.02, -1 + rand() * 2); g.add(o); ondas.push(o); }
       return (lt) => ondas.forEach((o, k) => { o.position.x = ((o.position.x + 6 + 0.006) % 12) - 6; o.material.opacity = 0.2 + 0.2 * Math.sin(lt * 2 + k); });
     }
     if (tipo === "cidade") { // quarteirões até o horizonte, ruas com carros
       const ruas = [-0.4, 0.4, -2.6, 2.4];
-      for (const z of ruas) { const rua = new T.Mesh(new T.PlaneGeometry(80, 0.3), this.mat.funda); rua.rotation.x = -Math.PI / 2; rua.position.set(0, 0.006, z); g.add(rua); }
-      for (const x of [-3, 3]) { const rua = new T.Mesh(new T.PlaneGeometry(0.3, 80), this.mat.funda); rua.rotation.x = -Math.PI / 2; rua.position.set(x, 0.007, 0); g.add(rua); }
+      for (const z of ruas) { const rua = new T.Mesh(new T.PlaneGeometry(80, 0.3), this.m("#22252A")); rua.rotation.x = -Math.PI / 2; rua.position.set(0, 0.006, z); g.add(rua); }
+      for (const x of [-3, 3]) { const rua = new T.Mesh(new T.PlaneGeometry(0.3, 80), this.m("#22252A")); rua.rotation.x = -Math.PI / 2; rua.position.set(x, 0.007, 0); g.add(rua); }
       const jan = [];
       preencher((x, z) => { const p = this.predio(rand); const k = 1 + Math.min(2.5, Math.abs(z) * 0.25); p.scale.set(k, k * (1 + rand()), k); p.position.set(x, 0, z); g.add(p); jan.push(p.userData.jan); },
         -11, 11, -12, 11, 0.55, (x, z) => Math.hypot(x, z) < 4.4 || ruas.some((r) => Math.abs(z - r) < 0.3) || Math.abs(Math.abs(x) - 3) < 0.3);
@@ -226,14 +240,14 @@ export class Diorama {
       preencher((x, z) => { const m = new T.Mesh(palete, mp); m.position.set(x, 0.15, z); g.add(m); }, -9, 9, -12, 9, 0.42, (x, z) => Math.hypot(x, z) < 3.8 || Math.abs(x) < 0.5);
       const lampada = new T.MeshBasicMaterial({ color: 0xffffff });
       for (let z = -12; z < 3; z += 1.2) for (const x of [-2, 0, 2]) { const l = new T.Mesh(new T.BoxGeometry(0.5, 0.02, 0.08), lampada); l.position.set(x, 2.4, z); g.add(l); }
-      const teto = new T.Mesh(new T.PlaneGeometry(40, 40), this.mat.plat); teto.rotation.x = Math.PI / 2; teto.position.y = 2.45; g.add(teto);
+      const teto = new T.Mesh(new T.PlaneGeometry(40, 40), this.m("#2A2826")); teto.rotation.x = Math.PI / 2; teto.position.y = 2.45; g.add(teto);
       return () => {};
     }
     // campo: lotes e árvores até o horizonte
-    preencher((x, z) => { const l = new T.Mesh(new T.PlaneGeometry(0.8, 0.6), rand() < 0.5 ? this.mat.funda : this.mat.plat); l.rotation.x = -Math.PI / 2; l.position.set(x, 0.004, z); g.add(l); }, -9, 9, -10, 4, 0.9);
+    preencher((x, z) => { const l = new T.Mesh(new T.PlaneGeometry(0.8, 0.6), this.m(["#6F8F3F", "#A3874F", "#8DA34A", "#5E7A34", "#C2A15A"][Math.floor(rand() * 5)])); l.rotation.x = -Math.PI / 2; l.position.set(x, 0.004, z); g.add(l); }, -9, 9, -10, 4, 0.9);
     const arv = new T.ConeGeometry(0.06, 0.18, 6);
-    preencher((x, z) => { const a = new T.Mesh(arv, this.mat.cor); a.position.set(x, 0.09, z); g.add(a); }, -8, 8, -9, 3, 0.6, (x, z) => Math.abs(x) < 1.6 && Math.abs(z) < 0.8);
-    const rua = new T.Mesh(new T.PlaneGeometry(80, 0.22), this.mat.funda); rua.rotation.x = -Math.PI / 2; rua.position.set(0, 0.008, 0.1); g.add(rua);
+    preencher((x, z) => { const a = new T.Mesh(arv, this.m(rand() < 0.5 ? "#2F5D34" : "#3E7041")); a.position.set(x, 0.09, z); g.add(a); }, -8, 8, -9, 3, 0.6, (x, z) => Math.abs(x) < 1.6 && Math.abs(z) < 0.8);
+    const rua = new T.Mesh(new T.PlaneGeometry(80, 0.22), this.m("#8C7A5B")); rua.rotation.x = -Math.PI / 2; rua.position.set(0, 0.008, 0.1); g.add(rua);
     return () => {};
   }
 
@@ -252,7 +266,8 @@ export class Diorama {
       if (a.tipo === "pessoas") {
         const ps = [];
         for (let k = 0; k < n; k++) {
-          const p = this.pessoa(k === 0 && destaque ? destaque : rand() < 0.25 ? this.mat.cor : this.mat.sec);
+          const roupas = ["#C0392B", "#2E86C1", "#F1C40F", "#ECF0F1", "#8E44AD", "#34495E", "#E67E22", "#7F8C8D", "#16A085"];
+          const p = this.pessoa(k === 0 && destaque ? destaque : this.m(roupas[Math.floor(rand() * roupas.length)]));
           const x = -1.2 + rand() * 2.4, z = -0.25 + rand() * 0.5 + (a.acao === "fila" ? 0 : (rand() - 0.5) * 0.9);
           p.position.set(a.acao === "fila" ? -1.2 + (k / n) * 2.0 : x, 0.014, a.acao === "fila" ? 0.35 : z);
           p.rotation.y = a.acao === "andar" ? (rand() < 0.5 ? 0 : Math.PI) : rand() * TAU;
@@ -321,8 +336,8 @@ export class Diorama {
         const fum = [];
         for (let k = 0; k < Math.min(n, 4); k++) {
           const f = new T.Group(); f.position.set(-0.8 + k * 0.55, 0, -0.55);
-          const corpo = new T.Mesh(new T.BoxGeometry(0.35, 0.18, 0.25), this.mat.funda); corpo.position.y = 0.09;
-          const cham = new T.Mesh(new T.CylinderGeometry(0.03, 0.04, 0.35, 8), this.mat.cor); cham.position.set(0.1, 0.18, 0);
+          const corpo = new T.Mesh(new T.BoxGeometry(0.35, 0.18, 0.25), this.m("#8A4B3A")); corpo.position.y = 0.09;
+          const cham = new T.Mesh(new T.CylinderGeometry(0.03, 0.04, 0.35, 8), this.m("#9A948A")); cham.position.set(0.1, 0.18, 0);
           f.add(corpo, cham, this.sombraDe(0.4, 0.3)); g.add(f);
           for (let j = 0; j < 6; j++) { const s = new T.Mesh(new T.IcosahedronGeometry(0.04, 0), this.mat.fumaca); g.add(s); fum.push({ s, x: f.position.x + 0.1, z: f.position.z, ph: j / 6 }); }
         }
@@ -330,7 +345,8 @@ export class Diorama {
       } else if (a.tipo === "bonecos") {
         const nomes = a.nomes || [], bs = [];
         for (let k = 0; k < Math.min(n, 7); k++) {
-          const b = this.boneco(k === 0 && destaque ? this.mat.funda : this.mat.funda, nomes[k]);
+          const ternos = ["#1F2A44", "#2B2B2E", "#3B3F4A", "#4A3B2A"];
+          const b = this.boneco(this.m(ternos[k % ternos.length]), nomes[k]);
           b.position.set((k - (Math.min(n, 7) - 1) / 2) * 0.42, 0, k % 2 ? -0.18 : 0.05); b.rotation.y = (rand() - 0.5) * 0.5; g.add(b); bs.push({ b, ph: rand() * TAU });
         }
         up.push((lt) => bs.forEach((q, k) => { const { bracos, cab } = q.b.userData;

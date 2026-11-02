@@ -22,6 +22,22 @@ Exemplo completo: `tools/worldframe/exemplo_roteiro.json`.
 ## Animação: cenários, atores e camadas (o que prende a atenção)
 Pelo menos **metade das cenas** usa `"palco": "diorama"`: um **cenário de verdade que ocupa a tela toda** (oceano, cidade, armazém, campo), com câmera baixa dentro dele e **atores animados**. Nada de mini cenário em cima de plataforma flutuante (proibido desde 30/10). As outras cenas podem usar `"palco": "globo"` (mapa, rotas).
 
+**Regra de ouro (02/11): cada frase tem um visual que mostra LITERALMENTE o que a frase diz, e o vídeo muda de cor de bloco em bloco.** Direção de cena (skill hypit-video): o visual reage à palavra-chave da frase. Estética de cartões editoriais (skills lemo-opuscar e hyperframes): tipografia grande, papel, recibo, letreiro, carimbo, como nos virais do Acervo. Pense: "se eu tirasse o som, a imagem contaria a frase?".
+- **Mínimo de 35% das cenas com 2D** (cartão, gráfico, recibo ou letreiro) e **30% com cenário 3D com atores**.
+- **Cenas vizinhas nunca com o mesmo visual**, e **cada ator em no máximo 2 cenas** (nada de barcos, carros e pessoas em todo vídeo sem motivo).
+- Só use navios se a frase fala de mar ou comércio marítimo; carros e pessoas só se a frase fala de cidade, gente ou consumo.
+
+**Cartões editoriais em tela cheia** (`"cartao": {...}`), cada um com fundo e cores próprios (`"tema": "escuro" | "papel" | "vermelho" | "amarelo" | "noturno"`; se faltar, alterna sozinho):
+| `tipo` | campos | use quando a frase... |
+|---|---|---|
+| `manchete` | `linhas` (1 a 3, curtas), `destaque` (índice da linha colorida), `sub`, `numero` | dá uma notícia ou um superlativo ("WORST / EARNINGS DAY", "IN ONE NIGHT") |
+| `comparar` | `titulo`, `a`: {`rotulo`, `valor`, `v`}, `b`: {...} | compara dois lados (EUA × China, antes × depois); `v` é o número para a barra |
+| `linha_tempo` | `titulo`, `marcos`: [["1989","Panama"], ["2026","Venezuela"]], `ativo` | conta datas, sequência histórica |
+| `alerta` | `titulo`, `texto` | algo chega ao celular das pessoas, uma ordem, um aviso |
+| `citacao` | `texto`, `autor` | alguém disse algo (frase real, com fonte) |
+| `dossie` | `titulo`, `numero`, `texto` | caso, investigação, ficha de um país ou pessoa |
+Todos aceitam `"carimbo": "CONFIRMED"` (ou HACKED, FROZEN, BANNED...).
+
 **Camadas no meio da tela** (por cima do cenário, uma ou duas por cena, varie):
 - `"grafico": {"tipo": "linha"|"barras"|"pizza"|"velas", "tela": "celular"|"tv"|"computador"|"nenhuma", "titulo": "...", "dados": [..], "rotulos": [..], "mercado": true}`. Varie o tipo e coloque vários dentro de celular, TV ou computador. Com `"mercado": true` (bolsa, investimentos, preços) a alta sai em **verde** e a queda em **vermelho**.
 - `"recibo": {"itens": [["001 BAR", "$1,000,000"], ...], "total": "$51.36B"}`: recibo imprimindo linha a linha até o total.
