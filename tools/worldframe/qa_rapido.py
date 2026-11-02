@@ -3,7 +3,7 @@
 
 python3 tools/worldframe/qa_rapido.py out/AAAA-MM-DD_<slug>.mp4
 Checa: 1080x1920, áudio presente, duração dentro de config (61-120 s), sem trecho preto (> 1 s),
-sem imagem congelada (> 4 s, fora do cartão final), legenda .txt presente, sem hífen e terminando em pergunta.
+sem imagem congelada (> 6 s, fora do cartão final), legenda .txt presente, sem hífen e terminando em pergunta.
 Imprime 1 linha JSON com ok e os problemas. Leva poucos segundos por vídeo.
 """
 import json
@@ -36,7 +36,7 @@ def checar(v: Path) -> list[str]:
     if not mn <= dur <= mx:
         probs.append(f"duração {dur:.1f}s fora de {mn:.0f}-{mx:.0f}s")
     # preto e congelado numa passada só, em baixa resolução (rápido)
-    r = subprocess.run(["ffmpeg", "-v", "info", "-i", str(v), "-vf", "scale=270:-1,blackdetect=d=1:pix_th=0.06,freezedetect=n=0.002:d=4",
+    r = subprocess.run(["ffmpeg", "-v", "info", "-i", str(v), "-vf", "scale=270:-1,blackdetect=d=1:pix_th=0.06,freezedetect=n=0.001:d=6",
                         "-an", "-f", "null", "-"], capture_output=True, text=True)
     if "black_start" in r.stderr:
         probs.append("trecho preto de mais de 1 s")

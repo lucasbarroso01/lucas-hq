@@ -181,6 +181,8 @@ def cartao(c: dict, i: int, s0: float, d: float) -> tuple[str, list[str]]:
     bg, tx, a1, a2 = TEMAS_CARTAO.get(k.get("tema") or TEMAS_ORDEM[i % len(TEMAS_ORDEM)])
     e = html.escape
     tw = [f'tl.fromTo("#ct{i}",{{opacity:0}},{{opacity:1,duration:.18}},{s0:.3f});']
+    # movimento contínuo (zoom lento): cartão nunca fica parado (parado > 4 s parece vídeo travado e o QA reprova)
+    tw.append(f'tl.fromTo("#ct{i} .ct-in",{{scale:1,y:0}},{{scale:1.07,y:-18,duration:{d:.3f},ease:"none"}},{s0:.3f});')
     corpo = ""
     if tipo == "manchete":
         linhas = k.get("linhas") or [c.get("legenda", "")]
@@ -219,7 +221,7 @@ def cartao(c: dict, i: int, s0: float, d: float) -> tuple[str, list[str]]:
         corpo += "</div>"
     elif tipo == "alerta":
         texto = e(k.get("texto", ""))
-        corpo += (f'<div class="al-tel"><div class="al-hora">06:42</div><div class="al-card" id="alc{i}" style="background:{a1}">'
+        corpo += (f'<div class="al-tel"><div class="al-hora">06:42</div><div class="al-card" id="alc{i}" style="background:{'#1C1D22' if bg == '#D7261E' else '#D7261E'}">'
                   f'<div class="al-tit">⚠ {e(k.get("titulo", "EMERGENCY ALERT").upper())}</div><div class="al-tx" id="alt{i}">{texto}</div></div></div>')
         tw.append(f'tl.fromTo("#alc{i}",{{opacity:0,y:-80}},{{opacity:1,y:0,duration:.35,ease:"back.out(1.6)"}},{s0 + 0.2:.3f});')
         tw.append(f'tl.fromTo("#alt{i}",{{clipPath:"inset(0 100% 0 0)"}},{{clipPath:"inset(0 0% 0 0)",duration:{min(1.6, d * 0.5):.2f},ease:"steps(24)"}},{s0 + 0.5:.3f});')
@@ -504,7 +506,8 @@ TEMPLATE = """<!doctype html>
   .rot {{ margin-top: 10px; font-family: {P[rotulo]}; font-weight: 300; font-size: 28px; letter-spacing: .32em; color: var(--sec); }}
   .cap {{ position: absolute; left: 70px; right: 70px; top: 1100px; height: 140px; display: flex; align-items: center; justify-content: center; }}
   .captxt {{ font-family: {P[fonte_leg]}; font-weight: {P[peso_leg]}; text-transform: {P[caixa]}; font-size: 80px; line-height: 84px; letter-spacing: -.005em;
-             text-align: center; color: var(--tx); text-shadow: 0 4px 24px rgba(0,0,0,.9); }}
+             text-align: center; color: #FFFFFF; text-shadow: 0 4px 24px rgba(0,0,0,.9);
+             -webkit-text-stroke: 12px rgba(10,10,12,.9); paint-order: stroke fill; }}
   .captxt .k {{ color: var(--hi); font-weight: inherit; font-style: italic; }}
   .fonte {{ position: absolute; left: 70px; right: 70px; top: 1250px; height: 32px; text-align: center; font-size: 21px;
            letter-spacing: .08em; color: var(--sec); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}

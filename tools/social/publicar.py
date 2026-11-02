@@ -267,7 +267,16 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--simular", action="store_true", help="mostra o que agendaria, sem chamar a Meta")
     ap.add_argument("--retomar", action="store_true", help="apaga o aviso de token expirado depois de renovar o token")
+    ap.add_argument("--reabrir", nargs="+", metavar="VIDEO", help="vídeos reprovados na revisão que voltam para a fila (depois de refeitos)")
     a = ap.parse_args()
+    if a.reabrir:
+        estado = json.loads(ESTADO.read_text()) if ESTADO.exists() else {}
+        for v in a.reabrir:
+            estado.pop(Path(v).name, None)
+        ESTADO.write_text(json.dumps(estado, indent=1, ensure_ascii=False))
+        log(f"reabertos para revisão e agendamento: {', '.join(a.reabrir)}")
+        print(json.dumps({"tool": "publicar", "ok": True, "reabertos": a.reabrir}))
+        return
     if a.retomar:
         if PARADA.exists():
             PARADA.rename(PARADA.with_suffix(".resolvido"))
