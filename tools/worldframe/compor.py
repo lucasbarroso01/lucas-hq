@@ -221,7 +221,8 @@ def cartao(c: dict, i: int, s0: float, d: float) -> tuple[str, list[str]]:
         corpo += "</div>"
     elif tipo == "alerta":
         texto = e(k.get("texto", ""))
-        corpo += (f'<div class="al-tel"><div class="al-hora">06:42</div><div class="al-card" id="alc{i}" style="background:{'#1C1D22' if bg == '#D7261E' else '#D7261E'}">'
+        cor_al = "#1C1D22" if bg == "#D7261E" else "#D7261E"   # cartão vermelho sobre fundo vermelho não lê
+        corpo += (f'<div class="al-tel"><div class="al-hora">06:42</div><div class="al-card" id="alc{i}" style="background:{cor_al}">'
                   f'<div class="al-tit">⚠ {e(k.get("titulo", "EMERGENCY ALERT").upper())}</div><div class="al-tx" id="alt{i}">{texto}</div></div></div>')
         tw.append(f'tl.fromTo("#alc{i}",{{opacity:0,y:-80}},{{opacity:1,y:0,duration:.35,ease:"back.out(1.6)"}},{s0 + 0.2:.3f});')
         tw.append(f'tl.fromTo("#alt{i}",{{clipPath:"inset(0 100% 0 0)"}},{{clipPath:"inset(0 0% 0 0)",duration:{min(1.6, d * 0.5):.2f},ease:"steps(24)"}},{s0 + 0.5:.3f});')
