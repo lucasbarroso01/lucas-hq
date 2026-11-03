@@ -128,6 +128,9 @@ def novos(estado: dict, desde: float) -> list[Path]:
     agora = dt.datetime.now().timestamp()
     out = []
     for p in sorted(OUT.glob("*.mp4"), key=lambda x: x.stat().st_mtime):
+        adiado = estado.get(p.name, {}).get("adiado_para")
+        if adiado and adiado <= dt.datetime.now(TZ).date().isoformat():
+            estado.pop(p.name)   # chegou o dia: entra na fila normal
         if not NOME.match(p.name) or "teste" in p.name or p.name in estado:
             continue
         st = p.stat().st_mtime
@@ -267,8 +270,17 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--simular", action="store_true", help="mostra o que agendaria, sem chamar a Meta")
     ap.add_argument("--retomar", action="store_true", help="apaga o aviso de token expirado depois de renovar o token")
+    ap.add_argument("--adiar", nargs=2, metavar=("VIDEO", "AAAA-MM-DD"), help="segura um vídeo até a data (ex.: deixar para amanhã)")
     ap.add_argument("--reabrir", nargs="+", metavar="VIDEO", help="vídeos reprovados na revisão que voltam para a fila (depois de refeitos)")
     a = ap.parse_args()
+    if a.adiar:
+        estado = json.loads(ESTADO.read_text()) if ESTADO.exists() else {}
+        nome, data = Path(a.adiar[0]).name, a.adiar[1]
+        estado[nome] = {"adiado_para": data}
+        ESTADO.write_text(json.dumps(estado, indent=1, ensure_ascii=False))
+        log(f"{nome} adiado: só entra na grade a partir de {data}")
+        print(json.dumps({"tool": "publicar", "ok": True, "adiado": nome, "para": data}))
+        return
     if a.reabrir:
         estado = json.loads(ESTADO.read_text()) if ESTADO.exists() else {}
         for v in a.reabrir:
