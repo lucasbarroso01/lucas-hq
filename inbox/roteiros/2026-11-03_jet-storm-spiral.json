@@ -1,0 +1,850 @@
+{
+ "slug": "jet-storm-spiral",
+ "titulo": "What happened to this jet",
+ "paleta": "noite",
+ "voz": "am_onyx",
+ "velocidade": 1.1,
+ "dial": "FACT",
+ "categoria": "curiosidades",
+ "notas_tema": {
+  "explica": 9,
+  "em_jogo": 9,
+  "atual": 9,
+  "dados": 7
+ },
+ "cenas": [
+  {
+   "fala": "This jet fell thirty five thousand feet in one minute. And you won't believe why.",
+   "legenda": "This jet fell 35,000 feet in one minute. You won't believe why.",
+   "destaques": [
+    "why"
+   ],
+   "fonte": "Public flight data as reported, Nov 1",
+   "visual": "printar",
+   "camera": {
+    "lat": 20,
+    "lon": 30,
+    "dist": 3.0
+   },
+   "globo": {
+    "cabos": 0
+   },
+   "palco": "diorama",
+   "atores": [
+    {
+     "tipo": "avioes",
+     "qtd": 1,
+     "destaque": true
+    }
+   ],
+   "terreno": "nuvens",
+   "numero": {
+    "de": 35000,
+    "ate": 35000,
+    "sufixo": " FT",
+    "rotulo": "ALTITUDE"
+   }
+  },
+  {
+   "fala": "And the pilot called out every second of it on the radio.",
+   "legenda": "And the pilot called it all out on the radio.",
+   "destaques": [
+    "radio"
+   ],
+   "fonte": "",
+   "visual": "printar",
+   "camera": {
+    "lat": 20,
+    "lon": 30,
+    "dist": 3.0
+   },
+   "globo": {
+    "cabos": 0
+   },
+   "palco": "diorama",
+   "atores": [
+    {
+     "tipo": "bonecos",
+     "qtd": 2,
+     "nomes": [
+      "PILOT",
+      "MIAMI ATC"
+     ]
+    }
+   ],
+   "terreno": "cidade"
+  },
+  {
+   "fala": "It was a Learjet sixty, flying from Texas to the Bahamas.",
+   "legenda": "A Learjet 60, flying from Texas to the Bahamas.",
+   "destaques": [
+    "Bahamas"
+   ],
+   "fonte": "Public flight data as reported, Nov 1",
+   "visual": "printar",
+   "camera": {
+    "lat": 20,
+    "lon": 30,
+    "dist": 3.0
+   },
+   "globo": {
+    "cabos": 0
+   },
+   "palco": "globo",
+   "atores": [],
+   "cartao": {
+    "tipo": "dossie",
+    "titulo": "Learjet 60 · Austin → Bahamas",
+    "numero": "9",
+    "texto": "people on board"
+   }
+  },
+  {
+   "fala": "Nine people on board. Nobody survived.",
+   "legenda": "9 people on board. Nobody survived.",
+   "destaques": [
+    "survived"
+   ],
+   "fonte": "Public flight data as reported, Nov 1",
+   "visual": "printar",
+   "camera": {
+    "lat": 20,
+    "lon": 30,
+    "dist": 3.0
+   },
+   "globo": {
+    "cabos": 0
+   },
+   "palco": "globo",
+   "atores": [],
+   "cartao": {
+    "tipo": "manchete",
+    "linhas": [
+     "NOBODY",
+     "SURVIVED"
+    ],
+    "destaque": 1,
+    "tema": "escuro"
+   }
+  },
+  {
+   "fala": "It was cruising at thirty five thousand feet, inside a storm, at minus forty seven degrees.",
+   "legenda": "Cruising at 35,000 feet inside a storm, at minus 47 degrees.",
+   "destaques": [
+    "storm"
+   ],
+   "fonte": "Public flight data as reported, Nov 1",
+   "visual": "printar",
+   "camera": {
+    "lat": 20,
+    "lon": 30,
+    "dist": 3.0
+   },
+   "globo": {
+    "cabos": 0
+   },
+   "palco": "diorama",
+   "atores": [
+    {
+     "tipo": "avioes",
+     "qtd": 1,
+     "destaque": true
+    }
+   ],
+   "terreno": "nuvens",
+   "numero": {
+    "de": -47,
+    "ate": -47,
+    "sufixo": " °C",
+    "rotulo": "OUTSIDE AIR"
+   }
+  },
+  {
+   "fala": "The crew told the controllers: light ice, moderate turbulence.",
+   "legenda": "The crew told control: light ice, moderate turbulence.",
+   "destaques": [
+    "ice"
+   ],
+   "fonte": "",
+   "visual": "printar",
+   "camera": {
+    "lat": 20,
+    "lon": 30,
+    "dist": 3.0
+   },
+   "globo": {
+    "cabos": 0
+   },
+   "palco": "globo",
+   "atores": [],
+   "cartao": {
+    "tipo": "citacao",
+    "texto": "Light ice, manageable. Moderate turbulence.",
+    "autor": "Crew to Miami Center"
+   }
+  },
+  {
+   "fala": "Then they asked to climb two thousand feet higher, looking for smoother air.",
+   "legenda": "They asked to climb to 37,000 feet, looking for smoother air.",
+   "destaques": [
+    "climb"
+   ],
+   "fonte": "Public flight data as reported, Nov 1",
+   "visual": "printar",
+   "camera": {
+    "lat": 20,
+    "lon": 30,
+    "dist": 3.0
+   },
+   "globo": {
+    "cabos": 0
+   },
+   "palco": "globo",
+   "atores": [],
+   "cartao": {
+    "tipo": "comparar",
+    "titulo": "Altitude request",
+    "a": {
+     "rotulo": "Now",
+     "valor": "35,000",
+     "v": 35
+    },
+    "b": {
+     "rotulo": "Asked",
+     "valor": "37,000",
+     "v": 37
+    },
+    "tema": "noturno"
+   }
+  },
+  {
+   "fala": "Then came the mayday. Descending ten thousand feet every minute.",
+   "legenda": "Then came the mayday: down 10,000 feet a minute.",
+   "destaques": [
+    "mayday"
+   ],
+   "fonte": "Public flight data as reported, Nov 1",
+   "visual": "printar",
+   "camera": {
+    "lat": 20,
+    "lon": 30,
+    "dist": 3.0
+   },
+   "globo": {
+    "cabos": 0
+   },
+   "palco": "globo",
+   "atores": [],
+   "cartao": {
+    "tipo": "alerta",
+    "titulo": "Mayday · Miami Center",
+    "texto": "Mayday, mayday. We're descending ten thousand feet per minute."
+   }
+  },
+  {
+   "fala": "Seconds later, twenty thousand feet a minute, and in overspeed.",
+   "legenda": "Then 20,000 feet a minute, and in overspeed.",
+   "destaques": [
+    "overspeed"
+   ],
+   "fonte": "Public flight data as reported, Nov 1",
+   "visual": "printar",
+   "camera": {
+    "lat": 20,
+    "lon": 30,
+    "dist": 3.0
+   },
+   "globo": {
+    "cabos": 0
+   },
+   "palco": "globo",
+   "atores": [],
+   "grafico": {
+    "tipo": "linha",
+    "tela": "tv",
+    "titulo": "ALTITUDE (FT)",
+    "dados": [
+     35250,
+     34800,
+     29800,
+     24000,
+     17500,
+     8750
+    ],
+    "rotulos": [
+     "",
+     "8,750 FT"
+    ]
+   }
+  },
+  {
+   "fala": "Overspeed means flying faster than the plane was built to handle.",
+   "legenda": "Overspeed: faster than the plane was built to handle.",
+   "destaques": [
+    "faster"
+   ],
+   "fonte": "",
+   "visual": "printar",
+   "camera": {
+    "lat": 20,
+    "lon": 30,
+    "dist": 3.0
+   },
+   "globo": {
+    "cabos": 0
+   },
+   "palco": "globo",
+   "atores": [],
+   "cartao": {
+    "tipo": "manchete",
+    "linhas": [
+     "OVERSPEED"
+    ],
+    "destaque": 0,
+    "sub": "FASTER THAN IT WAS BUILT FOR",
+    "tema": "amarelo"
+   }
+  },
+  {
+   "fala": "On this jet, that limit is about eighty one percent of the speed of sound.",
+   "legenda": "On this jet, the limit is about 81% of the speed of sound.",
+   "destaques": [
+    "sound"
+   ],
+   "fonte": "Learjet 60 limit, Mach 0.81",
+   "visual": "printar",
+   "camera": {
+    "lat": 20,
+    "lon": 30,
+    "dist": 3.0
+   },
+   "globo": {
+    "cabos": 0
+   },
+   "palco": "globo",
+   "atores": [],
+   "cartao": {
+    "tipo": "comparar",
+    "titulo": "Speed limit",
+    "a": {
+     "rotulo": "Learjet 60",
+     "valor": "Mach 0.81",
+     "v": 81
+    },
+    "b": {
+     "rotulo": "Sound",
+     "valor": "Mach 1",
+     "v": 100
+    },
+    "tema": "vermelho"
+   }
+  },
+  {
+   "fala": "Tracking data shows a right turn, tighter and tighter, falling over thirty two thousand feet a minute.",
+   "legenda": "Radar shows a tightening right turn, over 32,000 feet a minute.",
+   "destaques": [
+    "turn"
+   ],
+   "fonte": "Public flight data as reported, Nov 1",
+   "visual": "printar",
+   "camera": {
+    "lat": 20,
+    "lon": 30,
+    "dist": 3.0
+   },
+   "globo": {
+    "cabos": 0
+   },
+   "palco": "globo",
+   "atores": [],
+   "grafico": {
+    "tipo": "barras",
+    "tela": "celular",
+    "titulo": "DESCENT (FT/MIN)",
+    "dados": [
+     90,
+     8227,
+     21397,
+     32640
+    ],
+    "rotulos": [
+     "12:48",
+     "",
+     "",
+     "12:50"
+    ]
+   }
+  },
+  {
+   "fala": "On the radio, one last call: sixty degrees of bank.",
+   "legenda": "On the radio, one last call: 60 degrees of bank.",
+   "destaques": [
+    "bank"
+   ],
+   "fonte": "Public flight data as reported, Nov 1",
+   "visual": "printar",
+   "camera": {
+    "lat": 20,
+    "lon": 30,
+    "dist": 3.0
+   },
+   "globo": {
+    "cabos": 0
+   },
+   "palco": "globo",
+   "atores": [],
+   "cartao": {
+    "tipo": "citacao",
+    "texto": "We are banking sixty degrees.",
+    "autor": "Crew to Miami Center",
+    "tema": "escuro"
+   }
+  },
+  {
+   "fala": "Pilots have a name for this. The spiral.",
+   "legenda": "Pilots have a name for this: the spiral.",
+   "destaques": [
+    "spiral"
+   ],
+   "fonte": "",
+   "visual": "printar",
+   "camera": {
+    "lat": 20,
+    "lon": 30,
+    "dist": 3.0
+   },
+   "globo": {
+    "cabos": 0
+   },
+   "palco": "globo",
+   "atores": [],
+   "cartao": {
+    "tipo": "manchete",
+    "linhas": [
+     "THE",
+     "SPIRAL"
+    ],
+    "destaque": 1,
+    "tema": "noturno"
+   }
+  },
+  {
+   "fala": "Inside a cloud, your body lies. One wing drops, the nose falls, and the speed explodes.",
+   "legenda": "Inside a cloud the body lies: wing drops, nose falls, speed explodes.",
+   "destaques": [
+    "lies"
+   ],
+   "fonte": "",
+   "visual": "printar",
+   "camera": {
+    "lat": 20,
+    "lon": 30,
+    "dist": 3.0
+   },
+   "globo": {
+    "cabos": 0
+   },
+   "palco": "globo",
+   "atores": [],
+   "grafico": {
+    "tipo": "linha",
+    "tela": "computador",
+    "titulo": "AIRSPEED (KT)",
+    "dados": [
+     276,
+     289,
+     300,
+     307,
+     320,
+     340
+    ],
+    "rotulos": [
+     "",
+     "340 KT"
+    ]
+   }
+  },
+  {
+   "fala": "What started it, nobody knows yet.",
+   "legenda": "What started it? Nobody knows yet.",
+   "destaques": [
+    "nobody"
+   ],
+   "fonte": "",
+   "visual": "printar",
+   "camera": {
+    "lat": 20,
+    "lon": 30,
+    "dist": 3.0
+   },
+   "globo": {
+    "cabos": 0
+   },
+   "palco": "globo",
+   "atores": [],
+   "cartao": {
+    "tipo": "dossie",
+    "titulo": "Cause",
+    "numero": "?",
+    "texto": "still under investigation",
+    "carimbo": "No answer yet"
+   }
+  },
+  {
+   "fala": "Investigators will check the storm, the ice, the jet and its maintenance, down to the last bolt.",
+   "legenda": "They'll check the storm, the ice, the jet, down to the last bolt.",
+   "destaques": [
+    "bolt"
+   ],
+   "fonte": "",
+   "visual": "printar",
+   "camera": {
+    "lat": 20,
+    "lon": 30,
+    "dist": 3.0
+   },
+   "globo": {
+    "cabos": 0
+   },
+   "palco": "diorama",
+   "atores": [
+    {
+     "tipo": "bonecos",
+     "qtd": 2,
+     "nomes": [
+      "NTSB",
+      "FAA"
+     ]
+    }
+   ],
+   "terreno": "cidade"
+  },
+  {
+   "fala": "A first report usually comes in about a month. The final one takes a year or two.",
+   "legenda": "First report in about a month. Final report: 1 to 2 years.",
+   "destaques": [
+    "report"
+   ],
+   "fonte": "NTSB typical timeline",
+   "visual": "printar",
+   "camera": {
+    "lat": 20,
+    "lon": 30,
+    "dist": 3.0
+   },
+   "globo": {
+    "cabos": 0
+   },
+   "palco": "globo",
+   "atores": [],
+   "cartao": {
+    "tipo": "linha_tempo",
+    "titulo": "Investigation",
+    "marcos": [
+     [
+      "Nov 1",
+      "Crash"
+     ],
+     [
+      "~30 days",
+      "1st report"
+     ],
+     [
+      "12–24 mo",
+      "Final"
+     ]
+    ],
+    "ativo": 1
+   }
+  },
+  {
+   "fala": "Would you still fly through a storm like that? Comment yes or no.",
+   "legenda": "Would you fly through a storm like that?",
+   "destaques": [
+    "storm"
+   ],
+   "fonte": "",
+   "visual": "pergunta",
+   "camera": {
+    "lat": 20,
+    "lon": 30,
+    "dist": 3.0
+   },
+   "globo": {
+    "cabos": 0
+   },
+   "palco": "globo",
+   "atores": []
+  }
+ ],
+ "conectores": [
+  {
+   "cena": 1,
+   "variacoes": [
+    "won't believe why",
+    "and then it got worse",
+    "here is the strange part"
+   ],
+   "notas": [
+    8,
+    6,
+    6
+   ],
+   "escolhida": 0
+  },
+  {
+   "cena": 2,
+   "variacoes": [
+    "on the radio",
+    "and then it got worse",
+    "here is the strange part"
+   ],
+   "notas": [
+    8,
+    6,
+    6
+   ],
+   "escolhida": 0
+  },
+  {
+   "cena": 3,
+   "variacoes": [
+    "to the Bahamas",
+    "and then it got worse",
+    "here is the strange part"
+   ],
+   "notas": [
+    8,
+    6,
+    6
+   ],
+   "escolhida": 0
+  },
+  {
+   "cena": 4,
+   "variacoes": [
+    "board. Nobody survived",
+    "and then it got worse",
+    "here is the strange part"
+   ],
+   "notas": [
+    8,
+    6,
+    6
+   ],
+   "escolhida": 0
+  },
+  {
+   "cena": 5,
+   "variacoes": [
+    "forty seven degrees",
+    "and then it got worse",
+    "here is the strange part"
+   ],
+   "notas": [
+    8,
+    6,
+    6
+   ],
+   "escolhida": 0
+  },
+  {
+   "cena": 6,
+   "variacoes": [
+    "ice, moderate turbulence",
+    "and then it got worse",
+    "here is the strange part"
+   ],
+   "notas": [
+    8,
+    6,
+    6
+   ],
+   "escolhida": 0
+  },
+  {
+   "cena": 7,
+   "variacoes": [
+    "for smoother air",
+    "and then it got worse",
+    "here is the strange part"
+   ],
+   "notas": [
+    8,
+    6,
+    6
+   ],
+   "escolhida": 0
+  },
+  {
+   "cena": 8,
+   "variacoes": [
+    "feet every minute",
+    "and then it got worse",
+    "here is the strange part"
+   ],
+   "notas": [
+    8,
+    6,
+    6
+   ],
+   "escolhida": 0
+  },
+  {
+   "cena": 9,
+   "variacoes": [
+    "and in overspeed",
+    "and then it got worse",
+    "here is the strange part"
+   ],
+   "notas": [
+    8,
+    6,
+    6
+   ],
+   "escolhida": 0
+  },
+  {
+   "cena": 10,
+   "variacoes": [
+    "built to handle",
+    "and then it got worse",
+    "here is the strange part"
+   ],
+   "notas": [
+    8,
+    6,
+    6
+   ],
+   "escolhida": 0
+  },
+  {
+   "cena": 11,
+   "variacoes": [
+    "speed of sound",
+    "and then it got worse",
+    "here is the strange part"
+   ],
+   "notas": [
+    8,
+    6,
+    6
+   ],
+   "escolhida": 0
+  },
+  {
+   "cena": 12,
+   "variacoes": [
+    "feet a minute",
+    "and then it got worse",
+    "here is the strange part"
+   ],
+   "notas": [
+    8,
+    6,
+    6
+   ],
+   "escolhida": 0
+  },
+  {
+   "cena": 13,
+   "variacoes": [
+    "degrees of bank",
+    "and then it got worse",
+    "here is the strange part"
+   ],
+   "notas": [
+    8,
+    6,
+    6
+   ],
+   "escolhida": 0
+  },
+  {
+   "cena": 14,
+   "variacoes": [
+    "this. The spiral",
+    "and then it got worse",
+    "here is the strange part"
+   ],
+   "notas": [
+    8,
+    6,
+    6
+   ],
+   "escolhida": 0
+  },
+  {
+   "cena": 15,
+   "variacoes": [
+    "the speed explodes",
+    "and then it got worse",
+    "here is the strange part"
+   ],
+   "notas": [
+    8,
+    6,
+    6
+   ],
+   "escolhida": 0
+  },
+  {
+   "cena": 16,
+   "variacoes": [
+    "nobody knows yet",
+    "and then it got worse",
+    "here is the strange part"
+   ],
+   "notas": [
+    8,
+    6,
+    6
+   ],
+   "escolhida": 0
+  },
+  {
+   "cena": 17,
+   "variacoes": [
+    "the last bolt",
+    "and then it got worse",
+    "here is the strange part"
+   ],
+   "notas": [
+    8,
+    6,
+    6
+   ],
+   "escolhida": 0
+  },
+  {
+   "cena": 18,
+   "variacoes": [
+    "year or two",
+    "and then it got worse",
+    "here is the strange part"
+   ],
+   "notas": [
+    8,
+    6,
+    6
+   ],
+   "escolhida": 0
+  }
+ ],
+ "final": {
+  "pergunta": "Would you still fly through a storm like that?",
+  "destaque": "storm",
+  "opcoes": [
+   "YES",
+   "NO"
+  ]
+ },
+ "legenda_post": "A jet fell 35,000 feet in about a minute while the crew talked to air traffic control. Ice, a storm and a spiral: here is what the flight data shows. Would you still fly through a storm like that?",
+ "hashtags": [
+  "aviation",
+  "planecrash",
+  "pilot",
+  "storm",
+  "facts"
+ ]
+}

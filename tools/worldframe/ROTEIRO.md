@@ -61,7 +61,7 @@ Todos aceitam `"carimbo": "CONFIRMED"` (ou HACKED, FROZEN, BANNED...).
 | `carros` | carros andando na rua | trânsito, consumo, cidades |
 | `bonecos` (+ `nomes`: ["TRUMP", "LULA"]) | manequins de madeira de terno, com placa de nome, gesticulando | política, líderes, quem disse o quê |
 
-`qtd` (1 a 80) e `destaque: true` (o primeiro sai na cor de destaque). `terreno` opcional: `mar` (oceano/estreito até o horizonte), `cidade` (quarteirões e ruas com carros), `campo`, `cofre` (armazém com corredor de paletes e luzes no teto). Se faltar, ele escolhe pelos atores.
+`qtd` (1 a 80) e `destaque: true` (o primeiro sai na cor de destaque). `terreno` opcional: `nuvens` (tempestade acima das nuvens, com relâmpagos), `mar` (oceano/estreito até o horizonte), `cidade` (quarteirões e ruas com carros), `campo`, `cofre` (armazém com corredor de paletes e luzes no teto). Se faltar, ele escolhe pelos atores.
 
 ## Campos
 | Campo | |

@@ -208,7 +208,7 @@ export class Diorama {
 
   terreno(tipo, rand, g) {
     const T = this.T;
-    const piso = { mar: "#C9B98F", cidade: "#3A3D42", cofre: "#5E5A55", campo: "#6F8F3F" }[tipo] || "#6F8F3F";
+    const piso = { mar: "#C9B98F", cidade: "#3A3D42", cofre: "#5E5A55", campo: "#6F8F3F", nuvens: "#3B3F46" }[tipo] || "#6F8F3F";
     const chao = new T.Mesh(new T.PlaneGeometry(80, 80), this.m(piso)); chao.rotation.x = -Math.PI / 2; chao.position.y = 0.001; g.add(chao);
     const preencher = (fn, x0, x1, z0, z1, passo, vazio) => { // espalha objetos em grade até o horizonte
       for (let x = x0; x <= x1; x += passo) for (let z = z0; z <= z1; z += passo) {
@@ -234,6 +234,18 @@ export class Diorama {
       for (let k = 0; k < 26; k++) { const c = this.carro(rand); const z = ruas[k % 4] + (k % 2 ? 0.07 : -0.07); c.position.set(-6 + rand() * 12, 0.006, z); if (k % 2) c.rotation.y = Math.PI; g.add(c); carros.push({ c, x0: c.position.x, sp: (0.35 + rand() * 0.3) * (k % 2 ? -1 : 1) }); }
       return (lt) => { jan.forEach((j, k) => { j.material.opacity = 0.25 + 0.2 * (Math.sin(lt * 1.3 + k * 1.7) > 0.6 ? 1 : 0); });
         carros.forEach((q) => { q.c.position.x = ((q.x0 + q.sp * lt + 6) % 12 + 12) % 12 - 6; }); };
+    }
+    if (tipo === "nuvens") { // tempestade: mar de nuvens cinza até o horizonte + relâmpagos
+      const nm = [this.m("#5E636B"), this.m("#7A7F87"), this.m("#43474E"), this.m("#9AA0A8")];
+      const geo = new T.IcosahedronGeometry(1, 1);
+      preencher((x, z) => { const c = new T.Mesh(geo, nm[Math.floor(rand() * 4)]); const k = 0.35 + rand() * 0.6;
+        c.scale.set(k * 1.5, k * 0.45, k * 1.2); c.position.set(x, -0.45 + rand() * 0.2, z); g.add(c); }, -10, 10, -14, 8, 0.6,
+        (x, z) => Math.hypot(x - 1.5, z - 2.2) < 1.6);   // sem nuvem colada na câmera
+      const raio = new T.Mesh(new T.BoxGeometry(0.02, 1.6, 0.02), new T.MeshBasicMaterial({ color: 0xE8F0FF, transparent: true, opacity: 0 }));
+      raio.position.set(-1.2, 0.8, -2.5); raio.rotation.z = 0.25; g.add(raio);
+      const flash = new T.PointLight(0xcfe0ff, 0, 8); flash.position.set(-1.2, 1.5, -2); g.add(flash);
+      return (lt) => { const f = (Math.sin(lt * 2.7) > 0.96 || Math.sin(lt * 4.1 + 1) > 0.985) ? 1 : 0;
+        raio.material.opacity = f; flash.intensity = f * 6; };
     }
     if (tipo === "cofre") { // armazém: corredor de paletes até o fundo, luzes no teto
       const palete = new T.BoxGeometry(0.34, 0.3, 0.34), mp = new T.MeshLambertMaterial({ color: new T.Color("#B9AE7E"), flatShading: true });
@@ -288,8 +300,12 @@ export class Diorama {
         up.push((lt) => ns.forEach((q, k) => { q.v.position.x = ((q.x0 + q.sp * lt + 1.5) % 3 + 3) % 3 - 1.5; q.v.position.y = 0.014 + Math.sin(lt * 2 + k) * 0.004; q.v.rotation.x = Math.sin(lt * 1.6 + k) * 0.03; }));
       } else if (a.tipo === "avioes") {
         const as = [];
-        for (let k = 0; k < n; k++) { const v = this.aviao(); g.add(v); as.push({ v, r: 0.9 + rand() * 0.6, h: 0.7 + rand() * 0.5, ph: rand() * TAU, sp: 0.35 + rand() * 0.2 }); }
-        up.push((lt) => as.forEach((q) => { const a2 = q.ph + lt * q.sp; q.v.position.set(Math.cos(a2) * q.r, q.h, Math.sin(a2) * q.r * 0.6); q.v.rotation.y = -a2 - Math.PI / 2; q.v.rotation.x = 0.25; }));
+        // o 1º avião (destaque) é o "herói": grande, no centro do quadro, mergulhando de leve; os outros orbitam
+        for (let k = 0; k < n; k++) { const v = this.aviao(); const heroi = k === 0 && (a.destaque || n === 1); if (heroi) v.scale.setScalar(3.2); g.add(v);
+          as.push({ v, heroi, r: 0.6 + rand() * 0.5, h: 0.35 + rand() * 0.3, ph: rand() * TAU, sp: 0.35 + rand() * 0.2 }); }
+        up.push((lt) => as.forEach((q) => {
+          if (q.heroi) { q.v.position.set(Math.sin(lt * 0.5) * 0.12, 0.3 - lt * 0.02, 0.35); q.v.rotation.set(0.15 + Math.sin(lt * 1.3) * 0.05, -0.6, -0.35 - lt * 0.04); return; }
+          const a2 = q.ph + lt * q.sp; q.v.position.set(Math.cos(a2) * q.r, q.h, Math.sin(a2) * q.r * 0.6); q.v.rotation.y = -a2 - Math.PI / 2; q.v.rotation.x = 0.25; }));
       } else if (a.tipo === "drones") {
         const ds = [];
         for (let k = 0; k < n; k++) { const v = this.drone(); g.add(v); ds.push({ v, x: -1 + rand() * 2, z: -0.6 + rand() * 1.2, h: 0.45 + rand() * 0.4, ph: rand() * TAU }); }

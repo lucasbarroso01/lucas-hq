@@ -324,6 +324,8 @@ def build(proj: Path):
         n = c.get("numero")
         if n:
             v_ini = n["ate"] if (i == 0 or n["de"] == n["ate"]) else n["de"]   # frame 0 é a capa: já mostra o número
+            if isinstance(v_ini, (int, float)) and abs(v_ini) >= 1000 and not n.get("casas"):
+                v_ini = f"{int(v_ini):,}"   # 35,000 (o contador também formata assim)
             var = n.get("variacao")   # bolsa/investimento: "alta" verde ▲, "baixa" vermelho ▼
             seta = {"alta": "▲ ", "baixa": "▼ "}.get(var, "")
             inner = (f'<div class="num {var or ""}">{seta}<span id="n{i}v">{v_ini}</span>'
