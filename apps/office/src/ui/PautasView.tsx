@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { ArrowDown, ArrowUp, Check, Loader2, Plus, RotateCcw, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { UploadReferencia } from './UploadReferencia'
 
 /* Aba "Pautas": o Lucas digita os temas que quer; o Radar pega daqui primeiro (tools/pautas.py) e só pesquisa os fatos. */
 
@@ -65,7 +66,10 @@ export function PautasView() {
     <div className="absolute inset-0 z-10 overflow-y-auto bg-background px-4 pb-10 pt-20 text-foreground sm:px-8">
       <div className="mx-auto w-full max-w-[880px]">
         <header className="mb-4 px-1">
-          <h2 className="text-[26px] font-semibold tracking-[-0.03em]">Pautas</h2>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-[26px] font-semibold tracking-[-0.03em]">Pautas</h2>
+            <UploadReferencia />
+          </div>
           <p className="mt-1 text-sm text-muted-foreground">Escreva os temas que você quer em vídeo. O Radar pega os 5 primeiros da fila todo dia e só pesquisa os fatos e as fontes.</p>
         </header>
 
