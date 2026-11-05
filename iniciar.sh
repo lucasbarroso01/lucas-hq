@@ -44,6 +44,15 @@ FOLGA="$HOME/.config/lucas-hq/folga_ate"    # dia encerrado pela Publicação: n
 if { [ "$1" = "--turno" ] || [ "$1" = "--recuperar" ]; } && [ -f "$FOLGA" ] && [ "$(date +%s)" -lt "$(cut -d. -f1 "$FOLGA")" ]; then
   exit 0
 fi
+# Operação pausada pelo Lucas: não abre o Claude (abrir já gasta crédito, mesmo para ouvir "pausado").
+# Só scripts sem cota (produção, publicação) podem rodar, com LUCAS_HQ_FINALIZAR=1 na mão.
+if [ "$1" = "--turno" ] || [ "$1" = "--recuperar" ]; then
+  if [ -f .venv/bin/python ] && [ -f "$ENV_FILE" ]; then
+    # shellcheck disable=SC1090
+    source "$ENV_FILE"
+    .venv/bin/python -c 'import sys; sys.path.insert(0, "tools"); from _common import pausa; sys.exit(0 if pausa()[0] else 1)' 2>/dev/null && exit 0
+  fi
+fi
 if [ "$1" = "--turno" ]; then
   # disparo agendado: sem perguntas; espera um turno em andamento terminar
   source .venv/bin/activate
