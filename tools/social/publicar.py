@@ -66,6 +66,8 @@ def grade() -> list[str]:
 
 
 def pausado() -> bool:
+    if __import__("os").environ.get("LUCAS_HQ_FINALIZAR"):   # o Lucas mandou agendar o que está pronto, mesmo pausado
+        return False
     sys.path.insert(0, str(ROOT / "tools"))
     try:
         from _common import pausa  # noqa: PLC0415

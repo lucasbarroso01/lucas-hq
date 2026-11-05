@@ -327,7 +327,7 @@ try:
 
     # pausa: o Lucas apertou "Pausar operação"? para antes do render (a parte cara)
     pz, mot = pausa()
-    if pz:
+    if pz and not os.environ.get("LUCAS_HQ_FINALIZAR"):   # LUCAS_HQ_FINALIZAR=1: o Lucas mandou terminar o que já tem roteiro (script, sem cota)
         hq(a.task, "PAUSADO", 45, "operação pausada: parou antes do render")
         raise RuntimeError("operação pausada pelo Lucas" + (f": {mot}" if mot else "") + " (roda de novo ao retomar)")
     # 6. render + mux
