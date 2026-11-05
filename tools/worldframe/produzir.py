@@ -67,6 +67,46 @@ def log(msg: str):
         f.write(f"{dt.datetime.now():%F %T} [produzir] {msg}\n")
 
 
+ANIM_REPO = Path.home() / "claude-animation-skills"   # github.com/artemnovitckii/claude-animation-skills (MIT)
+ANIM_MODOS = {"graph", "map-route", "breakdown", "minimalistic-graphics"}
+
+
+def animacoes(r: dict, proj: Path) -> None:
+    """Cenas com "animacao": {"modo", "spec"} viram um clipe da skill reel-animations, esticado até o fim da cena."""
+    pedidas = [(i, c["animacao"]) for i, c in enumerate(r["cenas"]) if c.get("animacao")]
+    if not pedidas:
+        return
+    if not (ANIM_REPO / "skills").exists():
+        raise RuntimeError("falta a skill reel-animations: rode bash tools/setup_producao.sh")
+    dur = json.loads((proj / "voz" / "duracoes.json").read_text())["cenas"]
+    out = proj / "anim"
+    out.mkdir(exist_ok=True)
+    env = dict(os.environ)
+    bf = Path.home() / ".config/lucas-hq/browser"
+    if bf.exists() and "HYPERFRAMES_BROWSER_PATH" not in env:
+        m = re.search(r"HYPERFRAMES_BROWSER_PATH=(\S+)", bf.read_text())
+        if m:
+            env["HYPERFRAMES_BROWSER_PATH"] = m.group(1)
+    for i, an in pedidas:
+        modo = an.get("modo")
+        if modo not in ANIM_MODOS:
+            raise RuntimeError(f"cena {i + 1}: animacao.modo '{modo}' (use: {', '.join(sorted(ANIM_MODOS))})")
+        bruto, final = out / f"s{i}_bruto.mp4", out / f"s{i}.mp4"
+        spec = dict(an.get("spec", {}), out=str(bruto))
+        sp = out / f"s{i}.{modo.split('-')[0]}.json"
+        sp.write_text(json.dumps(spec, ensure_ascii=False))
+        p = subprocess.run([PY, str(ANIM_REPO / "skills" / modo / "build.py"), str(sp)], cwd=out, capture_output=True,
+                           text=True, env=env, stdin=subprocess.DEVNULL, timeout=900)
+        if not bruto.exists():
+            raise RuntimeError(f"animação da cena {i + 1} ({modo}) falhou: {(p.stdout + p.stderr)[-300:]}")
+        # estica até o fim da cena congelando o último quadro (a cena dura o que a voz durar)
+        falta = max(0.0, float(dur[i]) - float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
+                    "-of", "csv=p=0", str(bruto)], capture_output=True, text=True).stdout.strip() or 0) + 0.3)
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(bruto), "-vf", f"tpad=stop_mode=clone:stop_duration={falta:.2f},scale=1080:1920",
+                        "-an", "-c:v", "libx264", "-pix_fmt", "yuv420p", str(final)], check=True)
+        log(f"animação cena {i + 1}: {modo} ok")
+
+
 def step(name: str, cmd: list[str], cwd: Path = ROOT, env=None) -> dict:
     p = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, env=env)
     last = next((ln for ln in reversed(p.stdout.strip().splitlines()) if ln.startswith("{")), "")
@@ -126,6 +166,8 @@ def checar_roteiro(r: dict, slug: str = "") -> list[str]:
     # variedade (02/11): cada frase com um visual próprio, cores que mudam de bloco em bloco, nada repetido sem sentido
     CARTOES = {"manchete", "comparar", "linha_tempo", "alerta", "citacao", "dossie"}
     def assinatura(c):
+        if c.get("animacao"):
+            return "anim:" + c["animacao"].get("modo", "")
         if c.get("cartao"):
             return "cartao:" + c["cartao"].get("tipo", "")
         if c.get("grafico"):
@@ -139,7 +181,7 @@ def checar_roteiro(r: dict, slug: str = "") -> list[str]:
             probs.append(f"cena {i + 1}: cartão desconhecido '{c['cartao'].get('tipo')}' (use: {', '.join(sorted(CARTOES))})")
         if i and assinatura(c) == assinatura(corpo[i - 1]):
             probs.append(f"cenas {i} e {i + 1} com o mesmo visual ({assinatura(c)}): troque um deles para o vídeo não ficar repetitivo")
-    dois_d = [c for c in corpo if c.get("cartao") or c.get("grafico") or c.get("recibo") or c.get("letreiro")]
+    dois_d = [c for c in corpo if c.get("animacao") or c.get("cartao") or c.get("grafico") or c.get("recibo") or c.get("letreiro")]
     if len(dois_d) < CENAS_2D_MIN * len(corpo):
         probs.append(f"só {len(dois_d)} de {len(corpo)} cenas com cartão, gráfico, recibo ou letreiro (mínimo {CENAS_2D_MIN:.0%}): "
                      "use manchete, comparar, linha_tempo, alerta, citacao ou dossie onde a frase pedir")
@@ -242,6 +284,7 @@ try:
     # 2. voz → 3. composição (timeline vem da voz) → 4. trilha
     step("voz", [PY, str(WF / "tts.py"), str(proj / "roteiro.json"), str(proj / "voz")])
     hq(a.task, "VOZ", 20, "narração Kokoro pronta")
+    animacoes(r, proj)   # clipes da skill reel-animations (gráfico, rota, vista explodida, line art)
     step("composição", [PY, str(WF / "compor.py"), str(proj)])
     total = json.loads((proj / "timeline.json").read_text())["total"]
     if DUR_MIN and total < DUR_MIN:

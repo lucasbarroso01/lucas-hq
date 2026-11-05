@@ -22,7 +22,7 @@ CFG = yaml.safe_load((ROOT / "config" / "temas.yaml").read_text())
 
 PARADAS = {"the", "and", "for", "with", "from", "that", "this", "what", "when", "why", "how", "who", "your", "into", "over",
            "than", "more", "most", "just", "only", "will", "would", "could", "about", "after", "before", "their", "there",
-           "world", "worlds", "biggest", "secret", "real", "truth", "every", "years", "year", "dilemma", "war", "wars"}
+           "world", "worlds", "biggest", "secret", "happened", "happen", "inside", "really", "nobody", "everyone", "real", "truth", "every", "years", "year", "dilemma", "war", "wars"}
 # palavras genéricas não bastam sozinhas para dizer que é o mesmo tema (Malaca ≠ Ormuz só por "strait")
 GENERICAS = {"strait", "fund", "bank", "money", "price", "market", "country", "crisi", "trade", "power", "empire",
              "cost", "debt", "energy", "chokepoint", "reserve", "border", "election", "tariff", "currency"}

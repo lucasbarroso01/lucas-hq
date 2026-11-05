@@ -38,6 +38,15 @@ Pelo menos **metade das cenas** usa `"palco": "diorama"`: um **cenário de verda
 | `dossie` | `titulo`, `numero`, `texto` | caso, investigação, ficha de um país ou pessoa |
 Todos aceitam `"carimbo": "CONFIRMED"` (ou HACKED, FROZEN, BANNED...).
 
+**Clipes da skill reel-animations** (`"animacao": {"modo": ..., "spec": {...}}`, tela cheia, a legenda continua por cima). Use em 1 a 3 cenas por vídeo, onde a frase pedir:
+| `modo` | `spec` (veja `~/claude-animation-skills/skills/<modo>/SKILL.md`) | use quando a frase... |
+|---|---|---|
+| `graph` | `label`, `values` (números reais, do mais antigo ao mais novo), `final`, `prefix`/`suffix`, `dark: true` | um número sobe ou cai ao longo do tempo (preço, altitude, dívida) |
+| `breakdown` | `title`, `subtitle`, `labels` (6 pares ["Nome", "nota"]), `accent` | "o que tem dentro" de um objeto (vista explodida) |
+| `minimalistic-graphics` | `lines` (1 ou 2 frases curtas, minúsculas), `steps` | frase de reflexão, progresso lento |
+| `map-route` | `destination`, `minutes`, `distance`, `unit` | um trajeto de A até B numa cidade (mapa ilustrativo, não geografia real) |
+Nunca invente os números do `graph`: sem dado real, não use.
+
 **Camadas no meio da tela** (por cima do cenário, uma ou duas por cena, varie):
 - `"grafico": {"tipo": "linha"|"barras"|"pizza"|"velas", "tela": "celular"|"tv"|"computador"|"nenhuma", "titulo": "...", "dados": [..], "rotulos": [..], "mercado": true}`. Varie o tipo e coloque vários dentro de celular, TV ou computador. Com `"mercado": true` (bolsa, investimentos, preços) a alta sai em **verde** e a queda em **vermelho**.
 - `"recibo": {"itens": [["001 BAR", "$1,000,000"], ...], "total": "$51.36B"}`: recibo imprimindo linha a linha até o total.

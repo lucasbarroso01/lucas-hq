@@ -121,5 +121,14 @@ python3 tools/worldframe/terra.py >>"$LOG" 2>&1 && log "ok: assets/lib/terra.js 
 if [ -s "$HOME/ext/hypit/skills/hypit/SKILL.md" ]; then log "ok: hypit (direção)"
 else mkdir -p "$HOME/ext" && git clone -q --depth 1 https://github.com/hypit-ai/hypit "$HOME/ext/hypit" >>"$LOG" 2>&1 && log "baixado: hypit (direção)" || bad "git clone hypit"; fi
 
+# 9. Skill reel-animations (github.com/artemnovitckii/claude-animation-skills, MIT): gráfico, rota, vista explodida, line art
+ANIM="$HOME/claude-animation-skills"
+[ -d "$ANIM" ] || git clone -q --depth 1 https://github.com/artemnovitckii/claude-animation-skills.git "$ANIM" >>"$LOG" 2>&1
+if [ -s "$ANIM/kit/node_modules/three/build/three.module.js" ] && [ -s "$ANIM/kit/vendor/gsap.min.js" ]; then log "ok: reel-animations"
+else
+  (cd "$ANIM/kit" && npm install --silent --no-audit --no-fund >>"$LOG" 2>&1) && mkdir -p "$ANIM/kit/vendor" \
+    && cp assets/lib/gsap.min.js "$ANIM/kit/vendor/" && log "instalado: reel-animations" || bad "reel-animations (npm install em $ANIM/kit)"
+fi
+
 if [ "$FAIL" = 0 ]; then log "PASSO 0 completo: produção pronta"; else log "PASSO 0 incompleto: corrija os itens FALHOU acima"; fi
 exit "$FAIL"

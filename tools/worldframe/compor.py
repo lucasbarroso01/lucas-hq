@@ -305,6 +305,11 @@ def build(proj: Path):
     for f in ["gsap.min.js", "three.module.js", "terra.js"]:
         shutil.copy(ROOT / "assets/lib" / f, hf / "assets/lib" / f)
     shutil.copy(Path(__file__).with_name("diorama.js"), hf / "assets/lib" / "diorama.js")
+    if (proj / "anim").exists():   # clipes da skill reel-animations (produzir.py gera antes)
+        (hf / "assets" / "anim").mkdir(parents=True, exist_ok=True)
+        for f in (proj / "anim").glob("s*.mp4"):
+            if "_bruto" not in f.name:
+                shutil.copy(f, hf / "assets" / "anim" / f.name)
     for f in (ROOT / "assets/fonts").glob("*.ttf"):
         shutil.copy(f, hf / "assets/fonts" / f.name)
 
@@ -374,6 +379,10 @@ def build(proj: Path):
                 vis0 = re.sub(r'id="(\w+)"', r'id="l\1"', svg)
                 if vis in ("contador", "numero", "globo", "printar"):
                     vis0 = vis0.replace(f'<g id="lg0">', f'<g id="lg0" transform="rotate({-40 if vis == "contador" else 0} {cx} {cy})">')
+        # clipe da skill reel-animations em tela cheia (gráfico, rota, vista explodida, line art)
+        if c.get("animacao") and (hf / "assets" / "anim" / f"s{i}.mp4").exists():
+            clips.append(f'<video id="an{i}" class="clip anim" src="assets/anim/s{i}.mp4" muted playsinline data-start="{s0:.3f}" '
+                         f'data-duration="{d:.3f}" data-track-index="{len(clips) % 8}" data-layout-ignore></video>')
         # cartão editorial em tela cheia (cobre o cenário; a legenda continua por cima)
         if c.get("cartao"):
             ct, tw2 = cartao(c, i, s0, d)
@@ -545,6 +554,7 @@ TEMPLATE = """<!doctype html>
   .carimbo {{ position: absolute; left: 50%; top: 50%; padding: 10px 34px; border: 8px solid #D7261E; border-radius: 12px; color: #D7261E;
              font-family: 'Barlow'; font-weight: 400; font-size: 76px; letter-spacing: .12em; white-space: nowrap; mix-blend-mode: multiply; }}
   .cartao-w {{ position: absolute; inset: 0; }}
+  .anim {{ position: absolute; inset: 0; width: {W}px; height: {H}px; object-fit: cover; }}
   .cartao {{ position: absolute; inset: 0; }}
   .ct-in {{ position: absolute; left: 70px; right: 70px; top: 300px; height: 780px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }}
   .cm-l {{ font-family: 'League Gothic', 'Oswald', sans-serif; font-size: 190px; line-height: 170px; letter-spacing: .01em; }}
